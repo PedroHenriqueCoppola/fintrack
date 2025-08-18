@@ -1,6 +1,6 @@
 import React from "react";
 import { GlobalStyle, Title } from "./styles/globalStyles.js";
-import { Sidebar } from "./components/Sidebar/sidebar.jsx";
+import Sidebar from "./components/Sidebar/Sidebar.jsx";
 import { Outlet } from "react-router-dom";
 
 function App() {
