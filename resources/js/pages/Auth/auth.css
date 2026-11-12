@@ -1,0 +1,47 @@
+.auth-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+}
+
+.auth-form .button {
+    width: 100%;
+}
+
+.auth-remember {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-remember input {
+    width: 1.6rem;
+    height: 1.6rem;
+    margin: 0;
+    accent-color: var(--color-primary);
+}
+
+.auth-switch {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 1.4rem;
+}
+
+.auth-switch a {
+    color: var(--color-primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}

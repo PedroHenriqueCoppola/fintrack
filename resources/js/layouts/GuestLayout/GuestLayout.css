@@ -1,0 +1,68 @@
+.guest-shell {
+    min-height: 100vh;
+}
+
+.guest-toolbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 40;
+    padding: 1.2rem 2rem;
+}
+
+.guest-theme {
+    width: 4rem;
+    padding: 0;
+}
+
+.guest-theme svg {
+    width: 2rem;
+    height: 2rem;
+}
+
+.guest-main {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 8rem 2rem 4rem;
+}
+
+.guest-panel {
+    width: 100%;
+    max-width: 44rem;
+    animation: guest-enter var(--transition);
+}
+
+.guest-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2.4rem;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+.guest-brand__dot {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    box-shadow: 0 0 1.2rem var(--color-primary);
+}
+
+@keyframes guest-enter {
+    from {
+        opacity: 0;
+        transform: translateY(0.8rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}

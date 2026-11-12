@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     CalendarRange,
     ChartColumn,
@@ -49,6 +49,7 @@ function storeCollapsed(collapsed) {
 export default function AppLayout({ children }) {
     const page = usePage();
     const path = page.url.split('?')[0];
+    const user = page.props.auth?.user ?? null;
     const [collapsed, setCollapsed] = useState(readCollapsed);
     const [theme, setThemeState] = useState(() => (
         document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
@@ -72,14 +73,22 @@ export default function AppLayout({ children }) {
                     <span className="brand__dot" aria-hidden="true" />
                     Fintrack
                 </Link>
-                <Button
-                    variant="quiet"
-                    className="theme-toggle"
-                    aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
-                    onClick={onToggleTheme}
-                >
-                    {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-                </Button>
+                <div className="app-header__actions">
+                    {user ? <span className="app-header__user">{user.name}</span> : null}
+                    <Button
+                        variant="quiet"
+                        className="theme-toggle"
+                        aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
+                        onClick={onToggleTheme}
+                    >
+                        {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+                    </Button>
+                    {user ? (
+                        <Button variant="secondary" className="app-header__logout" onClick={() => router.post('/logout')}>
+                            Sair
+                        </Button>
+                    ) : null}
+                </div>
             </header>
             <aside className="app-sidebar">
                 <nav className="app-nav" aria-label="Principal">

@@ -41,6 +41,10 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            // Minutes until the remember-me cookie expires. AuthManager reads
+            // this in createSessionDriver and calls SessionGuard::setRememberDuration.
+            // Without it, Laravel 13 keeps the guard default of 576000 minutes (400 days).
+            'remember' => 60 * 24 * 30,
         ],
     ],
 
