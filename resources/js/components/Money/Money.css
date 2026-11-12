@@ -9,5 +9,5 @@
 }
 
 .money--negative {
-    color: var(--color-destructive);
+    color: var(--color-negative-text);
 }

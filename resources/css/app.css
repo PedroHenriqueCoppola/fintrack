@@ -9,6 +9,7 @@
     --color-secondary: hsl(252 16% 14%);
     --color-accent: hsl(268 70% 20%);
     --color-destructive: hsl(0 70% 42%);
+    --color-negative-text: hsl(0 84% 62%);
     --color-border: hsl(252 14% 20%);
     --color-sidebar: hsl(240 6% 10%);
     --radius: 0.75rem;
@@ -29,6 +30,7 @@
     --color-secondary: hsl(270 30% 96%);
     --color-accent: hsl(268 83% 55%);
     --color-destructive: hsl(0 84% 60%);
+    --color-negative-text: hsl(0 84% 47%);
     --color-border: hsl(214 32% 91%);
     --color-sidebar: hsl(0 0% 98%);
     color-scheme: light;
@@ -92,4 +94,17 @@ a {
     display: flex;
     flex-direction: column;
     gap: 2.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --transition: 0.01ms linear;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
 }

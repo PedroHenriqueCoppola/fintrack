@@ -53,6 +53,20 @@ docker compose exec app bash
 
 `docker compose down` para os containers e **mantém** o volume do banco. Não use `down -v` se quiser conservar os dados.
 
+## Quando mudar dependências
+
+Pacote novo ou atualizado no `composer.json` (PHP):
+
+```bash
+docker compose exec app composer install
+```
+
+Pacote novo ou atualizado no `package.json` (JavaScript):
+
+```bash
+docker compose exec vite npm install
+```
+
 ## Backup manual do banco
 
 A porta do PostgreSQL não fica exposta. O backup sai de dentro do container:

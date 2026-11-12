@@ -12,8 +12,8 @@ export default function CursorGlow() {
         }
 
         function onPointerMove(event) {
-            glow.style.left = `${event.clientX}px`;
-            glow.style.top = `${event.clientY}px`;
+            glow.classList.add('cursor-glow--visible');
+            glow.style.transform = `translate(${event.clientX}px, ${event.clientY}px) translate(-50%, -50%)`;
         }
 
         window.addEventListener('pointermove', onPointerMove);

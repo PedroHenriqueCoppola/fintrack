@@ -23,8 +23,6 @@ export default defineConfig({
             port: 5173,
         },
         watch: {
-            usePolling: true,
-            interval: 300,
             ignored: [
                 '**/storage/framework/views/**',
                 '**/vendor/**',
