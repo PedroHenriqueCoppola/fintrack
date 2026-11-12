@@ -1,0 +1,13 @@
+---
+description: Documentation upkeep after every task
+alwaysApply: true
+---
+
+# Documentation rules
+
+After every task, keep these files up to date. Write their content in Brazilian Portuguese.
+
+- `README.md`: what the project is, how to run it with Docker, the main features available so far and the demo user (once it exists).
+- `docs/route-map.md`: every page and API route, with method, path, who can access and what it returns.
+- `docs/product-vision.md` is owned by the author. Never edit it. If something in it must change, say so in the "Atenção" section of the delivery.
+- When a feature is added, update the demo seeder so the demo user has realistic data for it.

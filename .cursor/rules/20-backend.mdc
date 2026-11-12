@@ -1,0 +1,36 @@
+---
+description: Backend rules for Laravel code, routes, migrations and database
+globs: app/**/*.php,routes/**/*.php,database/**/*.php,config/**/*.php
+alwaysApply: false
+---
+
+# Backend rules
+
+## Structure
+- Controllers stay thin and live in `app/Http/Controllers/Api`.
+- Validation goes in FormRequests, with error messages in Brazilian Portuguese.
+- Responses go through API Resources.
+- Business rules go in Services (`app/Services`). Controllers call services.
+- Models define relationships and casts.
+
+## Source of truth
+- The backend computes every balance, total and derived value. The frontend never sends computed values.
+- The category available balance is always derived from history (previous balance + month value +/- reallocations - expenses) and never stored.
+
+## Money and dates
+- Money columns are `DECIMAL(15,2)`. Never use float. Use string decimals or BCMath for arithmetic.
+- Transactions store a positive amount. The type (income or expense) defines the sign.
+- Timezone `America/Sao_Paulo`. Use DATE columns when only the day matters.
+
+## Users and security
+- Every user-owned table has `user_id`. Every query is scoped to the authenticated user. Never accept `user_id` from the request.
+- Authorize every route. A user must never read or change another user's data.
+- Session cookie authentication, hashed passwords, rate limit on login.
+
+## Database
+- PostgreSQL. Every schema change is a NEW migration. Never edit a migration that was already applied.
+- Add foreign keys and indexes (at least `user_id` and date columns).
+- Records with history are archived (`archived_at`), never hard deleted.
+
+## Docs
+- When you add or change a route, update `docs/route-map.md`.

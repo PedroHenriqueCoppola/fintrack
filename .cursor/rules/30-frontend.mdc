@@ -1,0 +1,28 @@
+---
+description: Frontend rules for React components and CSS
+globs: resources/js/**,resources/css/**
+alwaysApply: false
+---
+
+# Frontend rules
+
+## Structure
+- React function components in JSX (no TypeScript).
+- One folder per component with `Name.jsx` and `Name.css`. Pages in `resources/js/pages`, layouts in `resources/js/layouts`, helpers in `resources/js/lib`.
+- Reuse the shared components (Button, Modal, FormField, Card). Do not duplicate them.
+
+## Styling
+- Plain CSS only. No Tailwind and no CSS-in-JS.
+- Global design tokens are CSS variables in one global file: `:root` for the light theme and a dark theme override. Dark is the default and the choice is persisted.
+- `html { font-size: 62.5% }` (1rem = 10px). Use rem for sizes.
+- Follow the "Identidade visual" section of `docs/product-vision.md` (colors, font Plus Jakarta Sans, radius 0.75rem, purple gradient on primary buttons, cursor glow).
+- Income and positive values in purple, expenses and negative values in red, always with a + or - sign.
+
+## Behavior
+- The frontend only displays what the API returns. Never compute balances or totals in the browser.
+- Create and edit happen in modals.
+- Currency with `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`. Dates as dd/mm/yyyy.
+- All UI text in Brazilian Portuguese. Every page has a title and a subtitle.
+- Basic accessibility: labels on inputs, visible focus, never rely only on color.
+- Show a short empty state with a shortcut when a block depends on data the user has not created yet.
+- Desktop only: do not build mobile layouts.

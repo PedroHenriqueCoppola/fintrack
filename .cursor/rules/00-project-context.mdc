@@ -1,0 +1,28 @@
+---
+description: Fintrack project context, stack, language and general conduct
+alwaysApply: true
+---
+
+# Fintrack
+
+Personal finance web app: transactions, budget by category with rollover, monthly planning, goals, net worth snapshots and reports.
+
+The business rules live in `docs/product-vision.md`. Read the relevant sections before implementing anything. If the code, the user's request and that document disagree, stop and ask the user before continuing.
+
+## Stack
+- Backend: Laravel (PHP) with PostgreSQL.
+- Frontend: Inertia + React (JSX, no TypeScript) + plain CSS.
+- Everything runs in Docker (Docker Desktop on Windows with WSL2). Never assume PHP, Composer, Node or PostgreSQL on the host: run every command through `docker compose`.
+- The project folder lives in the WSL Linux filesystem, never under /mnt/c.
+
+## Language
+- Code, identifiers, comments, file names, branch names and commit messages: English.
+- User-facing text (labels, buttons, messages, validation errors): Brazilian Portuguese.
+- Replies to the user in chat: Brazilian Portuguese.
+
+## Conduct
+- Do exactly what the prompt asks. No extra features, no unrequested refactors, no new dependencies without asking first.
+- When a rule is ambiguous, ask instead of guessing.
+- Never run `git commit`, `git push` or any destructive command (`docker compose down -v`, `migrate:fresh`, deleting files outside the task) without explicit permission.
+- No automated test suites: this is a deliberate decision of the author. Do not create tests unless asked. The manual test script in the delivery format replaces them.
+- Keep the code simple and readable. Prefer small functions and clear names.

@@ -1,0 +1,26 @@
+---
+description: Mandatory delivery format at the end of every task
+alwaysApply: true
+---
+
+# Delivery format
+
+At the end of EVERY task, reply to the user in Brazilian Portuguese using exactly these sections, in this order.
+
+## Resumo
+What was done, in a few short sentences.
+
+## Arquivos criados e alterados
+A list of paths, one line each saying what changed.
+
+## Comandos que você precisa rodar
+Any command the user must run (migrations, seeds, installs, restarts). Write "Nenhum" if none.
+
+## Roteiro de testes
+A numbered manual test script that covers EVERY feature added or changed in this task. Each step has the action and the expected result. Use concrete example numbers (for instance: previous balance 120, month value 300, expected available balance 420). Include the edge cases from docs/product-vision.md that apply. The user will follow this script by hand.
+
+## Mensagem de commit sugerida
+One Conventional Commits message in English covering everything in this task: `type(scope): summary` (types: feat, fix, refactor, docs, chore, style), a blank line, then bullet points of what was added. Do NOT run the commit. The user commits manually.
+
+## Atenção
+Deviations from docs/product-vision.md, decisions you made on your own, known limitations and anything you were unsure about. Write "Nada a declarar" if none.
