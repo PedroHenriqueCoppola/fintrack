@@ -1,0 +1,13 @@
+---
+description: Architecture contract for folders, naming and the database model
+alwaysApply: true
+---
+
+# Architecture
+
+Before creating or changing files, read `docs/architecture.md` and follow its folder structure, naming conventions and database model exactly.
+
+- Do not create tables, columns, folders or naming patterns that are not described there. If the task needs something that is missing or different, stop and ask the author.
+- Never edit `docs/architecture.md`. Report proposed changes in the "Atenção" section of the delivery.
+- Screens are Inertia pages. There is no separate JSON API.
+- Run every command through `docker compose`.

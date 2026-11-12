@@ -7,9 +7,9 @@ alwaysApply: false
 # Backend rules
 
 ## Structure
-- Controllers stay thin and live in `app/Http/Controllers/Api`.
+- Controllers stay thin, live in `app/Http/Controllers` (one per resource) and return Inertia pages or redirects.
 - Validation goes in FormRequests, with error messages in Brazilian Portuguese.
-- Responses go through API Resources.
+- Data sent to pages goes through API Resources.
 - Business rules go in Services (`app/Services`). Controllers call services.
 - Models define relationships and casts.
 
