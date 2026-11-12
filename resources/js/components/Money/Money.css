@@ -1,0 +1,13 @@
+.money {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.money--positive {
+    color: var(--color-primary);
+}
+
+.money--negative {
+    color: var(--color-destructive);
+}

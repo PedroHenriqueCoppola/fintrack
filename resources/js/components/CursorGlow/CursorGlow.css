@@ -1,0 +1,11 @@
+.cursor-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    width: 600px;
+    height: 600px;
+    pointer-events: none;
+    background: radial-gradient(circle, hsl(268 83% 62% / 0.08) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+}
