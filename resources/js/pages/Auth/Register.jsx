@@ -29,6 +29,9 @@ export default function Register() {
                     title="Criar conta"
                     subtitle="Nome, e-mail e senha. Você entra assim que o cadastro termina."
                 />
+                {form.errors.session ? (
+                    <p className="auth-alert" role="alert">{form.errors.session}</p>
+                ) : null}
                 <Card>
                     <form className="auth-form" noValidate onSubmit={submit}>
                         <FormField label="Nome" error={form.errors.name}>

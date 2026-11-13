@@ -74,7 +74,7 @@ export default function AppLayout({ children }) {
                     Fintrack
                 </Link>
                 <div className="app-header__actions">
-                    {user ? <span className="app-header__user">{user.name}</span> : null}
+                    {user ? <span className="app-header__user" title={user.name}>{user.name}</span> : null}
                     <Button
                         variant="quiet"
                         className="theme-toggle"

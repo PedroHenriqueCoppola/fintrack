@@ -49,6 +49,12 @@ Não há usuário pronto. Crie o primeiro pela tela de cadastro:
 
 Para entrar de novo, use http://localhost:8000/login. O botão **Sair**, no topo, encerra a sessão.
 
+## Proteção do login
+
+- 5 falhas seguidas do mesmo e-mail e do mesmo IP bloqueiam o login por 5 minutos, contados a partir da 5ª falha. Durante o bloqueio, nem a senha correta entra.
+- 20 falhas do mesmo IP em 15 minutos bloqueiam o login por mais 15 minutos, mesmo que o e-mail mude a cada tentativa.
+- O cadastro aceita no máximo 10 tentativas por hora por IP.
+
 ## Comandos úteis
 
 ```bash

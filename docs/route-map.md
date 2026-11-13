@@ -4,7 +4,7 @@ As páginas internas exigem login. Quem não está logado é enviado para `/logi
 
 | Método | Caminho | Nome | Quem acessa | O que devolve |
 | --- | --- | --- | --- | --- |
-| GET | `/login` | `login` | Visitante | Página Entrar. Usuário logado vai para `/` |
+| GET | `/login` | `login` | Visitante | Página Entrar. Se o login desta sessão está bloqueado, inclui os segundos que faltam. Usuário logado vai para `/` |
 | POST | `/login` | — | Visitante | Entra na conta e vai para a página que tentou abrir, ou para `/` |
 | GET | `/register` | `register` | Visitante | Página Criar conta. Usuário logado vai para `/` |
 | POST | `/register` | — | Visitante | Cria a conta, entra logado e vai para `/` |

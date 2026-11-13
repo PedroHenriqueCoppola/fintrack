@@ -11,9 +11,11 @@ use Inertia\Response;
 
 class SessionController extends Controller
 {
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Auth/Login');
+        return Inertia::render('Auth/Login', [
+            'loginLockSeconds' => LoginRequest::remainingLockSeconds($request),
+        ]);
     }
 
     public function store(LoginRequest $request): RedirectResponse
@@ -32,6 +34,8 @@ class SessionController extends Controller
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        Inertia::clearHistory();
 
         return redirect()->route('login');
     }

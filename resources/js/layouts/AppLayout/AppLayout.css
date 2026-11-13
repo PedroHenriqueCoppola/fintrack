@@ -45,6 +45,7 @@
 }
 
 .app-header__user {
+    min-width: 0;
     max-width: 24rem;
     overflow: hidden;
     color: var(--color-text);

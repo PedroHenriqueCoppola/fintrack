@@ -16,7 +16,7 @@ Route::post('/logout', [SessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'inertia.encrypt'])->group(function () {
     Route::get('/', fn () => Inertia::render('Dashboard/Index'))->name('dashboard');
     Route::get('/analysis', fn () => Inertia::render('Analysis/Index'))->name('analysis');
     Route::get('/planning', fn () => Inertia::render('Planning/Index'))->name('planning');

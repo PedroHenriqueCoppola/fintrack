@@ -4,6 +4,12 @@
     gap: 1.6rem;
 }
 
+.auth-alert {
+    color: var(--color-destructive);
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
 .auth-form {
     display: flex;
     flex-direction: column;
