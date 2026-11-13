@@ -2,7 +2,7 @@
 
 Sistema web de finanças pessoais: transações, orçamento por categoria com acúmulo, planejamento do mês, metas, patrimônio e relatórios. As regras de negócio estão em `docs/product-vision.md`.
 
-Nesta etapa o projeto sobe com um comando, com tema claro/escuro, layout, componentes comuns, login e cadastro. As páginas internas exigem uma conta. Ainda não há cadastros financeiros (bancos, categorias, transações) nem usuário de demonstração.
+Nesta etapa o projeto sobe com um comando, com tema claro/escuro, layout, componentes comuns, login, cadastro e a página Gerenciar (bancos, caixinhas, categorias, cartões e formas de pagamento). As páginas internas exigem uma conta. Ainda não há transações nem usuário de demonstração.
 
 ## Como subir
 
@@ -45,9 +45,36 @@ Não há usuário pronto. Crie o primeiro pela tela de cadastro:
 
 1. Abra http://localhost:8000/register.
 2. Preencha nome, e-mail e senha (mínimo de 8 caracteres) e confirme a senha.
-3. Ao enviar, a conta é criada e você já entra no Dashboard.
+3. Ao enviar, a conta é criada, já com as categorias e as formas de pagamento iniciais, e você entra no Dashboard.
 
 Para entrar de novo, use http://localhost:8000/login. O botão **Sair**, no topo, encerra a sessão.
+
+## Gerenciar
+
+A página http://localhost:8000/manage reúne os cadastros que organizam o resto do sistema: bancos, caixinhas, categorias, cartões e formas de pagamento. Criar e editar acontecem em um modal. Arquivar tira o item da lista ativa; nada é apagado. O botão **Mostrar arquivados** revela os itens arquivados, com a ação **Desarquivar**. Um banco que ainda tem caixinha ou cartão ativo não arquiva: a tela pede para arquivar esses itens antes.
+
+Cada conta nova recebe categorias e formas de pagamento iniciais:
+
+- Gasto: Mercado, Moradia, Transporte, Saúde, Lazer, Outros
+- Reserva: Reserva de emergência, Investimentos
+- Receita: Salário, Outras receitas
+- Formas de pagamento: Pix, Débito e Crédito (só Crédito exige cartão)
+
+As categorias de Despesa nascem com saldo inicial zero, valendo a partir do mês em que a conta foi criada. Receita não tem saldo inicial.
+
+O escopo `BelongsToUser` filtra toda consulta pelo usuário logado e preenche `user_id` ao criar. No tinker e nos comandos do console não há usuário autenticado: o escopo não filtra e não gera erro. Por isso o comando abaixo precisa indicar a conta.
+
+Para aplicar os padrões a um usuário que já existia:
+
+```bash
+docker compose exec app php artisan tinker --execute='app(App\Services\DefaultDataService::class)->createFor(App\Models\User::query()->where("email", "seu@email")->firstOrFail());'
+```
+
+Troque `seu@email` pelo e-mail da conta. Rodar de novo não duplica. Para todas as contas de uma vez:
+
+```bash
+docker compose exec app php artisan tinker --execute='App\Models\User::query()->each(function ($user) { app(App\Services\DefaultDataService::class)->createFor($user); echo $user->email, PHP_EOL; });'
+```
 
 ## Proteção do login
 

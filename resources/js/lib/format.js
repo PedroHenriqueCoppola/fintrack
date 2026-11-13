@@ -10,6 +10,45 @@ export function formatMoney(value) {
     return `${sign}${formatted}`;
 }
 
+export function parseMoneyInput(value) {
+    const raw = String(value ?? '').trim();
+
+    if (raw === '') {
+        return '';
+    }
+
+    const negative = raw.startsWith('-');
+    const unsigned = (negative ? raw.slice(1) : raw).trim();
+    const normalized = unsigned.replace(/\./g, '').replace(',', '.');
+
+    if (!/^\d+(\.\d{0,2})?$/.test(normalized)) {
+        return raw;
+    }
+
+    return negative ? `-${normalized}` : normalized;
+}
+
+export function formatMoneyInput(value) {
+    const raw = String(value ?? '').trim();
+
+    if (raw === '') {
+        return '';
+    }
+
+    const negative = raw.startsWith('-');
+    const unsigned = negative ? raw.slice(1) : raw;
+
+    if (!/^\d+(\.\d+)?$/.test(unsigned)) {
+        return '';
+    }
+
+    const [whole, fraction = ''] = unsigned.split('.');
+    const cents = `${fraction}00`.slice(0, 2);
+    const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    return `${negative ? '-' : ''}${grouped},${cents}`;
+}
+
 export function formatDate(value) {
     if (!value) {
         return '';

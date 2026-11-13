@@ -11,6 +11,9 @@
 
 .modal {
     width: min(52rem, 100%);
+    max-height: calc(100vh - 4.8rem);
+    display: flex;
+    flex-direction: column;
     background: var(--color-card);
     color: var(--color-text);
     border: 1px solid var(--color-border);
@@ -41,6 +44,8 @@
 }
 
 .modal__body {
+    min-height: 0;
+    overflow: auto;
     padding: 2rem;
     color: var(--color-text-muted);
     font-size: 1.5rem;
