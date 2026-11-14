@@ -65,11 +65,10 @@ As tabelas padrão do Laravel (`sessions`, `cache`, `jobs`, `password_reset_toke
 | --- | --- | --- |
 | users | name, email (único), password, remember_token | login por sessão |
 | banks | user_id, name, color?, archived_at? | |
-| pockets (caixinhas) | user_id, bank_id, name, type? (balance, piggy_bank, investment), color?, archived_at? | só organiza; o saldo não é calculado |
-| categories | user_id, name, applies_to (expense, income), nature? (spending, reserve; só para expense), icon?, color?, pocket_id?, initial_balance (padrão 0), initial_month?, archived_at? | saldo disponível é derivado, nunca guardado |
+| categories | user_id, name, applies_to (expense, income), nature? (spending, reserve; só para expense), icon?, color?, initial_balance (padrão 0), initial_month?, archived_at? | saldo disponível é derivado, nunca guardado |
 | cards | user_id, bank_id, name, closing_day, due_day?, color?, archived_at? | faturas são derivadas das transações |
 | payment_methods | user_id, name, requires_card (bool), archived_at? | |
-| transactions | user_id, type (income, expense), date, amount (positivo), description, category_id, bank_id, payment_method_id, card_id?, pocket_id?, note?, status (paid, pending), competence_month, fixed_expense_id?, installment_plan_id?, installment_number?, installment_total?, archived_at? | índices em (user_id, competence_month) e (user_id, date); `pending` não entra nos totais |
+| transactions | user_id, type (income, expense), date, amount (positivo), description, category_id, bank_id, payment_method_id, card_id?, note?, status (paid, pending), competence_month, fixed_expense_id?, installment_plan_id?, installment_number?, installment_total?, archived_at? | índices em (user_id, competence_month) e (user_id, date); `pending` não entra nos totais |
 | tags | user_id, name | |
 | tag_transaction | tag_id, transaction_id | |
 | monthly_plans | user_id, month, expected_income, status (draft, confirmed), note? | único por (user_id, month) |
@@ -77,10 +76,10 @@ As tabelas padrão do Laravel (`sessions`, `cache`, `jobs`, `password_reset_toke
 | reallocations | user_id, month, from_category_id, to_category_id, amount, note? | histórico de remanejamentos |
 | fixed_expenses | user_id, name, category_id, amount, payment_method_id?, note?, start_month, end_month?, archived_at? | confirmar o planejamento gera transações `pending` |
 | installment_plans | user_id, name, category_id, total_amount, installments_count, start_month, payment_method_id?, card_id?, note?, archived_at? | gera uma transação `pending` por mês |
-| goals | user_id, name, target_amount, start_date?, deadline, category_id?, pocket_id?, note?, archived_at? | valor atual = soma dos lançamentos |
+| goals | user_id, name, target_amount, start_date?, deadline, category_id?, note?, archived_at? | valor atual = soma dos lançamentos |
 | goal_entries | goal_id, type (deposit, adjustment), amount (com sinal), date, note? | |
 | net_worth_closings | user_id, reference_month, note? | único por (user_id, reference_month) |
-| net_worth_closing_items | net_worth_closing_id, pocket_id, balance | saldo digitado no fechamento |
+| net_worth_closing_items | net_worth_closing_id, bank_id, balance | saldo digitado no fechamento |
 | saved_reports | user_id, name, period (json), included_data (json), filters? (json), grouping? | |
 
 Campos com `?` são opcionais.
