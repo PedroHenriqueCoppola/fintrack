@@ -80,11 +80,12 @@ São sete páginas mais a tela de acesso; cada uma mantém o que o autor valoriz
 
 ### Estrutura comum
 
-- Header fixo com o nome do projeto à esquerda e o botão de modo claro/escuro à direita.
-- Sidebar recolhível com: Dashboard, Análise, Planejamento, Metas, Patrimônio, Relatórios e Gerenciar.
-- Cada página tem título e subtítulo explicando o que acontece nela.
-- Criar e editar acontecem em modais. O botão "Nova transação" fica no header de todas as páginas (em teste; se não funcionar visualmente, volta para o Dashboard e a Análise).
-- Filtro de período padrão em todo o sistema: atalhos prontos (mês atual, mês anterior, trimestre, semestre, ano), intervalo livre e "todo o período".
+- Não há header. A sidebar é flutuante e recolhível, traz o nome do projeto no topo e os links: Dashboard, Análise, Planejamento, Metas, Patrimônio, Relatórios e Gerenciar.
+- No topo da área de conteúdo ficam o botão de modo claro/escuro e o ícone de perfil, que abre um menu pequeno com o nome do usuário e a opção Sair. A edição de perfil (nome e senha) fica para depois.
+- Cada página tem título e subtítulo explicando o que acontece nela. No Dashboard o título é a saudação "Bom dia", "Boa tarde" ou "Boa noite" seguida do primeiro nome.
+- Criar e editar acontecem em modais. O botão "Nova transação" fica no topo do Dashboard e da Análise, à direita do título (a ideia de colocá-lo em todas as páginas foi testada e abandonada).
+- Filtro de período padrão em todo o sistema (Dashboard, Análise, Metas, Patrimônio e Relatórios): atalhos prontos (mês atual, mês anterior, trimestre, semestre, ano e todo o período) e "Personalizado", com calendário e campos De e Até. O Planejamento trabalha sempre com um mês fechado e usa o seletor de mês.
+- Filtros avançados e salvos: a Análise tem "Mais filtros" (tipo, status, valor mínimo e máximo, cartão e ordenação), chips removíveis dos filtros ativos e filtros salvos com nome, que o usuário aplica com um clique.
 
 ### Login e cadastro
 
@@ -129,7 +130,8 @@ Três seções e um painel de visão final que se atualiza enquanto o usuário p
 - Estados: ativa, pausada, concluída, cancelada e arquivada.
 - Cada meta mostra o progresso, quanto falta, quanto precisa guardar por mês e a previsão no ritmo atual.
 - Painel com total guardado, metas ativas e concluídas.
-- Gráficos: linha acumulada real contra a linha ideal por meta e distribuição do guardado por meta. Substituem os gráficos do protótipo.
+- Gráfico de evolução geral: o total guardado ao longo dos meses, com uma linha por meta e alternância entre Geral e Por meta.
+- Cada meta tem uma miniatura da evolução no card e uma tela de detalhe com a linha real contra a linha ideal, o quanto falta, quanto guardar por mês, a previsão e a lista de lançamentos. Esses gráficos substituem os do protótipo.
 
 ### Patrimônio
 
@@ -178,35 +180,25 @@ A lista de campos é a proposta inicial e será refinada no modelo do banco da e
 
 ## Identidade visual
 
-A identidade é "preto sofisticado com roxo": fundo quase preto, cards levemente mais claros, um roxo único como cor de destaque e a fonte Plus Jakarta Sans. Os valores abaixo foram lidos do CSS do protótipo e viram variáveis CSS puras (sem Tailwind).
-
-| Token | Escuro (padrão) | Claro |
-| --- | --- | --- |
-| Fundo | `hsl(240 6% 6%)` | `hsl(0 0% 100%)` |
-| Card | `hsl(240 6% 8%)` | `hsl(0 0% 100%)` |
-| Texto | `hsl(0 0% 98%)` | `hsl(222 84% 5%)` |
-| Texto secundário | `hsl(0 0% 82%)` | `hsl(215 16% 47%)` |
-| Primária (roxo) | `hsl(268 83% 62%)` | `hsl(268 83% 55%)` |
-| Secundária | `hsl(252 16% 14%)` | `hsl(270 30% 96%)` |
-| Realce suave | `hsl(268 70% 20%)` | `hsl(268 83% 55%)` |
-| Destrutiva (vermelho) | `hsl(0 70% 42%)` | `hsl(0 84% 60%)` |
-| Borda | `hsl(252 14% 20%)` | `hsl(214 32% 91%)` |
-| Sidebar | `hsl(240 6% 10%)` | `hsl(0 0% 98%)` |
+A identidade é "preto sofisticado com roxo", com um tom acolhedor: fundo quase preto levemente arroxeado, cards em camadas com sombra suave, um roxo único como cor de destaque e a fonte Plus Jakarta Sans. Texto pequeno e discreto, espaço bem distribuído (os blocos têm o tamanho do conteúdo, sem esticar para preencher), cantos bem arredondados e animações mínimas. O desenho completo está em `docs/design/` (imagens e HTML de cada tela, nos temas escuro e claro) e as regras de cada elemento estão em `docs/design-system.md`, que é a fonte de verdade dos valores.
 
 ### Regras de estilo
 
-- **Fonte:** Plus Jakarta Sans. Raio padrão de 0.75rem nos cards, campos e botões.
-- **Botão principal:** gradiente roxo em 135º (de `hsl(268 83% 62%)` a `hsl(268 90% 66%)`) com sombra `0 12px 30px -12px` na cor primária a 35%.
-- **Transições:** 0.25s com curva `cubic-bezier(0.4, 0, 0.2, 1)`.
-- **Header:** fixo no topo, 56px, com desfoque no fundo e uma bolinha roxa com brilho ao lado do nome.
-- **Brilho do cursor:** gradiente radial de 600px, roxo a 8%, que acompanha o mouse. É o "momento assinatura" do protótipo e fica.
+- **Fonte:** Plus Jakarta Sans. Texto de corpo em 14px, títulos de página em 26px, números com algarismos de largura fixa.
+- **Cantos:** 22px nos cards e na sidebar, 14px em botões e campos, 24px nos modais.
+- **Cards:** em camadas (fundo, card, bloco interno), sombra suave e borda fina. Ao passar o mouse, o card sobe 2px.
+- **Botão principal:** roxo sólido com sombra suave na cor primária. O gradiente do protótipo foi abandonado.
+- **Layout:** sem header. Sidebar flutuante e recolhível, conteúdo ocupando toda a largura no notebook e centralizado com largura máxima em telas grandes.
+- **Transições:** 0.25s com curva `cubic-bezier(0.4, 0, 0.2, 1)`. Sem animações de entrada, só o fade do modal.
+- **Brilho do cursor:** gradiente radial de 600px, roxo a 8%, que acompanha o mouse. Continua, e pode ser removido depois sem mexer no resto.
 - **Valores:** receitas e positivos em roxo, despesas e negativos em vermelho, sempre acompanhados de + ou − para não depender só da cor. Números em R$ no padrão brasileiro.
-- **Gráficos:** roxo e seus tons para as séries; vermelho só para despesas.
-- **Modo escuro é o padrão**, com botão para alternar para o claro, e a escolha fica salva.
+- **Categorias:** cada categoria aparece com um ícone sobre um quadrado arredondado na sua cor, em tom suave.
+- **Gráficos:** roxo para a série principal e tons de azul, verde-água e laranja para as demais, sempre com legenda em texto. Vermelho só para despesas.
+- **Modo escuro é o padrão**, com botão para alternar para o claro, e a escolha fica salva. O tema claro usa a mesma estrutura, com fundo lavanda bem claro e cards brancos.
 
 ### Como isso entra no código
 
-Segue o padrão do MaiaLanches: variáveis em `:root` e no tema escuro, `html` com `font-size: 62.5%` (1rem = 10px), um arquivo CSS por componente ao lado do `.jsx` e os estilos globais num único arquivo.
+Variáveis CSS em `:root` (escuro) e `[data-theme='light']`, definidas em `docs/design-system.md`. `html` com `font-size: 62.5%` (1rem = 10px), um arquivo CSS por componente ao lado do `.jsx` e os estilos globais num único arquivo. Nenhum componente usa cor escrita à mão: só as variáveis.
 
 ## Plataforma e decisões técnicas
 
@@ -250,11 +242,12 @@ Os itens abaixo foram conscientemente deixados de fora.
 
 ## Ordem de construção
 
-São onze módulos em sequência, cada um dependendo do anterior; cada módulo vira um prompt na etapa 3, com o checklist de "pronto quando" abaixo.
+São onze módulos em sequência, mais o 3.5 de visual, cada um dependendo do anterior; cada módulo vira um prompt na etapa 3, com o checklist de "pronto quando" abaixo.
 
-1. **Base:** Docker, Laravel, Inertia, PostgreSQL, tema claro/escuro, header, sidebar e componentes comuns (botão, modal, campos, cards). Pronto quando sobe com um comando e alterna o tema.
+1. **Base:** Docker, Laravel, Inertia, PostgreSQL, tema claro/escuro, sidebar e componentes comuns (botão, modal, campos, cards). Pronto quando sobe com um comando e alterna o tema.
 2. **Login e cadastro:** conta, entrar, sair, isolamento por usuário. Pronto quando dois usuários não veem os dados um do outro.
 3. **Gerenciar:** bancos, categorias, cartões e formas de pagamento, com categorias iniciais. Pronto quando cria, edita e arquiva por modal.
+   - **Módulo 3.5, novo visual:** aplicar o design de `docs/design/` e `docs/design-system.md` ao que já existe (tokens, layout sem header, componentes, login e Gerenciar), em três etapas. Pronto quando as telas existentes batem com as imagens de referência nos temas escuro e claro.
 4. **Transações e Análise:** nova transação, parcelamento, lista por dia, filtros, resumo, edição e duplicar. Pronto quando os totais batem com um conjunto de exemplo.
 5. **Planejamento:** valor do mês, saldo disponível com acúmulo, remanejamento, fixos e parcelados, visão final e estado Rascunho/Confirmado. Pronto quando o exemplo Roupas e Outros dá 0 e 130.
 6. **Cartões e faturas:** agrupar compras no crédito por fechamento e marcar fatura como paga. Pronto quando uma compra após o fechamento cai na fatura seguinte.
@@ -275,7 +268,7 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - [x] **Categorias de receita:** confirmado. Cada categoria é aplicável a Despesa ou a Receita.
 - [x] **Transação Pendente:** confirmado. Não conta nos totais nem desconta da categoria até virar Paga.
 - [x] **Categorias iniciais:** conjunto genérico e editável. Gasto: Mercado, Moradia, Transporte, Saúde, Lazer e Outros. Reserva: Reserva de emergência e Investimentos. Receita: Salário e Outras receitas.
-- [x] **Botão Nova transação:** no header de todas as páginas, em teste.
+- [x] **Botão Nova transação:** no topo do Dashboard e da Análise. A versão em todas as páginas foi abandonada junto com o header.
 - [x] **Nome do projeto:** Fintrack.
 
 ### Segunda revisão

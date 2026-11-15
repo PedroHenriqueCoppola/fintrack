@@ -24,6 +24,7 @@ alwaysApply: false
 
 ## Users and security
 - Every user-owned table has `user_id`. Every query is scoped to the authenticated user. Never accept `user_id` from the request.
+- Every model that belongs to a user uses the `BelongsToUser` trait. Do not filter by `user_id` by hand in controllers.
 - Authorize every route. A user must never read or change another user's data.
 - Session cookie authentication, hashed passwords, rate limit on login.
 

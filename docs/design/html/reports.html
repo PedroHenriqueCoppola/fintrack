@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta name="viewport" content="width=1440"><meta charset="utf-8"><title>Relatórios — Direção B</title></head><body>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><style>
+body{margin:0;background:#0f0e14;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#efedf6;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{position:relative}.shell{display:flex;flex-wrap:wrap;min-height:100vh;background:#0f0e14}
+.side{flex:0 0 228px;margin:14px 0 14px 14px;position:sticky;top:14px;align-self:flex-start;height:calc(100vh - 28px);min-height:640px;overflow:auto;background:#17151f;border:1px solid #26232f;border-radius:22px;padding:18px 12px;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em;padding:4px 10px 18px}
+.logo{width:28px;height:28px;border-radius:9px;background:#7c4fd6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
+.nav{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;color:#a7a3b8;font-size:14px;font-weight:500;transition:background .25s,color .25s}
+.nav:hover{background:#1f1c29;color:#efedf6}.nav.on{background:#241f35;color:#dccbfb;box-shadow:inset 0 0 0 1px rgba(166,120,240,.22)}
+.fold{margin-top:auto;display:flex;align-items:center;gap:12px;padding:10px 12px;border:0;background:transparent;border-radius:14px;color:#8a8699;font-size:13px}
+.col{flex:999 1 560px;min-width:0}.inner{max-width:1680px;margin:0 auto;padding:20px 36px 48px}
+.top{display:flex;justify-content:flex-end;align-items:center;gap:10px;height:44px}
+.ibtn{width:38px;height:38px;border-radius:13px;border:1px solid #2a2733;background:#17151f;display:flex;align-items:center;justify-content:center;color:#a7a3b8}
+.avatar{width:38px;height:38px;border-radius:50%;border:0;background:#2a2142;display:flex;align-items:center;justify-content:center;color:#d3bcfb}
+.head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin:10px 0 24px}
+h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.025em}.sub{margin:6px 0 0;font-size:14px;color:#a7a3b8}
+.month{display:flex;align-items:center;gap:4px;background:#17151f;border:1px solid #2a2733;border-radius:14px;padding:4px}
+.month button{border:0;background:transparent;width:30px;height:30px;border-radius:10px;color:#a7a3b8;display:flex;align-items:center;justify-content:center}
+.month span{font-size:13.5px;font-weight:600;padding:0 10px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:14px;padding:10px 18px;background:#7c4fd6;color:#fff;font-size:13.5px;font-weight:600;box-shadow:0 6px 16px rgba(124,79,214,.3)}
+.btn.ghost{background:#1f1c29;color:#cfcbe0;box-shadow:none}
+.card{background:#17151f;border:1px solid #26232f;border-radius:22px;padding:22px 24px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.card.hi{background:#1c1730;border-color:#32295a}
+.lbl{font-size:13px;color:#a7a3b8;font-weight:500}.big{font-size:32px;font-weight:700;letter-spacing:-.03em;margin-top:10px;font-variant-numeric:tabular-nums}
+.note{font-size:12.5px;color:#8a8699;margin-top:6px}.pos{color:#bc9cf7}.neg{color:#f08a8c}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.ct{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}.ct h2{margin:0;font-size:15px;font-weight:600}.ct a{font-size:12.5px;color:#a7a3b8}
+.nm{font-size:14px;font-weight:600}.mt{font-size:12.5px;color:#8a8699;margin-top:2px}
+.tile{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.bar{height:6px;border-radius:3px;background:#2a2635;margin-top:10px;overflow:hidden}.bar i{display:block;height:100%;border-radius:3px;background:#8c63dc}.bar i.over{background:#d9696c}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid #26232f}.row:first-of-type{border-top:0}
+.grow{flex:1;min-width:0}.rt{text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:8px;background:#2a2142;color:#cdb4fa;margin-left:8px;font-weight:500}
+.chip.mute{background:#25232e;color:#a7a3b8}.chip.ok{background:#1f3330;color:#86cdb7}
+.inp{width:100%;background:#1d1a27;border:1px solid #2a2635;border-radius:13px;padding:10px 14px;font-size:14px;outline:0}
+.inp.r{text-align:right;font-variant-numeric:tabular-nums}
+.fl{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:#a7a3b8;font-weight:500}
+.seg{display:inline-flex;background:#1d1a27;border:1px solid #2a2635;border-radius:14px;padding:4px;gap:4px}
+.seg span{padding:7px 16px;border-radius:10px;font-size:13.5px;font-weight:500;color:#a7a3b8}.seg span.on{background:#2a2142;color:#dccbfb}
+.pills{display:inline-flex;gap:4px;background:#17151f;border:1px solid #26232f;border-radius:16px;padding:4px;margin-bottom:20px}
+.pill{padding:8px 16px;font-size:13.5px;font-weight:500;color:#a7a3b8;border-radius:12px}.pill.on{background:#2a2142;color:#dccbfb}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.over{position:absolute;inset:0;background:rgba(8,7,12,.72);display:flex;align-items:flex-start;justify-content:center;padding-top:70px}
+.modal{width:560px;max-width:92%;background:#1a1724;border:1px solid #302b42;border-radius:24px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.modal h2{margin:0 0 4px;font-size:18px}.mfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+.stack{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.day{display:flex;justify-content:space-between;font-size:12.5px;color:#8a8699;font-weight:600;margin:6px 4px 8px}
+.empty{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:8px 0}
+.empty .ico{width:44px;height:44px;border-radius:14px;background:#241f35;color:#c3a5fa;display:flex;align-items:center;justify-content:center}
+.empty p{margin:0;font-size:13.5px;color:#a7a3b8;max-width:360px;line-height:1.5}
+.link{font-size:13px;font-weight:600;color:#cdb4fa}
+.chk{display:flex;align-items:center;gap:10px;font-size:13.5px;padding:7px 0;color:#cfcbe0}
+.box{width:18px;height:18px;border-radius:6px;border:1px solid #3d3950;background:#1d1a27;display:flex;align-items:center;justify-content:center;color:#fff}
+.box.on{background:#7c4fd6;border-color:#7c4fd6}.box svg{width:12px;height:12px;stroke-width:3}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}.tbl th{text-align:left;font-weight:500;color:#8a8699;font-size:12.5px;padding:0 10px 10px}.tbl th.r,.tbl td.r{text-align:right}
+.tbl td{padding:12px 10px;border-top:1px solid #26232f;font-variant-numeric:tabular-nums}
+
+.pbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-4px 0 18px}
+.pseg{flex-wrap:wrap}.pseg span{padding:7px 13px;font-size:13px}
+.prange{display:flex;align-items:center;gap:8px;background:#17151f;border:1px solid #2a2733;border-radius:14px;padding:8px 14px;font-size:13px;color:#cfcbe0}.prange i{color:#8a8699;font-style:normal}
+.fbtn{display:inline-flex;align-items:center;gap:8px;background:#17151f;border:1px solid #2a2733;border-radius:14px;padding:8px 14px;font-size:13px;color:#cfcbe0}
+.fchips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.fchip{display:inline-flex;align-items:center;gap:6px;background:#241f35;color:#dccbfb;border-radius:10px;padding:5px 6px 5px 12px;font-size:12.5px;font-weight:500}.fchip svg{width:13px;height:13px}
+.fchip.saved{background:#1d1a27;color:#a7a3b8;padding:5px 12px;border:1px dashed #3d3950}
+.pop{position:absolute;z-index:5;background:#1a1724;border:1px solid #302b42;border-radius:20px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.55);width:360px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:12.5px;margin-top:10px}
+.cal b{font-weight:500;color:#8a8699;padding:6px 0}.cal span{padding:8px 0;border-radius:10px;color:#cfcbe0}
+.cal span.in{background:#241f35;border-radius:0;color:#dccbfb}.cal span.end{background:#7c4fd6;color:#fff;border-radius:10px}
+.cal span.dim{color:#4a4560}
+@media (max-width:1100px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}}
+@media (max-width:640px){.side{flex-basis:100%;margin:12px}.inner{padding:16px}}
+</style>
+<div class="wrap"><div class="shell"><aside class="side"><div class="brand"><span class="logo">F</span>Fintrack</div><a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a><a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 16v-5M13 16V7M18 16v-8"/></svg>Análise</a><a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Planejamento</a><a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg>Metas</a><a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 21h18M5 21V10M9.5 21V10M14.5 21V10M19 21V10M2.5 9.5 12 4l9.5 5.5z"/></svg>Patrimônio</a><a class="nav on" href="#"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Relatórios</a><a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Gerenciar</a><button class="fold" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16"/></svg>Recolher</button></aside><div class="col"><div class="inner"><div class="top"><button class="ibtn" type="button" aria-label="Alternar tema"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><button class="avatar" type="button" aria-label="Perfil"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></button></div>
+<div class="head"><div><h1>Relatórios</h1><p class="sub">Monte, salve e baixe relatórios em PDF ou Excel.</p></div><div style="display:flex;gap:10px;align-items:center"></div></div><div class="grid"><div class="c4"><div class="card"><h2 style="margin:0 0 4px;font-size:15px">Montar relatório</h2><div class="stack" style="margin-top:14px"><label class="fl">Período<div class="inp" style="display:flex;justify-content:space-between;color:#cfcbe0">Personalizado<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div></label><div class="f2"><label class="fl">De<input class="inp " value="01/10/2026" readonly></label><label class="fl">Até<input class="inp " value="31/10/2026" readonly></label></div><div><div class="lbl" style="margin-bottom:4px">Dados incluídos</div><div class="chk"><span class="box on"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Gastos</div><div class="chk"><span class="box on"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Ganhos</div><div class="chk"><span class="box"></span>Saldo de cada mês</div><div class="chk"><span class="box"></span>Faturas</div><div class="chk"><span class="box"></span>Patrimônio</div><div class="chk"><span class="box"></span>Metas</div></div><label class="fl">Agrupar por<div class="inp" style="display:flex;justify-content:space-between;color:#cfcbe0">Categoria<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div></label><div style="display:flex;gap:8px"><button class="btn ghost" type="button">Salvar modelo</button><button class="btn" type="button">Gerar</button></div></div></div></div>
+<div class="c8"><div class="card" style="margin-bottom:16px"><div class="ct"><h2>Prévia</h2><span class="note" style="margin:0">Atualiza enquanto você escolhe</span></div><table class="tbl"><thead><tr><th>Categoria</th><th class="r">Receitas</th><th class="r">Despesas</th><th class="r">Saldo</th></tr></thead><tbody><tr><td>Mercado</td><td class="r">—</td><td class="r neg">−R$ 412,00</td><td class="r">−R$ 412,00</td></tr><tr><td>Transporte</td><td class="r">—</td><td class="r neg">−R$ 215,40</td><td class="r">−R$ 215,40</td></tr><tr><td>Salário</td><td class="r pos">+R$ 6.200,00</td><td class="r">—</td><td class="r">+R$ 6.200,00</td></tr></tbody></table></div>
+<div class="card"><div class="ct"><h2>Relatórios gerados</h2></div><div class="row"><div class="tile" style="background:#2b2147;color:#c3a5fa"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div><div class="grow"><div class="nm">Gastos por categoria · Outubro</div><div class="mt">Gerado em 02/11/2026</div></div><div class="rt "><button class="btn ghost" style="padding:7px 12px" type="button">PDF</button> <button class="btn ghost" style="padding:7px 12px" type="button">Excel</button></div></div><div class="row"><div class="tile" style="background:#2b2147;color:#c3a5fa"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div><div class="grow"><div class="nm">Resumo do trimestre</div><div class="mt">Gerado em 01/10/2026</div></div><div class="rt "><button class="btn ghost" style="padding:7px 12px" type="button">PDF</button> <button class="btn ghost" style="padding:7px 12px" type="button">Excel</button></div></div></div></div></div></div></div></div></div>
+
+</body></html>
