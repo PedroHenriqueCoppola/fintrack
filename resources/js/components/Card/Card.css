@@ -2,7 +2,29 @@
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
     padding: 2rem;
+}
+
+.card--interactive {
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition);
+}
+
+.card--interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: color-mix(in srgb, var(--color-text) 22%, var(--color-border));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card--interactive,
+    .card--interactive:hover {
+        transform: none;
+        transition: none;
+    }
 }
 
 .card__title {

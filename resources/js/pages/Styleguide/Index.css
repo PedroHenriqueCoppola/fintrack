@@ -1,7 +1,3 @@
-.styleguide {
-    max-width: 96rem;
-}
-
 .styleguide__section {
     display: flex;
     flex-direction: column;

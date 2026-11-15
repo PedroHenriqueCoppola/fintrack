@@ -17,6 +17,9 @@
     --header-height: 5.6rem;
     --sidebar-width: 24rem;
     --sidebar-width-collapsed: 7.2rem;
+    --container-max: 168rem;
+    --shadow-card: 0 0.2rem 0.6rem hsl(0 0% 0% / 0.28), 0 0.8rem 2.4rem hsl(0 0% 0% / 0.24);
+    --shadow-card-hover: 0 0.6rem 1.2rem hsl(0 0% 0% / 0.34), 0 1.6rem 3.6rem hsl(0 0% 0% / 0.38);
     --font: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
     color-scheme: dark;
 }
@@ -33,6 +36,8 @@
     --color-negative-text: hsl(0 84% 47%);
     --color-border: hsl(214 32% 91%);
     --color-sidebar: hsl(0 0% 98%);
+    --shadow-card: 0 0.2rem 0.6rem hsl(222 47% 11% / 0.06), 0 0.8rem 2.4rem hsl(222 47% 11% / 0.08);
+    --shadow-card-hover: 0 0.6rem 1.2rem hsl(222 47% 11% / 0.08), 0 1.6rem 3.6rem hsl(222 47% 11% / 0.14);
     color-scheme: light;
 }
 

@@ -5,9 +5,63 @@ export function formatMoney(value) {
         style: 'currency',
         currency: 'BRL',
     }).format(Math.abs(safe));
+
+    if (safe === 0) {
+        return formatted;
+    }
+
     const sign = safe < 0 ? '−' : '+';
 
     return `${sign}${formatted}`;
+}
+
+export function parseMoneyInput(value) {
+    const raw = String(value ?? '').trim();
+
+    if (raw === '') {
+        return '';
+    }
+
+    const negative = raw.startsWith('-');
+    const unsigned = (negative ? raw.slice(1) : raw).trim();
+    let normalized = unsigned;
+
+    if (unsigned.includes('.')) {
+        if (!/^\d{1,3}(\.\d{3})+(,\d{0,2})?$/.test(unsigned)) {
+            return raw;
+        }
+
+        normalized = unsigned.replace(/\./g, '');
+    }
+
+    normalized = normalized.replace(',', '.');
+
+    if (!/^\d+(\.\d{0,2})?$/.test(normalized)) {
+        return raw;
+    }
+
+    return negative ? `-${normalized}` : normalized;
+}
+
+export function formatMoneyInput(value) {
+    const raw = String(value ?? '').trim();
+
+    if (raw === '') {
+        return '';
+    }
+
+    const negative = raw.startsWith('-');
+    const unsigned = negative ? raw.slice(1) : raw;
+
+    if (!/^\d+(\.\d+)?$/.test(unsigned)) {
+        return '';
+    }
+
+    const [whole, fraction = ''] = unsigned.split('.');
+    const cents = `${fraction}00`.slice(0, 2);
+    const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    return `${negative ? '-' : ''}${grouped},${cents}`;
 }
 
 export function formatDate(value) {
