@@ -61,12 +61,6 @@ return [
         ['value' => 'CircleDollarSign', 'label' => 'Valor'],
     ],
 
-    'pocket_types' => [
-        ['value' => 'balance', 'label' => 'Saldo'],
-        ['value' => 'piggy_bank', 'label' => 'Cofrinho'],
-        ['value' => 'investment', 'label' => 'Investimento'],
-    ],
-
     'category_types' => [
         ['value' => 'expense', 'label' => 'Despesa'],
         ['value' => 'income', 'label' => 'Receita'],

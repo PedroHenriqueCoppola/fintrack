@@ -2,7 +2,6 @@ import { Head } from '@inertiajs/react';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
-import './Index.css';
 
 export default function Index() {
     return (

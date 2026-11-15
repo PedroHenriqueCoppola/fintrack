@@ -39,12 +39,9 @@ class BankService
 
     public function archive(Bank $bank): void
     {
-        $inUse = $bank->pockets()->whereNull('archived_at')->exists()
-            || $bank->cards()->whereNull('archived_at')->exists();
-
-        if ($inUse) {
+        if ($bank->cards()->whereNull('archived_at')->exists()) {
             throw ValidationException::withMessages([
-                'bank' => 'Arquive antes as caixinhas e cartões deste banco.',
+                'bank' => 'Arquive antes os cartões deste banco.',
             ]);
         }
 

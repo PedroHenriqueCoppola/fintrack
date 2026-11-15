@@ -17,7 +17,6 @@ return new class extends Migration
             $table->enum('nature', ['spending', 'reserve'])->nullable();
             $table->string('icon')->nullable();
             $table->string('color')->nullable();
-            $table->foreignId('pocket_id')->nullable()->index()->constrained()->restrictOnDelete();
             $table->decimal('initial_balance', 15, 2)->default(0);
             $table->date('initial_month')->nullable();
             $table->timestamp('archived_at')->nullable();

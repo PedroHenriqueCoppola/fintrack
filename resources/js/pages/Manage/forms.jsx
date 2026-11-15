@@ -102,100 +102,16 @@ export function BankForm({ item, colors, onClose }) {
     );
 }
 
-export function PocketForm({ item, banks, colors, pocketTypes, onClose }) {
-    const form = useForm({
-        name: item?.name ?? '',
-        bank_id: item?.bank_id ? String(item.bank_id) : '',
-        type: item?.type ?? '',
-        color: item?.color ?? '',
-    });
-    const activeBanks = banks.filter((bank) => !bank.archived);
-    const bankMissing = Boolean(form.data.bank_id)
-        && !activeBanks.some((bank) => String(bank.id) === form.data.bank_id);
-
-    function submit(event) {
-        event.preventDefault();
-        visit(form, item, '/manage/pockets', {
-            name: form.data.name,
-            bank_id: form.data.bank_id || null,
-            type: form.data.type || null,
-            color: form.data.color || null,
-        }, onClose);
-    }
-
-    return (
-        <Modal
-            open
-            title={item ? 'Editar caixinha' : 'Nova caixinha'}
-            onClose={onClose}
-            footer={<FormFooter formId="pocket-form" processing={form.processing} onClose={onClose} />}
-        >
-            <form id="pocket-form" className="manage-form" noValidate onSubmit={submit}>
-                <FormField label="Nome" error={form.errors.name}>
-                    <input
-                        type="text"
-                        name="name"
-                        autoComplete="off"
-                        value={form.data.name}
-                        onChange={(event) => form.setData('name', event.target.value)}
-                    />
-                </FormField>
-                <FormField
-                    label="Banco"
-                    error={form.errors.bank_id}
-                    hint={activeBanks.length === 0
-                        ? 'Cadastre um banco ativo antes.'
-                        : (bankMissing ? 'O banco atual está arquivado. Escolha um banco ativo.' : undefined)}
-                >
-                    <select
-                        name="bank_id"
-                        value={form.data.bank_id}
-                        onChange={(event) => form.setData('bank_id', event.target.value)}
-                    >
-                        <option value="">Selecione</option>
-                        {bankMissing ? (
-                            <option value={form.data.bank_id}>{item?.bank_name} (arquivado)</option>
-                        ) : null}
-                        {activeBanks.map((bank) => (
-                            <option key={bank.id} value={String(bank.id)}>{bank.name}</option>
-                        ))}
-                    </select>
-                </FormField>
-                <ChoiceGroup
-                    legend="Tipo"
-                    name="pocket-type"
-                    value={form.data.type}
-                    options={[{ value: '', label: 'Nenhum' }, ...pocketTypes]}
-                    onChange={(value) => form.setData('type', value)}
-                    error={form.errors.type}
-                />
-                <ChoiceGroup
-                    legend="Cor"
-                    name="pocket-color"
-                    value={form.data.color}
-                    options={colorOptions(colors)}
-                    onChange={(value) => form.setData('color', value)}
-                    error={form.errors.color}
-                />
-            </form>
-        </Modal>
-    );
-}
-
-export function CategoryForm({ item, pockets, colors, icons, categoryTypes, natures, onClose }) {
+export function CategoryForm({ item, colors, icons, categoryTypes, natures, onClose }) {
     const form = useForm({
         name: item?.name ?? '',
         applies_to: item?.applies_to ?? '',
         nature: item?.nature ?? '',
         icon: item?.icon ?? '',
         color: item?.color ?? '',
-        pocket_id: item?.pocket_id ? String(item.pocket_id) : '',
         initial_balance: item && item.applies_to === 'expense' ? formatMoneyInput(item.initial_balance) : '',
     });
     const expense = (item?.applies_to ?? form.data.applies_to) === 'expense';
-    const activePockets = pockets.filter((pocket) => !pocket.archived);
-    const pocketMissing = Boolean(form.data.pocket_id)
-        && !activePockets.some((pocket) => String(pocket.id) === form.data.pocket_id);
 
     function submit(event) {
         event.preventDefault();
@@ -204,7 +120,6 @@ export function CategoryForm({ item, pockets, colors, icons, categoryTypes, natu
             name: form.data.name,
             icon: form.data.icon || null,
             color: form.data.color || null,
-            pocket_id: form.data.pocket_id || null,
         };
 
         if (!item) {
@@ -215,8 +130,14 @@ export function CategoryForm({ item, pockets, colors, icons, categoryTypes, natu
         }
 
         if (appliesTo === 'expense') {
-            const parsed = parseMoneyInput(form.data.initial_balance);
-            payload.initial_balance = parsed === '' ? null : parsed;
+            const rawBalance = String(form.data.initial_balance ?? '').trim();
+            const parsed = parseMoneyInput(rawBalance);
+            const kept = rawBalance !== '' && parsed === rawBalance && /[.,]/.test(rawBalance);
+            // PHP treats "12.5" as a number. A rejected dot-decimal is posted
+            // with a trailing comma so the server returns the format error.
+            const serverValue = kept && /^-?\d+(\.\d+)?$/.test(parsed) ? `${parsed},` : parsed;
+
+            payload.initial_balance = rawBalance === '' ? null : serverValue;
         }
 
         visit(form, item, '/manage/categories', payload, onClose);
@@ -290,25 +211,6 @@ export function CategoryForm({ item, pockets, colors, icons, categoryTypes, natu
                     onChange={(value) => form.setData('color', value)}
                     error={form.errors.color}
                 />
-                <FormField
-                    label="Caixinha"
-                    error={form.errors.pocket_id}
-                    hint={pocketMissing ? 'A caixinha atual está arquivada. Escolha outra ou nenhuma.' : 'Opcional.'}
-                >
-                    <select
-                        name="pocket_id"
-                        value={form.data.pocket_id}
-                        onChange={(event) => form.setData('pocket_id', event.target.value)}
-                    >
-                        <option value="">Nenhuma</option>
-                        {pocketMissing ? (
-                            <option value={form.data.pocket_id}>{item?.pocket_name} (arquivada)</option>
-                        ) : null}
-                        {activePockets.map((pocket) => (
-                            <option key={pocket.id} value={String(pocket.id)}>{pocket.name}</option>
-                        ))}
-                    </select>
-                </FormField>
                 {expense ? (
                     <FormField
                         label="Saldo inicial"

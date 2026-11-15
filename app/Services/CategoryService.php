@@ -19,7 +19,6 @@ class CategoryService
         $category->applies_to = $data['applies_to'];
         $category->icon = $data['icon'] ?? null;
         $category->color = $data['color'] ?? null;
-        $category->pocket_id = $data['pocket_id'] ?? null;
 
         if ($data['applies_to'] === 'expense') {
             $category->nature = $data['nature'];
@@ -47,7 +46,6 @@ class CategoryService
         $category->name = $name;
         $category->icon = $data['icon'] ?? null;
         $category->color = $data['color'] ?? null;
-        $category->pocket_id = $data['pocket_id'] ?? null;
 
         if ($category->applies_to === 'expense' && array_key_exists('initial_balance', $data)) {
             $category->initial_balance = $this->balance($data['initial_balance']);

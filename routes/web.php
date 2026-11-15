@@ -5,7 +5,6 @@ use App\Http\Controllers\CardController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ManageController;
 use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\PocketController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
@@ -35,11 +34,6 @@ Route::middleware(['auth', 'inertia.encrypt'])->group(function () {
     Route::put('/manage/banks/{bank}', [BankController::class, 'update'])->name('banks.update')->whereNumber('bank');
     Route::post('/manage/banks/{bank}/archive', [BankController::class, 'archive'])->name('banks.archive')->whereNumber('bank');
     Route::post('/manage/banks/{bank}/restore', [BankController::class, 'restore'])->name('banks.restore')->whereNumber('bank');
-
-    Route::post('/manage/pockets', [PocketController::class, 'store'])->name('pockets.store');
-    Route::put('/manage/pockets/{pocket}', [PocketController::class, 'update'])->name('pockets.update')->whereNumber('pocket');
-    Route::post('/manage/pockets/{pocket}/archive', [PocketController::class, 'archive'])->name('pockets.archive')->whereNumber('pocket');
-    Route::post('/manage/pockets/{pocket}/restore', [PocketController::class, 'restore'])->name('pockets.restore')->whereNumber('pocket');
 
     Route::post('/manage/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::put('/manage/categories/{category}', [CategoryController::class, 'update'])->name('categories.update')->whereNumber('category');

@@ -18,14 +18,9 @@ class BankResource extends JsonResource
             'name' => $this->name,
             'color' => $this->color,
             'archived' => $this->archived_at !== null,
-            'usage' => UsageLabel::pair(
-                (int) $this->active_pockets_count,
-                'caixinha',
-                'caixinhas',
-                (int) $this->active_cards_count,
-                'cartão',
-                'cartões',
-            ),
+            'usage' => (int) $this->active_cards_count > 0
+                ? UsageLabel::count((int) $this->active_cards_count, 'cartão', 'cartões')
+                : null,
         ];
     }
 }

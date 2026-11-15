@@ -2,7 +2,7 @@
 
 Sistema web de finanças pessoais: transações, orçamento por categoria com acúmulo, planejamento do mês, metas, patrimônio e relatórios. As regras de negócio estão em `docs/product-vision.md`.
 
-Nesta etapa o projeto sobe com um comando, com tema claro/escuro, layout, componentes comuns, login, cadastro e a página Gerenciar (bancos, caixinhas, categorias, cartões e formas de pagamento). As páginas internas exigem uma conta. Ainda não há transações nem usuário de demonstração.
+Nesta etapa o projeto sobe com um comando, com tema claro/escuro, layout, componentes comuns, login, cadastro e a página Gerenciar (bancos, categorias, cartões e formas de pagamento). As páginas internas exigem uma conta. Ainda não há transações nem usuário de demonstração.
 
 ## Como subir
 
@@ -51,7 +51,7 @@ Para entrar de novo, use http://localhost:8000/login. O botão **Sair**, no topo
 
 ## Gerenciar
 
-A página http://localhost:8000/manage reúne os cadastros que organizam o resto do sistema: bancos, caixinhas, categorias, cartões e formas de pagamento. Criar e editar acontecem em um modal. Arquivar tira o item da lista ativa; nada é apagado. O botão **Mostrar arquivados** revela os itens arquivados, com a ação **Desarquivar**. Um banco que ainda tem caixinha ou cartão ativo não arquiva: a tela pede para arquivar esses itens antes.
+A página http://localhost:8000/manage reúne os cadastros que organizam o resto do sistema: bancos, categorias, cartões e formas de pagamento. Criar e editar acontecem em um modal. Arquivar tira o item da lista ativa; nada é apagado. O botão **Mostrar arquivados** revela os itens arquivados, com a ação **Desarquivar**. Um banco que ainda tem cartão ativo não arquiva: a tela pede para arquivar o cartão antes.
 
 Cada conta nova recebe categorias e formas de pagamento iniciais:
 
@@ -62,7 +62,7 @@ Cada conta nova recebe categorias e formas de pagamento iniciais:
 
 As categorias de Despesa nascem com saldo inicial zero, valendo a partir do mês em que a conta foi criada. Receita não tem saldo inicial.
 
-O escopo `BelongsToUser` filtra toda consulta pelo usuário logado e preenche `user_id` ao criar. No tinker e nos comandos do console não há usuário autenticado: o escopo não filtra e não gera erro. Por isso o comando abaixo precisa indicar a conta.
+O escopo `BelongsToUser` filtra toda consulta pelo usuário logado e preenche `user_id` ao criar. Numa requisição web sem usuário autenticado, a consulta não devolve registros. No tinker, nos comandos do Artisan e nos jobs não há usuário autenticado: o escopo não filtra e não gera erro. Por isso o comando abaixo precisa indicar a conta.
 
 Para aplicar os padrões a um usuário que já existia:
 

@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Auth;
 /**
  * Keeps a user's records out of every other user's queries.
  *
- * When nobody is authenticated (tinker, artisan, queues), the scope does not
- * add a filter and does not throw. The caller must set user_id.
  * During an authenticated request the scope forces user_id, so a value sent
  * in the request is never stored.
+ * A web request with no authenticated user matches nothing.
+ * In console (tinker, artisan, jobs) there is no user and the scope does not
+ * filter. The caller must set user_id.
  */
 trait BelongsToUser
 {
@@ -24,6 +25,10 @@ trait BelongsToUser
             $userId = Auth::id();
 
             if ($userId === null) {
+                if (! app()->runningInConsole()) {
+                    $query->whereRaw('1 = 0');
+                }
+
                 return;
             }
 

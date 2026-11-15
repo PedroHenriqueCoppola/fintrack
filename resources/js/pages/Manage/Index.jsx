@@ -5,7 +5,7 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import Tabs from '../../components/Tabs/Tabs';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
 import CatalogList from './CatalogList';
-import { BankForm, CardForm, CategoryForm, PaymentMethodForm, PocketForm } from './forms';
+import { BankForm, CardForm, CategoryForm, PaymentMethodForm } from './forms';
 import './Index.css';
 
 function labelFor(options, value) {
@@ -51,42 +51,7 @@ function BanksTab({ banks, options }) {
     );
 }
 
-function PocketsTab({ pockets, banks, options }) {
-    const [dialog, setDialog] = useState(null);
-
-    return (
-        <>
-            <CatalogList
-                items={pockets}
-                newLabel="Nova caixinha"
-                emptyAll="Nenhuma caixinha cadastrada."
-                emptyActive="Nenhuma caixinha ativa."
-                onCreate={() => setDialog({ item: null })}
-                onEdit={(item) => setDialog({ item })}
-                archivePath={(item) => `/manage/pockets/${item.id}/archive`}
-                restorePath={(item) => `/manage/pockets/${item.id}/restore`}
-                renderDetails={(item) => (
-                    <>
-                        <Detail label="Banco">{item.bank_name}</Detail>
-                        <Detail label="Tipo">{item.type ? labelFor(options.pocketTypes, item.type) : 'Sem tipo'}</Detail>
-                    </>
-                )}
-            />
-            {dialog ? (
-                <PocketForm
-                    key={dialog.item?.id ?? 'new'}
-                    item={dialog.item}
-                    banks={banks}
-                    colors={options.colors}
-                    pocketTypes={options.pocketTypes}
-                    onClose={() => setDialog(null)}
-                />
-            ) : null}
-        </>
-    );
-}
-
-function CategoriesTab({ categories, pockets, options }) {
+function CategoriesTab({ categories, options }) {
     const [dialog, setDialog] = useState(null);
 
     return (
@@ -104,7 +69,6 @@ function CategoriesTab({ categories, pockets, options }) {
                     <>
                         <Detail label="Tipo">{labelFor(options.categoryTypes, item.applies_to)}</Detail>
                         {item.nature ? <Detail label="Natureza">{labelFor(options.natures, item.nature)}</Detail> : null}
-                        <Detail label="Caixinha">{item.pocket_name || 'Sem caixinha'}</Detail>
                         {item.applies_to === 'expense' ? (
                             <Detail label="Saldo inicial"><Money value={item.initial_balance} /></Detail>
                         ) : null}
@@ -115,7 +79,6 @@ function CategoriesTab({ categories, pockets, options }) {
                 <CategoryForm
                     key={dialog.item?.id ?? 'new'}
                     item={dialog.item}
-                    pockets={pockets}
                     colors={options.colors}
                     icons={options.icons}
                     categoryTypes={options.categoryTypes}
@@ -191,21 +154,20 @@ function PaymentMethodsTab({ paymentMethods }) {
     );
 }
 
-export default function Index({ banks, pockets, categories, cards, paymentMethods, options }) {
+export default function Index({ banks, categories, cards, paymentMethods, options }) {
     return (
         <>
             <Head title="Gerenciar" />
             <div className="page">
                 <PageHeader
                     title="Gerenciar"
-                    subtitle="Bancos, caixinhas, categorias, cartões e formas de pagamento."
+                    subtitle="Bancos, categorias, cartões e formas de pagamento."
                 />
                 <Tabs
                     label="Cadastros"
                     tabs={[
                         { id: 'banks', label: 'Bancos', panel: <BanksTab banks={banks} options={options} /> },
-                        { id: 'pockets', label: 'Caixinhas', panel: <PocketsTab pockets={pockets} banks={banks} options={options} /> },
-                        { id: 'categories', label: 'Categorias', panel: <CategoriesTab categories={categories} pockets={pockets} options={options} /> },
+                        { id: 'categories', label: 'Categorias', panel: <CategoriesTab categories={categories} options={options} /> },
                         { id: 'cards', label: 'Cartões', panel: <CardsTab cards={cards} banks={banks} options={options} /> },
                         { id: 'payment-methods', label: 'Formas de pagamento', panel: <PaymentMethodsTab paymentMethods={paymentMethods} /> },
                     ]}

@@ -5,6 +5,11 @@ export function formatMoney(value) {
         style: 'currency',
         currency: 'BRL',
     }).format(Math.abs(safe));
+
+    if (safe === 0) {
+        return formatted;
+    }
+
     const sign = safe < 0 ? '−' : '+';
 
     return `${sign}${formatted}`;
@@ -19,7 +24,17 @@ export function parseMoneyInput(value) {
 
     const negative = raw.startsWith('-');
     const unsigned = (negative ? raw.slice(1) : raw).trim();
-    const normalized = unsigned.replace(/\./g, '').replace(',', '.');
+    let normalized = unsigned;
+
+    if (unsigned.includes('.')) {
+        if (!/^\d{1,3}(\.\d{3})+(,\d{0,2})?$/.test(unsigned)) {
+            return raw;
+        }
+
+        normalized = unsigned.replace(/\./g, '');
+    }
+
+    normalized = normalized.replace(',', '.');
 
     if (!/^\d+(\.\d{0,2})?$/.test(normalized)) {
         return raw;

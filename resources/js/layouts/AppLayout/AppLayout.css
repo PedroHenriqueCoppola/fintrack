@@ -143,6 +143,12 @@
     transition: margin-left var(--transition);
 }
 
+.app-content {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-inline: auto;
+}
+
 .app-shell--collapsed .app-sidebar {
     width: var(--sidebar-width-collapsed);
 }

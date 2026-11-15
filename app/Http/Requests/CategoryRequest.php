@@ -28,13 +28,6 @@ class CategoryRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'icon' => ['nullable', 'string', Rule::in(array_column(config('fintrack.icons'), 'value'))],
             'color' => ['nullable', 'string', Rule::in(array_column(config('fintrack.colors'), 'value'))],
-            'pocket_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('pockets', 'id')->where(function ($query) {
-                    $query->where('user_id', $this->user()->id)->whereNull('archived_at');
-                }),
-            ],
             'initial_month' => ['missing'],
             'user_id' => ['missing'],
             'initial_balance' => $expense
@@ -84,8 +77,6 @@ class CategoryRequest extends FormRequest
             'icon.in' => 'Escolha um ícone da lista.',
             'color.string' => 'Escolha uma cor da lista.',
             'color.in' => 'Escolha uma cor da lista.',
-            'pocket_id.integer' => 'Escolha uma caixinha ativa.',
-            'pocket_id.exists' => 'Escolha uma caixinha ativa.',
             'initial_balance.missing' => 'Receita não tem saldo inicial.',
             'initial_balance.numeric' => 'Informe o saldo inicial no formato 1.234,56.',
             'initial_balance.min' => 'O saldo inicial não pode ser negativo.',

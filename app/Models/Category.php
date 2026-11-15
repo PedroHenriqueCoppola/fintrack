@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Category extends Model
 {
@@ -14,7 +13,6 @@ class Category extends Model
         'name',
         'icon',
         'color',
-        'pocket_id',
         'initial_balance',
     ];
 
@@ -25,10 +23,5 @@ class Category extends Model
             'initial_month' => 'date',
             'archived_at' => 'datetime',
         ];
-    }
-
-    public function pocket(): BelongsTo
-    {
-        return $this->belongsTo(Pocket::class);
     }
 }

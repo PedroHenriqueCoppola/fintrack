@@ -22,11 +22,6 @@ class Bank extends Model
         ];
     }
 
-    public function pockets(): HasMany
-    {
-        return $this->hasMany(Pocket::class);
-    }
-
     public function cards(): HasMany
     {
         return $this->hasMany(Card::class);

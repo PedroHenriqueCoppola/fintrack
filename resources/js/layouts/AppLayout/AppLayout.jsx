@@ -119,7 +119,9 @@ export default function AppLayout({ children }) {
                     <span className="nav-link__label">{collapsed ? 'Expandir' : 'Recolher'}</span>
                 </button>
             </aside>
-            <main className="app-main">{children}</main>
+            <main className="app-main">
+                <div className="app-content">{children}</div>
+            </main>
         </div>
     );
 }
