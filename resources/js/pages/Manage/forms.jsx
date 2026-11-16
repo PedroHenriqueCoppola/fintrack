@@ -50,7 +50,7 @@ function visit(form, item, url, payload, onClose) {
 function FormFooter({ formId, processing, onClose }) {
     return (
         <>
-            <Button variant="quiet" onClick={onClose} disabled={processing}>Cancelar</Button>
+            <Button variant="secondary" onClick={onClose} disabled={processing}>Cancelar</Button>
             <Button type="submit" form={formId} disabled={processing}>
                 {processing ? 'Salvando…' : 'Salvar'}
             </Button>
@@ -92,6 +92,7 @@ export function BankForm({ item, colors, onClose }) {
                 <ChoiceGroup
                     legend="Cor"
                     name="bank-color"
+                    appearance="swatch"
                     value={form.data.color}
                     options={colorOptions(colors)}
                     onChange={(value) => form.setData('color', value)}
@@ -151,6 +152,7 @@ export function CategoryForm({ item, colors, icons, categoryTypes, natures, onCl
             footer={<FormFooter formId="category-form" processing={form.processing} onClose={onClose} />}
         >
             <form id="category-form" className="manage-form" noValidate onSubmit={submit}>
+                <p className="manage-lead">Organize o orçamento do jeito que faz sentido para você.</p>
                 <FormField label="Nome" error={form.errors.name}>
                     <input
                         type="text"
@@ -171,63 +173,71 @@ export function CategoryForm({ item, colors, icons, categoryTypes, natures, onCl
                         </p>
                     </div>
                 ) : (
-                    <ChoiceGroup
-                        legend="Tipo"
-                        name="category-type"
-                        value={form.data.applies_to}
-                        options={categoryTypes}
-                        onChange={(value) => form.setData((data) => ({
-                            ...data,
-                            applies_to: value,
-                            nature: value === 'expense' ? data.nature : '',
-                            initial_balance: value === 'expense' ? data.initial_balance : '',
-                        }))}
-                        error={form.errors.applies_to}
-                    />
+                    <div className="manage-form__row">
+                        <ChoiceGroup
+                            legend="Tipo"
+                            name="category-type"
+                            appearance="segment"
+                            value={form.data.applies_to}
+                            options={categoryTypes}
+                            onChange={(value) => form.setData((data) => ({
+                                ...data,
+                                applies_to: value,
+                                nature: value === 'expense' ? data.nature : '',
+                                initial_balance: value === 'expense' ? data.initial_balance : '',
+                            }))}
+                            error={form.errors.applies_to}
+                        />
+                        {expense ? (
+                            <ChoiceGroup
+                                legend="Natureza"
+                                name="category-nature"
+                                appearance="segment"
+                                value={form.data.nature}
+                                options={natures}
+                                onChange={(value) => form.setData('nature', value)}
+                                error={form.errors.nature}
+                            />
+                        ) : null}
+                    </div>
                 )}
-                {!item && expense ? (
+                <div className="manage-form__row">
+                    {expense ? (
+                        <FormField
+                            label="Saldo inicial"
+                            hint="Opcional. Exemplo: 1.234,56."
+                            error={form.errors.initial_balance}
+                        >
+                            <input
+                                type="text"
+                                name="initial_balance"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                placeholder="0,00"
+                                value={form.data.initial_balance}
+                                onChange={(event) => form.setData('initial_balance', event.target.value)}
+                            />
+                        </FormField>
+                    ) : null}
                     <ChoiceGroup
-                        legend="Natureza"
-                        name="category-nature"
-                        value={form.data.nature}
-                        options={natures}
-                        onChange={(value) => form.setData('nature', value)}
-                        error={form.errors.nature}
+                        legend="Cor"
+                        name="category-color"
+                        appearance="swatch"
+                        value={form.data.color}
+                        options={colorOptions(colors)}
+                        onChange={(value) => form.setData('color', value)}
+                        error={form.errors.color}
                     />
-                ) : null}
+                </div>
                 <ChoiceGroup
                     legend="Ícone"
                     name="category-icon"
+                    appearance="icons"
                     value={form.data.icon}
                     options={iconOptions(icons)}
                     onChange={(value) => form.setData('icon', value)}
                     error={form.errors.icon}
                 />
-                <ChoiceGroup
-                    legend="Cor"
-                    name="category-color"
-                    value={form.data.color}
-                    options={colorOptions(colors)}
-                    onChange={(value) => form.setData('color', value)}
-                    error={form.errors.color}
-                />
-                {expense ? (
-                    <FormField
-                        label="Saldo inicial"
-                        hint="Opcional. Exemplo: 1.234,56."
-                        error={form.errors.initial_balance}
-                    >
-                        <input
-                            type="text"
-                            name="initial_balance"
-                            inputMode="decimal"
-                            autoComplete="off"
-                            placeholder="0,00"
-                            value={form.data.initial_balance}
-                            onChange={(event) => form.setData('initial_balance', event.target.value)}
-                        />
-                    </FormField>
-                ) : null}
             </form>
         </Modal>
     );
@@ -319,6 +329,7 @@ export function CardForm({ item, banks, colors, onClose }) {
                 <ChoiceGroup
                     legend="Cor"
                     name="card-color"
+                    appearance="swatch"
                     value={form.data.color}
                     options={colorOptions(colors)}
                     onChange={(value) => form.setData('color', value)}
@@ -362,6 +373,7 @@ export function PaymentMethodForm({ item, onClose }) {
                 </FormField>
                 <FormField label="Exige cartão" error={form.errors.requires_card}>
                     <input
+                        className="manage-check"
                         type="checkbox"
                         name="requires_card"
                         checked={form.data.requires_card}

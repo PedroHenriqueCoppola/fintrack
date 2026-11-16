@@ -49,11 +49,11 @@ Não há usuário pronto. Crie o primeiro pela tela de cadastro:
 2. Preencha nome, e-mail e senha (mínimo de 8 caracteres) e confirme a senha.
 3. Ao enviar, a conta é criada, já com as categorias e as formas de pagamento iniciais, e você entra no Dashboard.
 
-Para entrar de novo, use http://localhost:8000/login. O ícone de perfil, no topo da área de conteúdo, abre um menu com o nome e a opção **Sair**, que encerra a sessão.
+Para entrar de novo, use http://localhost:8000/login. A mesma tela troca entre **Entrar** e **Criar conta**. A caixa **Manter conectado por 30 dias** mantém a sessão. O ícone de perfil, no topo da área de conteúdo, abre um menu com o nome e a opção **Sair**, que encerra a sessão.
 
 ## Gerenciar
 
-A página http://localhost:8000/manage reúne os cadastros que organizam o resto do sistema: bancos, categorias, cartões e formas de pagamento. Criar e editar acontecem em um modal. Arquivar tira o item da lista ativa; nada é apagado. O botão **Mostrar arquivados** revela os itens arquivados, com a ação **Desarquivar**. Um banco que ainda tem cartão ativo não arquiva: a tela pede para arquivar o cartão antes.
+A página http://localhost:8000/manage reúne os cadastros: categorias, bancos, cartões e formas de pagamento. O botão de criar fica ao lado do título e muda conforme a aba. Criar e editar acontecem em um modal. A busca por nome ignora acentos. Arquivar tira o item da lista ativa; nada é apagado. O botão **Mostrar arquivados** revela os itens arquivados, com a ação **Desarquivar**. As categorias ficam em dois grupos: **Despesas** e **Reservas e receitas**. Um banco que ainda tem cartão ativo não arquiva: a tela pede para arquivar o cartão antes.
 
 Cada conta nova recebe categorias e formas de pagamento iniciais:
 

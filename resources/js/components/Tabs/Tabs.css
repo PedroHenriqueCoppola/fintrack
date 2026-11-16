@@ -1,3 +1,11 @@
+.tabs__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+}
+
 .tabs__list {
     display: inline-flex;
     flex-wrap: wrap;

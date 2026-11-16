@@ -59,5 +59,5 @@ export default function CatalogIcon({ name }) {
         return null;
     }
 
-    return <Icon aria-hidden="true" size={18} strokeWidth={2} />;
+    return <Icon aria-hidden="true" size={18} strokeWidth={1.75} />;
 }

@@ -10,6 +10,8 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import Tabs from '../../components/Tabs/Tabs';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
 import { formatDate } from '../../lib/format';
+import CatalogIcon from '../Manage/icons';
+import '../Manage/Index.css';
 import './Index.css';
 
 export default function Index() {
@@ -49,6 +51,29 @@ export default function Index() {
                 </Card>
 
                 <section className="styleguide__section">
+                    <h2>Card de cadastro</h2>
+                    <div className="manage-list">
+                        <Card className="manage-card card--interactive">
+                            <div className="manage-card__top">
+                                <span className="manage-marker" style={{ '--item-color': 'hsl(262 42% 58%)' }}>
+                                    <CatalogIcon name="ShoppingCart" />
+                                </span>
+                                <div className="manage-card__copy">
+                                    <div className="manage-card__title">
+                                        <h2>Mercado</h2>
+                                    </div>
+                                    <p className="manage-card__detail">Gasto</p>
+                                </div>
+                            </div>
+                            <div className="manage-card__actions">
+                                <Button variant="secondary">Editar</Button>
+                                <Button variant="secondary">Arquivar</Button>
+                            </div>
+                        </Card>
+                    </div>
+                </section>
+
+                <section className="styleguide__section">
                     <h2>Modal</h2>
                     <div>
                         <Button onClick={() => setOpen(true)}>Abrir modal</Button>
@@ -58,9 +83,10 @@ export default function Index() {
                         title="Exemplo de modal"
                         onClose={() => setOpen(false)}
                         footer={(
-                            <Button variant="primary" onClick={() => setOpen(false)}>
-                                Entendi
-                            </Button>
+                            <>
+                                <Button variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
+                                <Button variant="primary" onClick={() => setOpen(false)}>Salvar</Button>
+                            </>
                         )}
                     >
                         <p>Este modal fecha com Esc, com o clique fora e com o botão Fechar.</p>
