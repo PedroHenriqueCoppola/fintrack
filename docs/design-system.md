@@ -167,14 +167,14 @@ Rótulo em todo campo, foco visível, o estado nunca depende só de cor, texto d
 
 ## 9. Mapa das telas
 
-Imagens em `docs/design/dark/` (todas) e `docs/design/light/` (dashboard, analysis, goals e manage-modal). HTML com os valores reais em `docs/design/html/`.
+Imagens em `docs/design/dark/` (todas) e `docs/design/light/` (dashboard, analysis, goals, manage-modal e transaction-edit). HTML com os valores reais em `docs/design/html/`.
 
 | Arquivo | Tela | Módulo que implementa o conteúdo |
 | --- | --- | --- |
 | `login` | Entrar e criar conta | 3.5 |
 | `manage`, `manage-modal` | Gerenciar e modal de categoria | 3.5 |
 | `dashboard`, `dashboard-empty` | Dashboard cheio e vazio | 8 (estrutura visual no 3.5) |
-| `analysis`, `transaction-modal`, `filters-open` | Análise, nova transação e filtros abertos | 4 |
+| `analysis`, `transaction-modal`, `transaction-edit`, `transaction-delete`, `filters-open`, `filter-save` | Análise, nova transação, editar (com Duplicar e Excluir), confirmar exclusão, filtros abertos e salvar filtro | 4 |
 | `planning` | Planejamento | 5 |
 | `net-worth`, `net-worth-closing` | Patrimônio e fechamento por banco | 7 |
 | `goals`, `goal-detail` | Metas e meta em detalhe | 9 |
