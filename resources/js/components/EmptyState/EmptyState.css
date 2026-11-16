@@ -2,23 +2,28 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 1.2rem;
-    max-width: 48rem;
-    padding: 2.4rem;
-    border: 1px dashed var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-card);
+    gap: 1rem;
+    max-width: 36rem;
+    padding: 0.8rem 0;
 }
 
 .empty-state p {
+    max-width: 36rem;
+    margin: 0;
     color: var(--color-text-muted);
-    font-size: 1.5rem;
+    font-size: 1.35rem;
+    font-weight: 500;
+    line-height: 1.5;
 }
 
 .empty-state__shortcut {
-    color: var(--color-primary);
-    font-size: 1.5rem;
-    font-weight: 700;
+    color: var(--color-chip-text);
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.empty-state__shortcut:hover {
     text-decoration: underline;
     text-underline-offset: 0.3rem;
 }

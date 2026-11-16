@@ -7,6 +7,7 @@ import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
 import Money from '../../components/Money/Money';
 import PageHeader from '../../components/PageHeader/PageHeader';
+import Tabs from '../../components/Tabs/Tabs';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
 import { formatDate } from '../../lib/format';
 import './Index.css';
@@ -21,6 +22,7 @@ export default function Index() {
                 <PageHeader
                     title="Guia de estilos"
                     subtitle="Conferência dos componentes da interface."
+                    actions={<Button variant="secondary">Ação</Button>}
                 />
 
                 <section className="styleguide__section">
@@ -35,6 +37,15 @@ export default function Index() {
 
                 <Card title="Cartão">
                     Um bloco para agrupar saldo, listas e resumos.
+                </Card>
+                <Card title="Destaque" className="card--highlight">
+                    O saldo principal de uma tela.
+                </Card>
+                <Card title="Interno" className="card--inset">
+                    Um bloco dentro de outro card.
+                </Card>
+                <Card className="card--interactive">
+                    Card clicável: no hover sobe e a borda fica mais forte.
                 </Card>
 
                 <section className="styleguide__section">
@@ -54,6 +65,17 @@ export default function Index() {
                     >
                         <p>Este modal fecha com Esc, com o clique fora e com o botão Fechar.</p>
                     </Modal>
+                </section>
+
+                <section className="styleguide__section">
+                    <h2>Abas</h2>
+                    <Tabs
+                        label="Exemplo"
+                        tabs={[
+                            { id: 'one', label: 'Primeira', panel: <p>Painel da primeira aba.</p> },
+                            { id: 'two', label: 'Segunda', panel: <p>Painel da segunda aba.</p> },
+                        ]}
+                    />
                 </section>
 
                 <section className="styleguide__section">
@@ -82,6 +104,9 @@ export default function Index() {
                     </p>
                     <p>
                         Negativo: <Money value={-470} />
+                    </p>
+                    <p>
+                        Zero: <Money value={0} />
                     </p>
                     <p>
                         Data: {formatDate('2026-11-12')}

@@ -1,43 +1,81 @@
 @import '@fontsource-variable/plus-jakarta-sans';
 
 :root {
-    --color-bg: hsl(240 6% 6%);
-    --color-card: hsl(240 6% 8%);
-    --color-text: hsl(0 0% 98%);
-    --color-text-muted: hsl(0 0% 82%);
-    --color-primary: hsl(268 83% 62%);
-    --color-secondary: hsl(252 16% 14%);
-    --color-accent: hsl(268 70% 20%);
-    --color-destructive: hsl(0 70% 42%);
-    --color-negative-text: hsl(0 84% 62%);
-    --color-border: hsl(252 14% 20%);
-    --color-sidebar: hsl(240 6% 10%);
-    --radius: 0.75rem;
+    --color-bg: #0f0e14;
+    --color-card: #17151f;
+    --color-sidebar: #17151f;
+    --color-card-inset: #1d1a27;
+    --color-card-highlight: #1c1730;
+    --color-border: #26232f;
+    --color-border-input: #2a2635;
+    --color-border-strong: #3d3950;
+    --color-border-highlight: #32295a;
+    --color-text: #efedf6;
+    --color-text-muted: #a7a3b8;
+    --color-text-subtle: #8a8699;
+    --color-primary: #7c4fd6;
+    --color-primary-soft: #a678f0;
+    --color-primary-fill: #8c63dc;
+    --color-on-primary: #ffffff;
+    --color-secondary: #1f1c29;
+    --color-accent: #241f35;
+    --color-accent-text: #dccbfb;
+    --color-chip-bg: #2a2142;
+    --color-chip-text: #cdb4fa;
+    --color-positive: #bc9cf7;
+    --color-negative-text: #f08a8c;
+    --color-destructive: #d9696c;
+    --color-modal: #1a1724;
+    --color-modal-border: #302b42;
+    --color-overlay: rgb(8 7 12 / 0.72);
+    --radius-sm: 0.8rem;
+    --radius-md: 1.4rem;
+    --radius-lg: 1.8rem;
+    --radius-xl: 2.2rem;
+    --radius-2xl: 2.4rem;
     --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    --header-height: 5.6rem;
-    --sidebar-width: 24rem;
+    --sidebar-width: 22.8rem;
     --sidebar-width-collapsed: 7.2rem;
     --container-max: 168rem;
-    --shadow-card: 0 0.2rem 0.6rem hsl(0 0% 0% / 0.28), 0 0.8rem 2.4rem hsl(0 0% 0% / 0.24);
-    --shadow-card-hover: 0 0.6rem 1.2rem hsl(0 0% 0% / 0.34), 0 1.6rem 3.6rem hsl(0 0% 0% / 0.38);
+    --shadow-card: 0 0.8rem 2.4rem rgb(0 0 0 / 0.28);
+    --shadow-sidebar: 0 1rem 3rem rgb(0 0 0 / 0.35);
+    --shadow-modal: 0 3rem 8rem rgb(0 0 0 / 0.55);
+    --shadow-button: 0 0.6rem 1.6rem rgb(124 79 214 / 0.3);
     --font: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
     color-scheme: dark;
 }
 
 [data-theme='light'] {
-    --color-bg: hsl(0 0% 100%);
-    --color-card: hsl(0 0% 100%);
-    --color-text: hsl(222 84% 5%);
-    --color-text-muted: hsl(215 16% 47%);
-    --color-primary: hsl(268 83% 55%);
-    --color-secondary: hsl(270 30% 96%);
-    --color-accent: hsl(268 83% 55%);
-    --color-destructive: hsl(0 84% 60%);
-    --color-negative-text: hsl(0 84% 47%);
-    --color-border: hsl(214 32% 91%);
-    --color-sidebar: hsl(0 0% 98%);
-    --shadow-card: 0 0.2rem 0.6rem hsl(222 47% 11% / 0.06), 0 0.8rem 2.4rem hsl(222 47% 11% / 0.08);
-    --shadow-card-hover: 0 0.6rem 1.2rem hsl(222 47% 11% / 0.08), 0 1.6rem 3.6rem hsl(222 47% 11% / 0.14);
+    --color-bg: #f6f4fb;
+    --color-card: #ffffff;
+    --color-sidebar: #ffffff;
+    --color-card-inset: #f3f0fa;
+    --color-card-highlight: #f1eafd;
+    --color-border: #e6e1f0;
+    --color-border-input: #e6e1f0;
+    --color-border-strong: #d3cce3;
+    --color-border-highlight: #d9cbf5;
+    --color-text: #1a1726;
+    --color-text-muted: #5f5a72;
+    --color-text-subtle: #6f6a84;
+    --color-primary: #7c4fd6;
+    --color-primary-soft: #7c4fd6;
+    --color-primary-fill: #7c4fd6;
+    --color-on-primary: #ffffff;
+    --color-secondary: #efeaf8;
+    --color-accent: #ece4fb;
+    --color-accent-text: #5a2fb0;
+    --color-chip-bg: #ece4fb;
+    --color-chip-text: #5a2fb0;
+    --color-positive: #6d3fc4;
+    --color-negative-text: #c23b43;
+    --color-destructive: #c23b43;
+    --color-modal: #ffffff;
+    --color-modal-border: #e0daee;
+    --color-overlay: rgb(26 23 38 / 0.45);
+    --shadow-card: 0 0.8rem 2.4rem rgb(60 40 110 / 0.08);
+    --shadow-sidebar: 0 1rem 3rem rgb(60 40 110 / 0.10);
+    --shadow-modal: 0 3rem 8rem rgb(60 40 110 / 0.18);
     color-scheme: light;
 }
 
@@ -57,7 +95,8 @@ body {
     background: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font);
-    font-size: 1.6rem;
+    font-size: 1.4rem;
+    font-weight: 500;
     line-height: 1.5;
 }
 
@@ -79,7 +118,7 @@ a {
 }
 
 :focus-visible {
-    outline: 2px solid var(--color-primary);
+    outline: 2px solid var(--color-primary-soft);
     outline-offset: 2px;
 }
 

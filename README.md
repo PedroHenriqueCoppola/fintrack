@@ -4,6 +4,8 @@ Sistema web de finanças pessoais: transações, orçamento por categoria com ac
 
 Nesta etapa o projeto sobe com um comando, com tema claro/escuro, layout, componentes comuns, login, cadastro e a página Gerenciar (bancos, categorias, cartões e formas de pagamento). As páginas internas exigem uma conta. Ainda não há transações nem usuário de demonstração.
 
+O layout não tem header. A sidebar flutuante traz o nome Fintrack e os sete links, e pode ser recolhida. No topo da área de conteúdo ficam o botão de tema e o ícone de perfil.
+
 ## Como subir
 
 Na pasta do projeto:
@@ -47,7 +49,7 @@ Não há usuário pronto. Crie o primeiro pela tela de cadastro:
 2. Preencha nome, e-mail e senha (mínimo de 8 caracteres) e confirme a senha.
 3. Ao enviar, a conta é criada, já com as categorias e as formas de pagamento iniciais, e você entra no Dashboard.
 
-Para entrar de novo, use http://localhost:8000/login. O botão **Sair**, no topo, encerra a sessão.
+Para entrar de novo, use http://localhost:8000/login. O ícone de perfil, no topo da área de conteúdo, abre um menu com o nome e a opção **Sair**, que encerra a sessão.
 
 ## Gerenciar
 

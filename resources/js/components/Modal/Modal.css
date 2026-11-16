@@ -3,55 +3,82 @@
     inset: 0;
     z-index: 80;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 2.4rem;
-    background: hsl(240 6% 6% / 0.62);
+    padding: 7rem 2.4rem 2.4rem;
+    overflow: auto;
+    background: var(--color-overlay);
+    animation: modal-fade 0.2s ease;
 }
 
 .modal {
-    width: min(52rem, 100%);
-    max-height: calc(100vh - 4.8rem);
-    display: flex;
-    flex-direction: column;
-    background: var(--color-card);
+    position: relative;
+    width: min(56rem, 100%);
+    margin-bottom: 2.4rem;
+    padding: 2.6rem;
+    background: var(--color-modal);
     color: var(--color-text);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    box-shadow: 0 2.4rem 6rem hsl(240 6% 4% / 0.45);
+    border: 1px solid var(--color-modal-border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-modal);
 }
 
 .modal:focus {
     outline: none;
 }
 
-.modal__header,
-.modal__footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.6rem;
-    padding: 1.6rem 2rem;
-}
-
 .modal__header {
-    border-bottom: 1px solid var(--color-border);
+    padding-right: 3.6rem;
 }
 
-.modal__header h2 {
+.modal .modal__header h2 {
+    margin: 0;
+    color: var(--color-text);
     font-size: 1.8rem;
     font-weight: 700;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.modal__close {
+    position: absolute;
+    top: 1.6rem;
+    right: 1.6rem;
+    width: 3.2rem;
+    height: 3.2rem;
+    padding: 0;
 }
 
 .modal__body {
-    min-height: 0;
-    overflow: auto;
-    padding: 2rem;
+    margin-top: 1.8rem;
+    color: var(--color-text);
+    font-size: 1.4rem;
+}
+
+.modal__body p {
     color: var(--color-text-muted);
-    font-size: 1.5rem;
 }
 
 .modal__footer {
+    display: flex;
+    align-items: center;
     justify-content: flex-end;
-    border-top: 1px solid var(--color-border);
+    gap: 1rem;
+    margin-top: 2.2rem;
+}
+
+@keyframes modal-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-backdrop {
+        animation: none;
+    }
 }

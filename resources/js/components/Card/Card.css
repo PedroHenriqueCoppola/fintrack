@@ -1,22 +1,33 @@
 .card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-xl);
     box-shadow: var(--shadow-card);
-    padding: 2rem;
+    padding: 2.2rem 2.4rem;
+}
+
+.card--highlight {
+    background: var(--color-card-highlight);
+    border-color: var(--color-border-highlight);
+}
+
+.card--inset {
+    background: var(--color-card-inset);
+    border-color: var(--color-border-input);
+    border-radius: var(--radius-lg);
+    box-shadow: none;
+    padding: 1.6rem;
 }
 
 .card--interactive {
     transition:
         transform var(--transition),
-        box-shadow var(--transition),
         border-color var(--transition);
 }
 
 .card--interactive:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-card-hover);
-    border-color: color-mix(in srgb, var(--color-text) 22%, var(--color-border));
+    transform: translateY(-0.2rem);
+    border-color: var(--color-border-strong);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -29,11 +40,12 @@
 
 .card__title {
     margin-bottom: 1.2rem;
-    font-size: 1.8rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
 .card__body {
     color: var(--color-text);
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 500;
 }

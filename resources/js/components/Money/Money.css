@@ -6,7 +6,7 @@
 }
 
 .money--positive {
-    color: var(--color-primary);
+    color: var(--color-positive);
 }
 
 .money--negative {
