@@ -1,12 +1,16 @@
 <?php
 
+use App\Http\Controllers\AnalysisController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManageController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\SavedFilterController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -22,8 +26,16 @@ Route::post('/logout', [SessionController::class, 'destroy'])
     ->name('logout');
 
 Route::middleware(['auth', 'inertia.encrypt'])->group(function () {
-    Route::get('/', fn () => Inertia::render('Dashboard/Index'))->name('dashboard');
-    Route::get('/analysis', fn () => Inertia::render('Analysis/Index'))->name('analysis');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/analysis', [AnalysisController::class, 'index'])->name('analysis');
+
+    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update')->whereNumber('transaction');
+    Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy')->whereNumber('transaction');
+    Route::post('/transactions/{transaction}/pay', [TransactionController::class, 'pay'])->name('transactions.pay')->whereNumber('transaction');
+
+    Route::post('/saved-filters', [SavedFilterController::class, 'store'])->name('saved-filters.store');
+    Route::delete('/saved-filters/{savedFilter}', [SavedFilterController::class, 'destroy'])->name('saved-filters.destroy')->whereNumber('savedFilter');
     Route::get('/planning', fn () => Inertia::render('Planning/Index'))->name('planning');
     Route::get('/goals', fn () => Inertia::render('Goals/Index'))->name('goals');
     Route::get('/net-worth', fn () => Inertia::render('NetWorth/Index'))->name('net-worth');

@@ -9,12 +9,18 @@ As páginas internas exigem login. Quem não está logado é enviado para `/logi
 | GET | `/register` | `register` | Visitante | Página Criar conta. Usuário logado vai para `/` |
 | POST | `/register` | — | Visitante | Cria a conta, entra logado e vai para `/` |
 | POST | `/logout` | `logout` | Logado | Encerra a sessão e vai para `/login` |
-| GET | `/` | `dashboard` | Logado | Página Dashboard. O título é a saudação com o primeiro nome (hora do navegador), o subtítulo é o do dashboard vazio e há um card "Em construção". O botão Nova transação fica desabilitado, com o aviso "Em breve" |
-| GET | `/analysis` | `analysis` | Logado | Página Análise, em construção, com o botão Nova transação desabilitado e o aviso "Em breve" |
+| GET | `/` | `dashboard` | Logado | Página Dashboard. O título é a saudação com o primeiro nome (hora do navegador), o subtítulo é o do dashboard vazio e o corpo ainda é o card "Em construção". O botão Nova transação abre o modal. A página recebe as opções do formulário: categorias ativas (despesa só de gasto, e receita), bancos, cartões e formas de pagamento |
+| GET | `/analysis` | `analysis` | Logado | Página Análise, com a lista (50 por página), o resumo do filtro inteiro e as mesmas opções do modal. Parâmetros opcionais na URL: `period` (`current_month` padrão, `previous_month`, `quarter`, `semester`, `year`, `all`, `custom`), `from` e `to` no personalizado, `type`, `status`, `category_id`, `bank_id`, `card_id`, `payment_method_id`, `min_amount`, `max_amount`, `q`, `sort` (`date_desc` padrão, `date_asc`, `amount_desc`, `amount_asc`) e `page`. Ids precisam ser da conta. Consulta inválida volta para `/analysis` com o erro. Pendente entra na quantidade e fica de fora dos totais de dinheiro. A página seguinte é anexada à lista já carregada |
 | GET | `/planning` | `planning` | Logado | Página Planejamento, em construção |
 | GET | `/goals` | `goals` | Logado | Página Metas, em construção |
 | GET | `/net-worth` | `net-worth` | Logado | Página Patrimônio, em construção |
 | GET | `/reports` | `reports` | Logado | Página Relatórios, em construção |
+| POST | `/transactions` | `transactions.store` | Logado | Cria a transação e volta para a lista, sem o parâmetro `page`. Erros de validação em português. `user_id` da requisição não é aceito |
+| PUT | `/transactions/{transaction}` | `transactions.update` | Logado | Atualiza a transação do usuário. Id de outro usuário responde 404 |
+| DELETE | `/transactions/{transaction}` | `transactions.destroy` | Logado | Apaga a transação. Id de outro usuário responde 404 |
+| POST | `/transactions/{transaction}/pay` | `transactions.pay` | Logado | Marca a pendente como paga e mantém a data. Id de outro usuário responde 404 |
+| POST | `/saved-filters` | `saved-filters.store` | Logado | Salva o filtro atual. Nome obrigatório, até 40 caracteres, único por usuário sem diferenciar maiúsculas nem acentos, no máximo 20 por usuário. O JSON só guarda chaves de filtro que o servidor valida |
+| DELETE | `/saved-filters/{savedFilter}` | `saved-filters.destroy` | Logado | Apaga o filtro salvo. Id de outro usuário responde 404 |
 | GET | `/manage` | `manage` | Logado | Página Gerenciar, com bancos, categorias, cartões e formas de pagamento (ativos e arquivados) e as opções de cor, ícone, tipo e natureza |
 | POST | `/manage/banks` | `banks.store` | Logado | Cria um banco e volta para Gerenciar. Erros de validação em português |
 | PUT | `/manage/banks/{bank}` | `banks.update` | Logado | Atualiza o banco do usuário. Id de outro usuário responde 404 |

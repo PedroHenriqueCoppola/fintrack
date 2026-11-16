@@ -5,7 +5,7 @@ import './Modal.css';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export default function Modal({ open, title, footer, onClose, children }) {
+export default function Modal({ open, title, footer, onClose, children, className = '' }) {
     const dialogRef = useRef(null);
     const onCloseRef = useRef(onClose);
     const titleId = useId();
@@ -88,7 +88,7 @@ export default function Modal({ open, title, footer, onClose, children }) {
     return (
         <div className="modal-backdrop" onClick={onBackdropClick}>
             <div
-                className="modal"
+                className={['modal', className].filter(Boolean).join(' ')}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}

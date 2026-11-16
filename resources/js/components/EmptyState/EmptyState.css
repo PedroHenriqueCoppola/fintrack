@@ -34,10 +34,16 @@
 }
 
 .empty-state__shortcut {
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: var(--color-chip-text);
+    font: inherit;
     font-size: 1.3rem;
     font-weight: 600;
+    text-align: left;
     text-decoration: none;
+    cursor: pointer;
 }
 
 .empty-state__shortcut:hover {

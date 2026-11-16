@@ -54,7 +54,7 @@ fintrack/
 - Dinheiro `DECIMAL(15,2)`; meses guardados como a data do primeiro dia do mês (`2026-11-01`).
 - Valores de lista fechada (tipo, natureza, estado) ficam em coluna string com restrição no banco, e valores em inglês.
 - Toda tabela de dados do usuário tem `user_id` com chave estrangeira e índice. As consultas sempre filtram pelo usuário logado.
-- Registros com histórico usam `archived_at` (nulo = ativo). Nunca apagar de verdade.
+- Registros com histórico usam `archived_at` (nulo = ativo) e não são apagados. A transação é a exceção: excluir apaga a linha.
 - Todas as tabelas têm `id`, `created_at` e `updated_at`, além dos campos listados.
 
 ## Modelo do banco
@@ -68,7 +68,8 @@ As tabelas padrão do Laravel (`sessions`, `cache`, `jobs`, `password_reset_toke
 | categories | user_id, name, applies_to (expense, income), nature? (spending, reserve; só para expense), icon?, color?, initial_balance (padrão 0), initial_month?, archived_at? | saldo disponível é derivado, nunca guardado |
 | cards | user_id, bank_id, name, closing_day, due_day?, color?, archived_at? | faturas são derivadas das transações |
 | payment_methods | user_id, name, requires_card (bool), archived_at? | |
-| transactions | user_id, type (income, expense), date, amount (positivo), description, category_id, bank_id, payment_method_id, card_id?, note?, status (paid, pending), competence_month, fixed_expense_id?, installment_plan_id?, installment_number?, installment_total?, archived_at? | índices em (user_id, competence_month) e (user_id, date); `pending` não entra nos totais |
+| transactions | user_id, type (income, expense), status (paid, pending), amount (DECIMAL(15,2), sempre positivo), date, competence_date?, description (até 120), category_id, bank_id, payment_method_id, card_id?, notes? (até 500) | chaves estrangeiras com restrict; índices em (user_id, date), (user_id, category_id), (user_id, bank_id) e (user_id, status); sem archived_at; exclusão apaga a linha; `pending` não entra nos totais de dinheiro |
+| saved_filters | user_id, name (até 40), filters (json) | no máximo 20 por usuário; nome único por usuário sem diferenciar maiúsculas nem acentos, validado no serviço; o json só guarda chaves de filtro e ordenação que o servidor aceita, e o período só quando o usuário marca para guardar |
 | tags | user_id, name | |
 | tag_transaction | tag_id, transaction_id | |
 | monthly_plans | user_id, month, expected_income, status (draft, confirmed), note? | único por (user_id, month) |

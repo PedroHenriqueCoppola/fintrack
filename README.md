@@ -6,7 +6,7 @@ Sistema web de finanças pessoais: transações, orçamento por categoria com ac
 
 O visual novo segue o design system: superfícies em camadas, cards com sombra suave e a fonte Plus Jakarta Sans. Não há header. A sidebar flutuante traz o nome Fintrack, os sete links e o botão Recolher. No topo da área de conteúdo ficam o botão de tema e o ícone de perfil. O tema escuro é o padrão. O botão de tema alterna para o tema claro e guarda a escolha neste navegador.
 
-Nesta etapa dá para entrar, criar conta e usar a página Gerenciar (bancos, categorias, cartões e formas de pagamento). Dashboard, Análise, Planejamento, Metas, Patrimônio e Relatórios já estão no visual novo, com título, subtítulo e um card "Em construção". No Dashboard o título é a saudação com o primeiro nome. No Dashboard e na Análise o botão Nova transação aparece desabilitado, com o aviso "Em breve". As páginas internas exigem uma conta. Ainda não há transações nem usuário de demonstração.
+Nesta etapa dá para entrar, criar conta, cadastrar em Gerenciar e lançar transações. O botão Nova transação, no Dashboard e na Análise, abre o modal. A Análise lista os lançamentos, com filtros na URL, filtros salvos e o resumo do período. O corpo do Dashboard, Planejamento, Metas, Patrimônio e Relatórios continuam em construção. As páginas internas exigem uma conta. Ainda não há usuário de demonstração.
 
 ## Como subir
 
@@ -79,6 +79,14 @@ Troque `seu@email` pelo e-mail da conta. Rodar de novo não duplica. Para todas 
 ```bash
 docker compose exec app php artisan tinker --execute='App\Models\User::query()->each(function ($user) { app(App\Services\DefaultDataService::class)->createFor($user); echo $user->email, PHP_EOL; });'
 ```
+
+## Transações e Análise
+
+O modal registra despesa ou receita, paga ou pendente, com valor, data, descrição, categoria, banco e forma de pagamento. Se a forma exige cartão, o cartão é obrigatório e o banco fica travado no banco do cartão. Data de competência e observação ficam em Mais opções. Duplicar abre uma cópia com a data de hoje e o status Paga. Excluir pede confirmação e apaga a linha.
+
+A página http://localhost:8000/analysis agrupa por dia no período escolhido (mês atual é o padrão; o intervalo é o do calendário, no fuso de São Paulo). O resumo — quantidade, receitas, despesas, saldo e média por despesa — é calculado no servidor sobre o filtro inteiro. Transação pendente entra na quantidade e fica de fora do dinheiro. A lista carrega de 50 em 50. Os filtros ficam na URL, então o endereço pode ser aberto em outra aba. Dá para salvar até 20 filtros por conta e apagar cada um. A busca ignora maiúsculas e acentos.
+
+Parcelamento, gasto fixo, tag e fatura ainda não existem.
 
 ## Proteção do login
 

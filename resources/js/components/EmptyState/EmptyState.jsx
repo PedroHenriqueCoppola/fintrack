@@ -5,6 +5,7 @@ export default function EmptyState({
     message,
     shortcutLabel,
     shortcutHref,
+    onShortcut,
     icon: Icon = null,
 }) {
     return (
@@ -19,6 +20,11 @@ export default function EmptyState({
                 <Link href={shortcutHref} className="empty-state__shortcut">
                     {shortcutLabel}
                 </Link>
+            ) : null}
+            {shortcutLabel && onShortcut ? (
+                <button type="button" className="empty-state__shortcut" onClick={onShortcut}>
+                    {shortcutLabel}
+                </button>
             ) : null}
         </div>
     );
