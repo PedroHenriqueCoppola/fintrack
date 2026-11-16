@@ -97,7 +97,7 @@ export default function CatalogList({
         return (
             <Card
                 key={item.id}
-                className={item.archived ? 'manage-card manage-card--archived card--interactive' : 'manage-card card--interactive'}
+                className="manage-card card--interactive"
             >
                 <div className="manage-card__top">
                     <ItemMarker item={item} fallbackIcon={fallbackIcon} />

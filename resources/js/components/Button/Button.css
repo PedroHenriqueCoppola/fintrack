@@ -43,7 +43,11 @@
 }
 
 .button--primary:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--color-primary) 86%, var(--color-on-primary));
+    background: color-mix(in srgb, var(--color-primary) 86%, var(--color-bg));
+}
+
+[data-theme='light'] .button--primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 86%, var(--color-text));
 }
 
 .button--secondary {
@@ -57,11 +61,19 @@
 
 .button--destructive {
     background: var(--color-destructive);
-    color: var(--color-on-primary);
+    color: var(--color-bg);
 }
 
 .button--destructive:hover:not(:disabled) {
     background: color-mix(in srgb, var(--color-destructive) 86%, var(--color-on-primary));
+}
+
+[data-theme='light'] .button--destructive {
+    color: var(--color-on-primary);
+}
+
+[data-theme='light'] .button--destructive:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-destructive) 86%, var(--color-text));
 }
 
 .button--quiet {

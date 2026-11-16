@@ -1,4 +1,6 @@
 import { Head } from '@inertiajs/react';
+import { Construction } from 'lucide-react';
+import Card from '../../components/Card/Card';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
@@ -10,13 +12,11 @@ export default function Index() {
             <div className="page">
                 <PageHeader
                     title="Patrimônio"
-                    subtitle="Saldo de cada banco no fechamento do mês."
+                    subtitle="O que você tem guardado, banco a banco."
                 />
-                <EmptyState
-                    message="Esta página está em construção."
-                    shortcutLabel="Ir para o Dashboard"
-                    shortcutHref="/"
-                />
+                <Card className="card--fit">
+                    <EmptyState icon={Construction} message="Em construção" />
+                </Card>
             </div>
         </>
     );

@@ -2,9 +2,11 @@
 
 Sistema web de finanças pessoais: transações, orçamento por categoria com acúmulo, planejamento do mês, metas, patrimônio e relatórios. As regras de negócio estão em `docs/product-vision.md`.
 
-Nesta etapa o projeto sobe com um comando, com tema claro/escuro, layout, componentes comuns, login, cadastro e a página Gerenciar (bancos, categorias, cartões e formas de pagamento). As páginas internas exigem uma conta. Ainda não há transações nem usuário de demonstração.
+## Funcionalidades
 
-O layout não tem header. A sidebar flutuante traz o nome Fintrack e os sete links, e pode ser recolhida. No topo da área de conteúdo ficam o botão de tema e o ícone de perfil.
+O visual novo segue o design system: superfícies em camadas, cards com sombra suave e a fonte Plus Jakarta Sans. Não há header. A sidebar flutuante traz o nome Fintrack, os sete links e o botão Recolher. No topo da área de conteúdo ficam o botão de tema e o ícone de perfil. O tema escuro é o padrão. O botão de tema alterna para o tema claro e guarda a escolha neste navegador.
+
+Nesta etapa dá para entrar, criar conta e usar a página Gerenciar (bancos, categorias, cartões e formas de pagamento). Dashboard, Análise, Planejamento, Metas, Patrimônio e Relatórios já estão no visual novo, com título, subtítulo e um card "Em construção". No Dashboard o título é a saudação com o primeiro nome. No Dashboard e na Análise o botão Nova transação aparece desabilitado, com o aviso "Em breve". As páginas internas exigem uma conta. Ainda não há transações nem usuário de demonstração.
 
 ## Como subir
 

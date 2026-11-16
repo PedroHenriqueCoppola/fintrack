@@ -7,6 +7,23 @@
     padding: 0.8rem 0;
 }
 
+.empty-state__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.4rem;
+    height: 4.4rem;
+    flex: none;
+    border-radius: var(--radius-md);
+    background: var(--color-accent);
+    color: var(--color-accent-text);
+}
+
+.empty-state__icon svg {
+    width: 1.8rem;
+    height: 1.8rem;
+}
+
 .empty-state p {
     max-width: 36rem;
     margin: 0;

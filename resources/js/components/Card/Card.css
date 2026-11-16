@@ -11,6 +11,12 @@
     border-color: var(--color-border-highlight);
 }
 
+.card--fit {
+    align-self: flex-start;
+    width: fit-content;
+    max-width: 100%;
+}
+
 .card--inset {
     background: var(--color-card-inset);
     border-color: var(--color-border-input);
