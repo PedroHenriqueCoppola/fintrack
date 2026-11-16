@@ -3,7 +3,6 @@ import { router } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import Card from '../../components/Card/Card';
 import EmptyState from '../../components/EmptyState/EmptyState';
-import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
 import CatalogIcon from './icons';
 
@@ -15,20 +14,34 @@ function fold(value) {
         .replace(/\p{M}/gu, '');
 }
 
-function ItemMarker({ item }) {
-    if (item.color) {
-        return (
-            <span className="manage-marker" style={{ '--item-color': item.color }} aria-hidden="true">
-                {item.icon ? <CatalogIcon name={item.icon} /> : <span className="manage-marker__dot" />}
-            </span>
-        );
-    }
-
+function markerIcon(item, fallbackIcon) {
     if (item.icon) {
-        return <CatalogIcon name={item.icon} />;
+        return item.icon;
     }
 
-    return null;
+    if (typeof fallbackIcon === 'function') {
+        return fallbackIcon(item);
+    }
+
+    return fallbackIcon || null;
+}
+
+function ItemMarker({ item, fallbackIcon }) {
+    const icon = markerIcon(item, fallbackIcon);
+
+    if (!icon && !item.color) {
+        return null;
+    }
+
+    return (
+        <span
+            className={item.color ? 'manage-marker' : 'manage-marker manage-marker--plain'}
+            style={item.color ? { '--item-color': item.color } : undefined}
+            aria-hidden="true"
+        >
+            {icon ? <CatalogIcon name={icon} /> : null}
+        </span>
+    );
 }
 
 function firstError(errors) {
@@ -37,17 +50,17 @@ function firstError(errors) {
 
 export default function CatalogList({
     items,
-    newLabel,
+    query,
+    showArchived,
     emptyAll,
     emptyActive,
-    onCreate,
     onEdit,
     archivePath,
     restorePath,
-    renderDetails,
+    detail,
+    fallbackIcon = null,
+    groups = null,
 }) {
-    const [query, setQuery] = useState('');
-    const [showArchived, setShowArchived] = useState(false);
     const [pending, setPending] = useState(null);
     const [actionError, setActionError] = useState('');
     const [busy, setBusy] = useState(false);
@@ -80,28 +93,82 @@ export default function CatalogList({
         });
     }
 
+    function renderCard(item) {
+        return (
+            <Card
+                key={item.id}
+                className="manage-card card--interactive"
+            >
+                <div className="manage-card__top">
+                    <ItemMarker item={item} fallbackIcon={fallbackIcon} />
+                    <div className="manage-card__copy">
+                        <div className="manage-card__title">
+                            <h2>{item.name}</h2>
+                            {item.archived ? <span className="manage-badge">Arquivado</span> : null}
+                        </div>
+                        <p className="manage-card__detail">{detail(item)}</p>
+                    </div>
+                </div>
+                <div className="manage-card__actions">
+                    <Button
+                        variant="secondary"
+                        aria-label={`Editar ${item.name}`}
+                        onClick={() => onEdit(item)}
+                    >
+                        Editar
+                    </Button>
+                    {item.archived ? (
+                        <Button
+                            variant="secondary"
+                            aria-label={`Desarquivar ${item.name}`}
+                            disabled={busy}
+                            onClick={() => run(restorePath(item), () => {})}
+                        >
+                            Desarquivar
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="secondary"
+                            aria-label={`Arquivar ${item.name}`}
+                            onClick={() => {
+                                setActionError('');
+                                setPending(item);
+                            }}
+                        >
+                            Arquivar
+                        </Button>
+                    )}
+                </div>
+            </Card>
+        );
+    }
+
+    function renderGroups() {
+        const buckets = groups.map(() => []);
+
+        visible.forEach((item) => {
+            const index = groups.findIndex((group) => group.match(item));
+            buckets[index === -1 ? 0 : index].push(item);
+        });
+
+        return buckets.map((groupItems, index) => {
+            if (groupItems.length === 0) {
+                return null;
+            }
+
+            return (
+                <section key={groups[index].title} className="manage-section">
+                    <h2 className="manage-section__title">{groups[index].title}</h2>
+                    <div className="manage-list">
+                        {groupItems.map(renderCard)}
+                    </div>
+                </section>
+            );
+        });
+    }
+
     return (
         <>
-            <div className="manage-toolbar">
-                <FormField label="Buscar por nome">
-                    <input
-                        type="search"
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                    />
-                </FormField>
-                <div className="manage-toolbar__actions">
-                    <Button
-                        variant={showArchived ? 'secondary' : 'quiet'}
-                        aria-pressed={showArchived}
-                        onClick={() => setShowArchived((current) => !current)}
-                    >
-                        Mostrar arquivados
-                    </Button>
-                    <Button onClick={onCreate}>{newLabel}</Button>
-                </div>
-            </div>
-
             {actionError && !pending ? (
                 <p className="manage-alert" role="alert">{actionError}</p>
             ) : null}
@@ -109,53 +176,11 @@ export default function CatalogList({
             {visible.length === 0 ? (
                 <EmptyState message={emptyMessage} />
             ) : (
-                <div className="manage-list">
-                    {visible.map((item) => (
-                        <Card
-                            key={item.id}
-                            className={item.archived ? 'manage-card manage-card--archived card--interactive' : 'manage-card card--interactive'}
-                        >
-                            <div className="manage-card__heading">
-                                <ItemMarker item={item} />
-                                <h2>{item.name}</h2>
-                                {item.archived ? <span className="manage-badge">Arquivado</span> : null}
-                            </div>
-                            <div className="manage-card__details">{renderDetails(item)}</div>
-                            {item.usage ? <p className="manage-card__usage">{item.usage}</p> : null}
-                            <div className="manage-card__actions">
-                                <Button
-                                    variant="secondary"
-                                    aria-label={`Editar ${item.name}`}
-                                    onClick={() => onEdit(item)}
-                                >
-                                    Editar
-                                </Button>
-                                {item.archived ? (
-                                    <Button
-                                        variant="quiet"
-                                        aria-label={`Desarquivar ${item.name}`}
-                                        disabled={busy}
-                                        onClick={() => run(restorePath(item), () => {})}
-                                    >
-                                        Desarquivar
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        variant="quiet"
-                                        className="manage-card__archive"
-                                        aria-label={`Arquivar ${item.name}`}
-                                        onClick={() => {
-                                            setActionError('');
-                                            setPending(item);
-                                        }}
-                                    >
-                                        Arquivar
-                                    </Button>
-                                )}
-                            </div>
-                        </Card>
-                    ))}
-                </div>
+                groups ? renderGroups() : (
+                    <div className="manage-list">
+                        {visible.map(renderCard)}
+                    </div>
+                )
             )}
 
             <Modal
@@ -169,10 +194,13 @@ export default function CatalogList({
                 }}
                 footer={(
                     <>
-                        <Button variant="quiet" disabled={busy} onClick={() => {
-                            setPending(null);
-                            setActionError('');
-                        }}
+                        <Button
+                            variant="secondary"
+                            disabled={busy}
+                            onClick={() => {
+                                setPending(null);
+                                setActionError('');
+                            }}
                         >
                             Cancelar
                         </Button>
@@ -190,7 +218,7 @@ export default function CatalogList({
                     </>
                 )}
             >
-                <p>
+                <p className="manage-confirm">
                     Arquivar <strong>{pending?.name}</strong>? O item sai da lista. Nada é apagado, e dá para desarquivar depois.
                 </p>
                 {actionError ? <p className="manage-alert" role="alert">{actionError}</p> : null}

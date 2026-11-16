@@ -13,9 +13,10 @@ alwaysApply: false
 
 ## Styling
 - Plain CSS only. No Tailwind and no CSS-in-JS.
-- Global design tokens are CSS variables in one global file: `:root` for the light theme and a dark theme override. Dark is the default and the choice is persisted.
+- Global design tokens are CSS variables in one global file: `:root` holds the dark theme (the default) and `[data-theme='light']` overrides it. The choice is persisted.
 - `html { font-size: 62.5% }` (1rem = 10px). Use rem for sizes.
-- Follow the "Identidade visual" section of `docs/product-vision.md` (colors, font Plus Jakarta Sans, radius 0.75rem, purple gradient on primary buttons, cursor glow).
+- Follow `docs/design-system.md` and the reference screens in `docs/design/` (see `.cursor/rules/60-design.mdc`). They replace the old values (radius 0.75rem, purple gradient on primary buttons).
+- Never write a color by hand in a component: use the CSS variables.
 - Income and positive values in purple, expenses and negative values in red, always with a + or - sign.
 
 ## Behavior
@@ -24,5 +25,6 @@ alwaysApply: false
 - Currency with `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`. Dates as dd/mm/yyyy.
 - All UI text in Brazilian Portuguese. Every page has a title and a subtitle.
 - Basic accessibility: labels on inputs, visible focus, never rely only on color.
+- The app has no header: floating collapsible sidebar, a top row with the theme button and the profile menu, and the page title below it.
 - Show a short empty state with a shortcut when a block depends on data the user has not created yet.
 - Desktop only: do not build mobile layouts.

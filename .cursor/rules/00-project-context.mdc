@@ -9,6 +9,8 @@ Personal finance web app: transactions, budget by category with rollover, monthl
 
 The business rules live in `docs/product-vision.md`. Read the relevant sections before implementing anything. If the code, the user's request and that document disagree, stop and ask the user before continuing.
 
+The visual identity lives in `docs/design-system.md` and `docs/design/`. UI work follows `.cursor/rules/60-design.mdc`.
+
 ## Stack
 - Backend: Laravel (PHP) with PostgreSQL.
 - Frontend: Inertia + React (JSX, no TypeScript) + plain CSS.

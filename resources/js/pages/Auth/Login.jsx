@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
-import Card from '../../components/Card/Card';
 import FormField from '../../components/FormField/FormField';
-import PageHeader from '../../components/PageHeader/PageHeader';
 import GuestLayout from '../../layouts/GuestLayout/GuestLayout';
+import AuthFrame from './AuthFrame';
 import './auth.css';
 
 function formatLock(total) {
@@ -69,53 +68,48 @@ export default function Login() {
     return (
         <>
             <Head title="Entrar" />
-            <div className="auth-page">
-                <PageHeader
-                    title="Entrar"
-                    subtitle="Use o e-mail e a senha da sua conta."
-                />
-                {form.errors.session ? (
+            <AuthFrame
+                mode="login"
+                title="Bem-vindo de volta"
+                subtitle="Entre para ver como está o seu mês."
+                alert={form.errors.session ? (
                     <p className="auth-alert" role="alert">{form.errors.session}</p>
                 ) : null}
-                <Card>
-                    <form className="auth-form" noValidate onSubmit={submit}>
-                        <FormField label="E-mail" error={emailError}>
-                            <input
-                                type="email"
-                                name="email"
-                                autoComplete="email"
-                                autoFocus
-                                value={form.data.email}
-                                onChange={(event) => form.setData('email', event.target.value)}
-                            />
-                        </FormField>
-                        <FormField label="Senha" error={form.errors.password}>
-                            <input
-                                type="password"
-                                name="password"
-                                autoComplete="current-password"
-                                value={form.data.password}
-                                onChange={(event) => form.setData('password', event.target.value)}
-                            />
-                        </FormField>
-                        <label className="auth-remember">
-                            <input
-                                type="checkbox"
-                                name="remember"
-                                checked={form.data.remember}
-                                onChange={(event) => form.setData('remember', event.target.checked)}
-                            />
-                            Manter conectado
-                        </label>
-                        <Button type="submit" disabled={form.processing || remaining > 0}>
-                            {form.processing ? 'Entrando…' : 'Entrar'}
-                        </Button>
-                    </form>
-                </Card>
-                <p className="auth-switch">
-                    <Link href="/register">Criar conta</Link>
-                </p>
-            </div>
+            >
+                <form className="auth-form" noValidate onSubmit={submit}>
+                    <FormField label="E-mail" error={emailError}>
+                        <input
+                            type="email"
+                            name="email"
+                            autoComplete="email"
+                            autoFocus
+                            value={form.data.email}
+                            onChange={(event) => form.setData('email', event.target.value)}
+                        />
+                    </FormField>
+                    <FormField label="Senha" error={form.errors.password}>
+                        <input
+                            type="password"
+                            name="password"
+                            autoComplete="current-password"
+                            value={form.data.password}
+                            onChange={(event) => form.setData('password', event.target.value)}
+                        />
+                    </FormField>
+                    <label className="auth-check">
+                        <input
+                            type="checkbox"
+                            name="remember"
+                            checked={form.data.remember}
+                            onChange={(event) => form.setData('remember', event.target.checked)}
+                        />
+                        Manter conectado por 30 dias
+                    </label>
+                    <Button type="submit" disabled={form.processing || remaining > 0}>
+                        {form.processing ? 'Entrando…' : 'Entrar'}
+                    </Button>
+                </form>
+            </AuthFrame>
         </>
     );
 }

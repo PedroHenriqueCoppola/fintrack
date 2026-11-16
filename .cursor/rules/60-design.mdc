@@ -1,0 +1,26 @@
+---
+description: Visual rules for every UI task. Read the design system and the reference screens first
+globs: resources/js/**,resources/css/**
+alwaysApply: false
+---
+
+# Design rules
+
+## Sources of truth
+- `docs/design-system.md`: tokens, typography, spacing, layout and components. If it is ambiguous, ask.
+- `docs/design/dark/*.png` and `docs/design/light/*.png`: how each screen must look. `docs/design/html/*.html`: the same screens with the real CSS values (px, divide by 10 for rem).
+- These files belong to the author. Never edit them.
+
+## Rules
+- Match the reference screen. Do not redesign, add decoration, or "improve" spacing, colors and sizes on your own.
+- Colors come only from the CSS variables. No hex, hsl or rgb in components. Both themes must work, so test dark and light.
+- Text sizes and weights come from the typography table. Nothing above 3.4rem.
+- Blocks hug their content. Do not stretch a card or invent content to fill space.
+- No header. Floating sidebar, top row with theme button and profile menu, page title below.
+- Primary buttons are solid purple (no gradient). Cards use the layered surfaces and soft shadow from the design system.
+- Money: real minus sign, `--color-positive` for income, `--color-negative-text` for expenses, the sign always shown.
+- Icons are `lucide-react`. Category tiles use the `color-mix` rule from the design system.
+- Motion is minimal: the 0.25s transition token, the 0.2rem hover lift on clickable cards, the modal fade. The cursor glow stays.
+- Build only the components the current module needs. Reference screens of future modules are for visual direction only.
+- When a reference screen shows something the current task does not cover, leave it out and mention it in "Atenção".
+- In "Comparação visual", report every difference from the reference that you could not remove.

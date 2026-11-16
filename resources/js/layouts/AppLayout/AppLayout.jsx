@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     CalendarRange,
@@ -12,8 +12,8 @@ import {
     Settings,
     Sun,
     Target,
+    User,
 } from 'lucide-react';
-import Button from '../../components/Button/Button';
 import CursorGlow from '../../components/CursorGlow/CursorGlow';
 import { toggleTheme } from '../../lib/theme';
 import './AppLayout.css';
@@ -50,10 +50,38 @@ export default function AppLayout({ children }) {
     const page = usePage();
     const path = page.url.split('?')[0];
     const user = page.props.auth?.user ?? null;
+    const profileRef = useRef(null);
     const [collapsed, setCollapsed] = useState(readCollapsed);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [theme, setThemeState] = useState(() => (
         document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
     ));
+
+    useEffect(() => {
+        if (!menuOpen) {
+            return undefined;
+        }
+
+        function onPointerDown(event) {
+            if (!profileRef.current?.contains(event.target)) {
+                setMenuOpen(false);
+            }
+        }
+
+        function onKeyDown(event) {
+            if (event.key === 'Escape') {
+                setMenuOpen(false);
+            }
+        }
+
+        document.addEventListener('pointerdown', onPointerDown);
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown);
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [menuOpen]);
 
     function onToggleSidebar() {
         const next = !collapsed;
@@ -65,32 +93,19 @@ export default function AppLayout({ children }) {
         setThemeState(toggleTheme(theme));
     }
 
+    function onLogout() {
+        setMenuOpen(false);
+        router.post('/logout');
+    }
+
     return (
         <div className={collapsed ? 'app-shell app-shell--collapsed' : 'app-shell'}>
             <CursorGlow />
-            <header className="app-header">
-                <Link href="/" className="brand">
-                    <span className="brand__dot" aria-hidden="true" />
-                    Fintrack
-                </Link>
-                <div className="app-header__actions">
-                    {user ? <span className="app-header__user" title={user.name}>{user.name}</span> : null}
-                    <Button
-                        variant="quiet"
-                        className="theme-toggle"
-                        aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
-                        onClick={onToggleTheme}
-                    >
-                        {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-                    </Button>
-                    {user ? (
-                        <Button variant="secondary" className="app-header__logout" onClick={() => router.post('/logout')}>
-                            Sair
-                        </Button>
-                    ) : null}
-                </div>
-            </header>
             <aside className="app-sidebar">
+                <Link href="/" className="brand" title="Fintrack">
+                    <span className="brand__mark" aria-hidden="true">F</span>
+                    <span className="sidebar-label">Fintrack</span>
+                </Link>
                 <nav className="app-nav" aria-label="Principal">
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon;
@@ -102,9 +117,10 @@ export default function AppLayout({ children }) {
                                 href={item.href}
                                 className={active ? 'nav-link nav-link--active' : 'nav-link'}
                                 aria-current={active ? 'page' : undefined}
+                                title={collapsed ? item.label : undefined}
                             >
-                                <Icon aria-hidden="true" />
-                                <span className="nav-link__label">{item.label}</span>
+                                <Icon aria-hidden="true" strokeWidth={1.75} />
+                                <span className="sidebar-label">{item.label}</span>
                             </Link>
                         );
                     })}
@@ -113,14 +129,53 @@ export default function AppLayout({ children }) {
                     type="button"
                     className="sidebar-toggle"
                     aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+                    title={collapsed ? 'Expandir menu' : undefined}
                     onClick={onToggleSidebar}
                 >
-                    {collapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
-                    <span className="nav-link__label">{collapsed ? 'Expandir' : 'Recolher'}</span>
+                    {collapsed
+                        ? <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} />
+                        : <PanelLeftClose aria-hidden="true" strokeWidth={1.75} />}
+                    <span className="sidebar-label">Recolher</span>
                 </button>
             </aside>
             <main className="app-main">
-                <div className="app-content">{children}</div>
+                <div className="app-content">
+                    <div className="app-top">
+                        <button
+                            type="button"
+                            className="icon-button"
+                            aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
+                            onClick={onToggleTheme}
+                        >
+                            {theme === 'dark'
+                                ? <Sun aria-hidden="true" strokeWidth={1.75} />
+                                : <Moon aria-hidden="true" strokeWidth={1.75} />}
+                        </button>
+                        {user ? (
+                            <div className="profile" ref={profileRef}>
+                                <button
+                                    type="button"
+                                    className="profile__button"
+                                    aria-label="Abrir perfil"
+                                    aria-expanded={menuOpen}
+                                    aria-haspopup="menu"
+                                    onClick={() => setMenuOpen((open) => !open)}
+                                >
+                                    <User aria-hidden="true" strokeWidth={1.75} />
+                                </button>
+                                {menuOpen ? (
+                                    <div className="profile__menu" role="menu" aria-label="Conta">
+                                        <p className="profile__name">{user.name}</p>
+                                        <button type="button" className="profile__logout" role="menuitem" onClick={onLogout}>
+                                            Sair
+                                        </button>
+                                    </div>
+                                ) : null}
+                            </div>
+                        ) : null}
+                    </div>
+                    {children}
+                </div>
             </main>
         </div>
     );

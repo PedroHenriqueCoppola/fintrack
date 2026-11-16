@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import { X } from 'lucide-react';
 import Button from '../Button/Button';
 import './Modal.css';
 
@@ -96,12 +97,12 @@ export default function Modal({ open, title, footer, onClose, children }) {
             >
                 <div className="modal__header">
                     <h2 id={titleId}>{title}</h2>
-                    <Button variant="quiet" aria-label="Fechar" onClick={onClose}>
-                        Fechar
+                    <Button variant="quiet" className="modal__close" aria-label="Fechar" onClick={onClose}>
+                        <X aria-hidden="true" strokeWidth={1.75} />
                     </Button>
                 </div>
                 <div className="modal__body">{children}</div>
-                <div className="modal__footer">{footer}</div>
+                {footer ? <div className="modal__footer">{footer}</div> : null}
             </div>
         </div>
     );

@@ -9,8 +9,8 @@ As páginas internas exigem login. Quem não está logado é enviado para `/logi
 | GET | `/register` | `register` | Visitante | Página Criar conta. Usuário logado vai para `/` |
 | POST | `/register` | — | Visitante | Cria a conta, entra logado e vai para `/` |
 | POST | `/logout` | `logout` | Logado | Encerra a sessão e vai para `/login` |
-| GET | `/` | `dashboard` | Logado | Página Dashboard, com título, subtítulo e estado vazio |
-| GET | `/analysis` | `analysis` | Logado | Página Análise, em construção |
+| GET | `/` | `dashboard` | Logado | Página Dashboard. O título é a saudação com o primeiro nome (hora do navegador), o subtítulo é o do dashboard vazio e há um card "Em construção". O botão Nova transação fica desabilitado, com o aviso "Em breve" |
+| GET | `/analysis` | `analysis` | Logado | Página Análise, em construção, com o botão Nova transação desabilitado e o aviso "Em breve" |
 | GET | `/planning` | `planning` | Logado | Página Planejamento, em construção |
 | GET | `/goals` | `goals` | Logado | Página Metas, em construção |
 | GET | `/net-worth` | `net-worth` | Logado | Página Patrimônio, em construção |
