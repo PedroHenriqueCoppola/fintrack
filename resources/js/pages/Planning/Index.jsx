@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import Button from '../../components/Button/Button';
 import MonthNav from '../../components/MonthNav/MonthNav';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import Tabs from '../../components/Tabs/Tabs';
@@ -19,13 +20,20 @@ export default function Index(props) {
                     title="Planejamento"
                     subtitle="Defina quanto cada categoria recebe neste mês."
                     actions={(
-                        <MonthNav
-                            label={navigation.label}
-                            previous={navigation.previous}
-                            next={navigation.next}
-                            onPrevious={() => visitPlanning(props, { month: navigation.previous })}
-                            onNext={() => visitPlanning(props, { month: navigation.next })}
-                        />
+                        <div className="plan-month">
+                            {navigation.is_current ? null : (
+                                <Button variant="quiet" onClick={() => visitPlanning(props, { month: navigation.current })}>
+                                    Mês atual
+                                </Button>
+                            )}
+                            <MonthNav
+                                label={navigation.label}
+                                previous={navigation.previous}
+                                next={navigation.next}
+                                onPrevious={() => visitPlanning(props, { month: navigation.previous })}
+                                onNext={() => visitPlanning(props, { month: navigation.next })}
+                            />
+                        </div>
                     )}
                 />
                 <Tabs

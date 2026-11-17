@@ -52,6 +52,11 @@
     margin: 0;
 }
 
+.plan-chip--muted {
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+}
+
 .plan-save,
 .plan-note,
 .plan-hint,
@@ -77,14 +82,33 @@
     font-size: 1.4rem;
 }
 
+.plan-layout > .card,
+.plan-layout .card__body {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.plan-month {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .plan-table-wrap {
+    max-width: 100%;
     overflow-x: auto;
 }
 
 .plan-table {
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
     border-collapse: collapse;
     font-size: 1.35rem;
+}
+
+.plan-table th,
+.plan-table td {
+    white-space: nowrap;
 }
 
 .plan-table th {
@@ -107,7 +131,32 @@
 }
 
 .plan-table__amount {
-    width: 16rem;
+    width: 14rem;
+}
+
+.plan-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    vertical-align: middle;
+}
+
+.plan-stack__value {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 2.4rem;
+}
+
+.plan-stack__note {
+    min-height: 1.6rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.6rem;
+}
+
+.plan-stack__note--over {
+    color: var(--color-negative-text);
 }
 
 .plan-table .form-field__label {

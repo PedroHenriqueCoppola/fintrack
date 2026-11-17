@@ -41,7 +41,7 @@ function CategoryName({ row }) {
     );
 }
 
-function AmountField({ label, value, error, onChange, onBlur }) {
+function AmountField({ label, value, error, onChange, onBlur, onFocus }) {
     const id = useId();
     const errorId = error ? `${id}-error` : undefined;
 
@@ -57,11 +57,21 @@ function AmountField({ label, value, error, onChange, onBlur }) {
                     aria-describedby={errorId}
                     value={value}
                     onChange={onChange}
+                    onFocus={onFocus}
                     onBlur={onBlur}
                 />
             </div>
             {error ? <p className="form-field__error" id={errorId} role="alert">{error}</p> : null}
         </div>
+    );
+}
+
+function StackValue({ children, note = '' }) {
+    return (
+        <span className="plan-stack">
+            <span className="plan-stack__value">{children}</span>
+            <span className={note ? 'plan-stack__note plan-stack__note--over' : 'plan-stack__note'}>{note}</span>
+        </span>
     );
 }
 
@@ -86,6 +96,12 @@ export default function PlanMonth({ month, plan }) {
     const signature = `${plan.expected_income}|${rows.map((row) => `${row.category_id}:${row.planned}`).join('|')}`;
     const seen = useRef(signature);
     const form = useForm(buildForm(plan));
+    const dataRef = useRef(form.data);
+    const snapshotRef = useRef(null);
+    const focusedRef = useRef(null);
+    const requestRef = useRef(0);
+    const skipRef = useRef(false);
+    dataRef.current = form.data;
     const setField = useFieldSetter(form);
     const [notice, setNotice] = useState('');
     const [confirmCopy, setConfirmCopy] = useState(false);
@@ -99,12 +115,46 @@ export default function PlanMonth({ month, plan }) {
         }
 
         seen.current = signature;
-        form.setData(buildForm(plan));
+
+        if (skipRef.current) {
+            skipRef.current = false;
+            return;
+        }
+
+        const snapshot = snapshotRef.current;
+        const current = dataRef.current;
+        const next = buildForm(plan);
+
+        if (snapshot) {
+            const incomeEdited = focusedRef.current === 'income' || current.expected_income !== snapshot.income;
+
+            if (incomeEdited) {
+                next.expected_income = current.expected_income;
+            }
+
+            Object.keys(next.amounts).forEach((id) => {
+                const edited = String(focusedRef.current) === String(id)
+                    || current.amounts?.[id] !== snapshot.amounts?.[id];
+
+                if (edited) {
+                    next.amounts[id] = current.amounts?.[id] ?? '';
+                }
+            });
+        }
+
+        form.setData(next);
         form.clearErrors();
-        setNotice('Salvo');
     }, [signature]);
 
     function save(nextAmounts, nextIncome) {
+        const id = requestRef.current + 1;
+        requestRef.current = id;
+        snapshotRef.current = {
+            id,
+            income: nextIncome,
+            amounts: { ...nextAmounts },
+        };
+
         const payload = {
             expected_income: moneyPayload(nextIncome, '0'),
             items: rows.map((row) => ({
@@ -117,16 +167,42 @@ export default function PlanMonth({ month, plan }) {
         form.put(`/planning/${month}`, {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => setNotice('Salvo'),
-            onError: () => setNotice(''),
+            onSuccess: () => {
+                if (id !== requestRef.current) {
+                    skipRef.current = true;
+                    return;
+                }
+
+                setNotice('Salvo');
+            },
+            onError: () => {
+                if (id === requestRef.current) {
+                    setNotice('');
+                }
+            },
         });
     }
 
     function blurIncome() {
+        const next = moneyPayload(form.data.expected_income, '0');
+        const saved = moneyPayload(moneyText(plan.expected_income), '0');
+
+        if (next === saved) {
+            return;
+        }
+
         save(form.data.amounts, form.data.expected_income);
     }
 
     function blurAmount(categoryId) {
+        const row = rows.find((item) => item.category_id === categoryId);
+        const next = moneyPayload(form.data.amounts[categoryId], '0');
+        const saved = moneyPayload(moneyText(row?.planned), '0');
+
+        if (next === saved) {
+            return;
+        }
+
         save(form.data.amounts, form.data.expected_income);
     }
 
@@ -178,6 +254,9 @@ export default function PlanMonth({ month, plan }) {
                                         inputMode="decimal"
                                         autoComplete="off"
                                         value={form.data.expected_income}
+                                        onFocus={() => {
+                                            focusedRef.current = 'income';
+                                        }}
                                         onChange={(event) => {
                                             setNotice('');
                                             setField('expected_income', event.target.value);
@@ -204,6 +283,7 @@ export default function PlanMonth({ month, plan }) {
                                     <th>Categoria</th>
                                     <th>Valor do mês</th>
                                     <th className="is-right">Gasto no mês</th>
+                                    <th className="is-right">Fixos e parcelas</th>
                                     <th className="is-right">Usado</th>
                                     <th className="is-right">Resta</th>
                                 </tr>
@@ -221,6 +301,9 @@ export default function PlanMonth({ month, plan }) {
                                                     label={`Valor do mês de ${row.name}`}
                                                     value={form.data.amounts[row.category_id] ?? ''}
                                                     error={error}
+                                                    onFocus={() => {
+                                                        focusedRef.current = row.category_id;
+                                                    }}
                                                     onChange={(event) => {
                                                         setNotice('');
                                                         setField((data) => ({
@@ -236,8 +319,15 @@ export default function PlanMonth({ month, plan }) {
                                             </td>
                                             <td className="is-right"><MoneyText value={row.spent} /></td>
                                             <td className="is-right">
+                                                <StackValue note={row.committed_over ? 'Passa do valor do mês' : ''}>
+                                                    <MoneyText value={row.committed} />
+                                                </StackValue>
+                                            </td>
+                                            <td className="is-right">
                                                 {isZero(row.planned) ? (
-                                                    <span className="plan-muted">—</span>
+                                                    <StackValue>
+                                                        <span className="plan-muted">—</span>
+                                                    </StackValue>
                                                 ) : (
                                                     <UsageBar
                                                         percent={row.used_percent}
@@ -272,6 +362,9 @@ export default function PlanMonth({ month, plan }) {
                                                         label={`Valor do mês de ${row.name}`}
                                                         value={form.data.amounts[row.category_id] ?? ''}
                                                         error={error}
+                                                        onFocus={() => {
+                                                            focusedRef.current = row.category_id;
+                                                        }}
                                                         onChange={(event) => {
                                                             setNotice('');
                                                             setField((data) => ({
@@ -285,8 +378,15 @@ export default function PlanMonth({ month, plan }) {
                                                         onBlur={() => blurAmount(row.category_id)}
                                                     />
                                                 </td>
-                                                <td className="is-right plan-muted">—</td>
-                                                <td className="is-right plan-muted" colSpan={2}>Guardado em Metas</td>
+                                                <td className="is-right">
+                                                    <StackValue><span className="plan-muted">—</span></StackValue>
+                                                </td>
+                                                <td className="is-right">
+                                                    <StackValue><span className="plan-muted">—</span></StackValue>
+                                                </td>
+                                                <td className="is-right plan-muted" colSpan={2}>
+                                                    <StackValue>Guardado em Metas</StackValue>
+                                                </td>
                                             </tr>
                                         );
                                     })}

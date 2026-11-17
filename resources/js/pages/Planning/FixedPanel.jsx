@@ -30,11 +30,12 @@ function RecordRow({ item, kind, onEdit, onArchive, onRestore }) {
                 <div className="plan-record__title">
                     <span>{item.name}</span>
                     {item.high_impact ? <span className="plan-chip">Alto impacto</span> : null}
+                    {item.reason ? <span className="plan-chip plan-chip--muted">{item.reason}</span> : null}
                 </div>
                 <p className="plan-record__meta">
                     {[item.category?.name, item.due_label, item.payment_label].filter(Boolean).join(' · ')}
                 </p>
-                {kind === 'installment' ? (
+                {kind === 'installment' && item.progress_label ? (
                     <div className="plan-record__progress">
                         <span className="plan-progress" aria-hidden="true">
                             <span style={{ width: `${item.progress_percent}%` }} />
@@ -136,8 +137,10 @@ export default function FixedPanel({ page }) {
         router.post(url, {}, { preserveScroll: true });
     }
 
+    const outsideCount = fixed.outside_expenses.length + fixed.outside_installments.length;
     const listsEmpty = fixed.expenses.length === 0
         && fixed.installments.length === 0
+        && outsideCount === 0
         && fixed.archived_expenses.length === 0
         && fixed.archived_installments.length === 0;
 
@@ -284,6 +287,27 @@ export default function FixedPanel({ page }) {
                         onArchive={(item) => setArchive({ kind: 'installment', item })}
                         onRestore={(item) => restore('installment', item)}
                     />
+                    {outsideCount > 0 ? (
+                        <details className="plan-archived">
+                            <summary>Fora deste mês ({outsideCount})</summary>
+                            <RecordGroup
+                                title="Gastos fixos"
+                                items={fixed.outside_expenses}
+                                kind="fixed"
+                                onEdit={(item) => setEditor({ kind: 'fixed', item })}
+                                onArchive={(item) => setArchive({ kind: 'fixed', item })}
+                                onRestore={(item) => restore('fixed', item)}
+                            />
+                            <RecordGroup
+                                title="Parcelados"
+                                items={fixed.outside_installments}
+                                kind="installment"
+                                onEdit={(item) => setEditor({ kind: 'installment', item })}
+                                onArchive={(item) => setArchive({ kind: 'installment', item })}
+                                onRestore={(item) => restore('installment', item)}
+                            />
+                        </details>
+                    ) : null}
                     {fixed.archived_expenses.length + fixed.archived_installments.length > 0 ? (
                         <details className="plan-archived">
                             <summary>Arquivados</summary>

@@ -43,6 +43,14 @@ class PlanningService
             ->orderByRaw('unaccent(name)')
             ->get();
 
+        $catalog = $this->loadCatalog();
+        $committedByCategory = $this->committedByCategory($catalog['expenses'], $catalog['installments'], $start, $monthKey);
+        $committed = '0.00';
+
+        foreach ($committedByCategory as $amount) {
+            $committed = Money::add($committed, $amount);
+        }
+
         $spendingLines = [];
         $reserveLines = [];
 
@@ -56,7 +64,12 @@ class PlanningService
                 continue;
             }
 
-            $line = $this->line($category, $planned, $categorySpent);
+            $line = $this->line(
+                $category,
+                $planned,
+                $categorySpent,
+                $committedByCategory[$category->id] ?? '0.00',
+            );
 
             if ($category->nature === 'reserve') {
                 $reserveLines[] = $line;
@@ -64,9 +77,6 @@ class PlanningService
                 $spendingLines[] = $line;
             }
         }
-
-        $catalog = $this->loadCatalog();
-        $committed = $this->committedFrom($catalog['expenses'], $catalog['installments'], $start, $monthKey);
         $summary = $this->summary($income, $spendingLines, $reserveLines, $committed);
         $fixed = $this->fixedPayload($user, $monthKey, $start, $summary['spending_planned'], $filters, $catalog, $committed);
 
@@ -77,6 +87,8 @@ class PlanningService
                 'label' => Month::label($monthKey),
                 'previous' => Month::shift($monthKey, -1),
                 'next' => Month::shift($monthKey, 1),
+                'current' => Month::currentKey(),
+                'is_current' => $monthKey === Month::currentKey(),
             ],
             'plan' => [
                 'exists' => $plan !== null,
@@ -247,7 +259,7 @@ class PlanningService
     /**
      * @return array<string, mixed>
      */
-    private function line(Category $category, string $planned, string $spent): array
+    private function line(Category $category, string $planned, string $spent, string $committed): array
     {
         $reserve = $category->nature === 'reserve';
         $percent = $reserve ? null : Money::usedPercent($spent, $planned);
@@ -263,6 +275,8 @@ class PlanningService
             'planned' => $planned,
             'spent' => $reserve ? null : $spent,
             'remaining' => $reserve ? null : Money::sub($planned, $spent),
+            'committed' => $reserve ? null : $committed,
+            'committed_over' => ! $reserve && Money::compare($committed, $planned) === 1,
             'used_percent' => $percent,
             'over' => $over,
             'near_limit' => $percent !== null && $percent >= 90 && $percent <= 100,
@@ -371,14 +385,25 @@ class PlanningService
      * @param  Collection<int, FixedExpense>  $expenses
      * @param  Collection<int, Installment>  $installments
      */
-    private function committedFrom(Collection $expenses, Collection $installments, string $monthStart, string $monthKey): string
+    /**
+     * Active fixed expenses and the parcel that falls in the month, keyed by category.
+     * Archived templates are left out. The same pass feeds the summary total.
+     *
+     * @param  Collection<int, FixedExpense>  $expenses
+     * @param  Collection<int, Installment>  $installments
+     * @return array<int, string>
+     */
+    private function committedByCategory(Collection $expenses, Collection $installments, string $monthStart, string $monthKey): array
     {
-        $total = '0.00';
+        $amounts = [];
 
         foreach ($expenses as $expense) {
-            if ($this->generator->fixedApplies($expense, $monthStart)) {
-                $total = Money::add($total, $expense->amount);
+            if (! $this->generator->fixedApplies($expense, $monthStart)) {
+                continue;
             }
+
+            $categoryId = (int) $expense->category_id;
+            $amounts[$categoryId] = Money::add($amounts[$categoryId] ?? '0.00', $expense->amount);
         }
 
         foreach ($installments as $installment) {
@@ -392,8 +417,9 @@ class PlanningService
                 continue;
             }
 
-            $total = Money::add(
-                $total,
+            $categoryId = (int) $installment->category_id;
+            $amounts[$categoryId] = Money::add(
+                $amounts[$categoryId] ?? '0.00',
                 $this->calculator->amountForNumber(
                     (string) $installment->total_amount,
                     (int) $installment->installments_count,
@@ -402,7 +428,7 @@ class PlanningService
             );
         }
 
-        return $total;
+        return $amounts;
     }
 
     /**
@@ -468,18 +494,30 @@ class PlanningService
         $parcelTotal = 0;
         $percent = (int) ($user->high_impact_percent ?: 30);
 
-        $fixedRows = [];
-        $installmentRows = [];
+        $activeFixed = [];
+        $outsideFixed = [];
+        $archivedFixed = [];
+        $activeInstallmentsRows = [];
+        $outsideInstallments = [];
+        $archivedInstallments = [];
 
         foreach ($expenses as $expense) {
-            $applies = $this->generator->fixedApplies($expense, $monthStart);
+            $row = $this->fixedRow($expense, $spendingPlanned, $percent);
 
-            if ($applies) {
-                $fixedCount++;
-                $fixedAmount = Money::add($fixedAmount, $expense->amount);
+            if ($expense->archived_at !== null) {
+                $archivedFixed[] = $row;
+                continue;
             }
 
-            $fixedRows[] = $this->fixedRow($expense, $spendingPlanned, $percent);
+            if ($this->generator->fixedApplies($expense, $monthStart)) {
+                $fixedCount++;
+                $fixedAmount = Money::add($fixedAmount, $expense->amount);
+                $activeFixed[] = $row;
+                continue;
+            }
+
+            $row['reason'] = $this->fixedReason($expense, $monthStart);
+            $outsideFixed[] = $row;
         }
 
         foreach ($installments as $installment) {
@@ -487,18 +525,13 @@ class PlanningService
                 ? $this->calculator->numberInMonth($installment, $monthKey)
                 : null;
             $paid = (int) ($paidCounts[$installment->id] ?? 0);
-
-            if ($number !== null) {
-                $activeInstallments++;
-                $paidTotal += $paid;
-                $parcelTotal += (int) $installment->installments_count;
-            }
-
-            $monthly = $number === null
-                ? $this->calculator->amountForNumber((string) $installment->total_amount, (int) $installment->installments_count, 1)
-                : $this->calculator->amountForNumber((string) $installment->total_amount, (int) $installment->installments_count, $number);
-
-            $installmentRows[] = $this->installmentRow(
+            $monthlyNumber = $number ?? 1;
+            $monthly = $this->calculator->amountForNumber(
+                (string) $installment->total_amount,
+                (int) $installment->installments_count,
+                $monthlyNumber,
+            );
+            $row = $this->installmentRow(
                 $installment,
                 $monthly,
                 $paid,
@@ -507,6 +540,22 @@ class PlanningService
                 $percent,
                 isset($locked[$installment->id]),
             );
+
+            if ($installment->archived_at !== null) {
+                $archivedInstallments[] = $row;
+                continue;
+            }
+
+            if ($number !== null) {
+                $activeInstallments++;
+                $paidTotal += $paid;
+                $parcelTotal += (int) $installment->installments_count;
+                $activeInstallmentsRows[] = $row;
+                continue;
+            }
+
+            $row['reason'] = $this->installmentReason($installment, $monthKey);
+            $outsideInstallments[] = $row;
         }
 
         return [
@@ -524,10 +573,12 @@ class PlanningService
                         ? Money::usedPercent($committed, $spendingPlanned)
                         : null,
                 ],
-                'expenses' => $this->filterRows($fixedRows, $filters, false),
-                'archived_expenses' => $this->filterRows($fixedRows, $filters, true),
-                'installments' => $this->filterRows($installmentRows, $filters, false),
-                'archived_installments' => $this->filterRows($installmentRows, $filters, true),
+                'expenses' => $this->filterRows($activeFixed, $filters),
+                'outside_expenses' => $this->filterRows($outsideFixed, $filters),
+                'archived_expenses' => $this->filterRows($archivedFixed, $filters),
+                'installments' => $this->filterRows($activeInstallmentsRows, $filters),
+                'outside_installments' => $this->filterRows($outsideInstallments, $filters),
+                'archived_installments' => $this->filterRows($archivedInstallments, $filters),
                 'filters' => [
                     'category_id' => $filters['category_id'],
                     'min_amount' => $filters['min_amount'],
@@ -562,7 +613,28 @@ class PlanningService
             'payment_method' => $this->methodPayload($expense->paymentMethod),
             'card' => $this->cardPayload($expense->card),
             'payment_label' => $this->paymentLabel($expense->bank?->name, $expense->paymentMethod?->name, $expense->card?->name),
+            'reason' => null,
         ];
+    }
+
+    private function fixedReason(FixedExpense $expense, string $monthStart): string
+    {
+        if ($expense->start_month->toDateString() > $monthStart) {
+            return 'Começa em '.$expense->start_month->format('m/Y');
+        }
+
+        return 'Terminou em '.$expense->end_month->format('m/Y');
+    }
+
+    private function installmentReason(Installment $installment, string $monthKey): string
+    {
+        $first = $installment->first_date->format('Y-m');
+
+        if ($monthKey < $first) {
+            return 'Começa em '.$installment->first_date->format('m/Y');
+        }
+
+        return 'Quitado';
     }
 
     /**
@@ -578,11 +650,6 @@ class PlanningService
         bool $locked,
     ): array {
         $count = (int) $installment->installments_count;
-        $current = $number ?? min($paid + 1, $count);
-
-        if ($paid >= $count) {
-            $current = $count;
-        }
 
         return [
             'id' => $installment->id,
@@ -599,7 +666,8 @@ class PlanningService
             'high_impact' => Money::reachesPercent($monthly, $spendingPlanned, $percent),
             'paid_count' => $paid,
             'progress_percent' => $count > 0 ? intdiv($paid * 100 + intdiv($count, 2), $count) : 0,
-            'progress_label' => 'Parcela '.$current.' de '.$count,
+            'progress_label' => $number === null ? null : 'Parcela '.$number.' de '.$count,
+            'reason' => null,
             'category' => $this->categoryPayload($installment->category),
             'bank' => $this->named($installment->bank),
             'payment_method' => $this->methodPayload($installment->paymentMethod),
@@ -613,13 +681,9 @@ class PlanningService
      * @param  array{category_id: ?int, min_amount: ?string, max_amount: ?string, sort: string}  $filters
      * @return array<int, array<string, mixed>>
      */
-    private function filterRows(array $rows, array $filters, bool $archived): array
+    private function filterRows(array $rows, array $filters): array
     {
-        $rows = array_values(array_filter($rows, function (array $row) use ($filters, $archived) {
-            if ($row['archived'] !== $archived) {
-                return false;
-            }
-
+        $rows = array_values(array_filter($rows, function (array $row) use ($filters) {
             if ($filters['category_id'] !== null && (int) ($row['category']['id'] ?? 0) !== $filters['category_id']) {
                 return false;
             }

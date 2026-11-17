@@ -5,11 +5,13 @@ export default function UsageBar({ percent, over = false, nearLimit = false }) {
 
     return (
         <div className={over ? 'usage usage--over' : 'usage'}>
-            <span className="usage__track" aria-hidden="true">
-                <span className="usage__fill" style={{ width: `${capped}%` }} />
+            <span className="usage__main">
+                <span className="usage__track" aria-hidden="true">
+                    <span className="usage__fill" style={{ width: `${capped}%` }} />
+                </span>
+                <span className="usage__percent">{percent}%</span>
             </span>
-            <span className="usage__percent">{percent}%</span>
-            {nearLimit ? <span className="usage__near">Perto do limite</span> : null}
+            <span className="usage__near">{nearLimit ? 'Perto do limite' : ''}</span>
         </div>
     );
 }

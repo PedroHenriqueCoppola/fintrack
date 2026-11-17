@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Services\InstallmentService;
 use App\Services\PlanningService;
 use App\Support\Month;
+use App\Support\WorkingMonth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,14 +20,15 @@ class PlanningController extends Controller
 {
     use RedirectsToPlanning;
 
-    public function index(Request $request, PlanningService $planning): Response|RedirectResponse
+    public function index(Request $request, PlanningService $planning, WorkingMonth $workingMonth): Response|RedirectResponse
     {
         $raw = $request->query('month');
-        $month = is_string($raw) && $raw !== '' ? $raw : Month::currentKey();
 
-        if (Month::startOrNull($month) === null) {
+        if (is_string($raw) && $raw !== '' && Month::startOrNull($raw) === null) {
             return redirect()->route('planning', $this->queryWithout($request, 'month', Month::currentKey()));
         }
+
+        $month = $workingMonth->remember(is_string($raw) ? $raw : null);
 
         $tab = $request->query('tab', 'plan');
         $tab = in_array($tab, ['plan', 'fixed'], true) ? $tab : 'plan';

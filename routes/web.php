@@ -31,6 +31,7 @@ Route::post('/logout', [SessionController::class, 'destroy'])
 Route::middleware(['auth', 'inertia.encrypt'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/analysis', [AnalysisController::class, 'index'])->name('analysis');
+    Route::post('/analysis/clear', [AnalysisController::class, 'clear'])->name('analysis.clear');
 
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update')->whereNumber('transaction');

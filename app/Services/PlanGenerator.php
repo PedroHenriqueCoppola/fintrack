@@ -118,6 +118,7 @@ class PlanGenerator
 
     private function createFixedIfMissing(FixedExpense $expense, string $monthStart, string $key): void
     {
+        // Deleting a generated pending does not skip the month: the next sync creates it again.
         $exists = Transaction::query()
             ->where('fixed_expense_id', $expense->id)
             ->whereDate('generated_for', $monthStart)
@@ -137,6 +138,10 @@ class PlanGenerator
 
     private function refreshFixedPending(FixedExpense $expense, string $monthStart, string $previousAmount): void
     {
+        if ($monthStart < Month::currentStart()) {
+            return;
+        }
+
         $existing = Transaction::query()
             ->where('fixed_expense_id', $expense->id)
             ->whereDate('generated_for', $monthStart)
@@ -183,6 +188,12 @@ class PlanGenerator
 
     private function refreshInstallmentPending(Installment $installment, int $number): void
     {
+        $monthStart = $installment->first_date->copy()->startOfMonth()->addMonths($number - 1)->toDateString();
+
+        if ($monthStart < Month::currentStart()) {
+            return;
+        }
+
         $existing = Transaction::query()
             ->where('installment_id', $installment->id)
             ->where('installment_number', $number)

@@ -86,4 +86,11 @@ Campos com `?` são opcionais.
 
 ## Valores derivados (nunca guardados)
 
-Gasto do mês por categoria, porcentagem usada, o que resta, totais do planejamento (renda, planejado, sobra a alocar, comprometido), faturas dos cartões, valor atual das metas e total do patrimônio. Todos calculados no backend, em Services, a partir das tabelas acima. O planejamento fica em `PlanningService`, `SpendingService`, `FixedExpenseService`, `InstallmentService`, `InstallmentCalculator` e `PlanGenerator`.
+Gasto do mês por categoria, porcentagem usada, o que resta, totais do planejamento (renda, planejado, sobra a alocar, comprometido e o comprometido de cada categoria), faturas dos cartões, valor atual das metas e total do patrimônio. Todos calculados no backend, em Services, a partir das tabelas acima. O comprometido de cada categoria soma os fixos ativos naquele mês e a parcela que cai nele; não é uma coluna gravada. O planejamento fica em `PlanningService`, `SpendingService`, `FixedExpenseService`, `InstallmentService`, `InstallmentCalculator` e `PlanGenerator`.
+
+## Mês de trabalho e filtros da Análise
+
+A sessão do login guarda duas preferências. O logout chama `session()->invalidate()`, então as duas somem no login seguinte.
+
+- `working_month` (`YYYY-MM`), lida e gravada por `App\Support\WorkingMonth`. O Planejamento usa o mês da URL; sem `month`, usa o da sessão; sem sessão, o mês atual (America/Sao_Paulo). Um mês válido na URL substitui o guardado. O Dashboard ainda não filtra período: no módulo 8 ele lê o mesmo helper. Esta rodada não cria filtro no Dashboard.
+- `analysis_query`, a última query de filtros da Análise (sem `page`). Abrir `/analysis` sem parâmetros redireciona para essa query. Aplicar ou mudar um filtro grava de novo e substitui o anterior. `POST /analysis/clear` apaga a query e volta ao padrão (mês atual). Uma consulta inválida também apaga a query, para o redirecionamento não entrar em ciclo.
