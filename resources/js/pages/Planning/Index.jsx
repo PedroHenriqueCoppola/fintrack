@@ -22,7 +22,7 @@ export default function Index(props) {
                     actions={(
                         <div className="plan-month">
                             {navigation.is_current ? null : (
-                                <Button variant="quiet" onClick={() => visitPlanning(props, { month: navigation.current })}>
+                                <Button variant="secondary" onClick={() => visitPlanning(props, { month: navigation.current })}>
                                     Mês atual
                                 </Button>
                             )}

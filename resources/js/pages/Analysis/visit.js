@@ -3,7 +3,7 @@ import { router } from '@inertiajs/react';
 export function visitAnalysis(next, { replace = false, loadMore = false, onStart, onFinish } = {}) {
     const params = {};
     const values = {
-        period: next.period && next.period !== 'current_month' ? next.period : undefined,
+        period: next.period || undefined,
         from: next.period === 'custom' ? next.from : undefined,
         to: next.period === 'custom' ? next.to : undefined,
         type: next.type || undefined,

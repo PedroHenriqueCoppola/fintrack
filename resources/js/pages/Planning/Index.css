@@ -97,6 +97,26 @@
 .plan-table-wrap {
     max-width: 100%;
     overflow-x: auto;
+    scrollbar-color: var(--color-border-strong) var(--color-card-inset);
+    scrollbar-width: thin;
+}
+
+.plan-table-wrap::-webkit-scrollbar {
+    height: 0.8rem;
+}
+
+.plan-table-wrap::-webkit-scrollbar-track {
+    background: var(--color-card-inset);
+    border-radius: 999px;
+}
+
+.plan-table-wrap::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 999px;
+}
+
+.plan-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-fill);
 }
 
 .plan-table {
