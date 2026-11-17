@@ -107,7 +107,7 @@ Plus Jakarta Sans (já instalada). Números de dinheiro e tabelas usam `font-var
 - **Linha do topo:** altura 4.4rem, alinhada à direita, com o botão de tema (3.8rem, quadrado arredondado) e o ícone de perfil (3.8rem, redondo). O ícone abre um menu pequeno com o nome do usuário e a opção **Sair**.
 - **Cabeçalho da página:** título e subtítulo à esquerda, ações à direita (ex.: botão Nova transação, seletor de mês). Margem de 1rem em cima e 2.4rem embaixo.
 - **Grade:** 12 colunas com espaço de 1.6rem. Use `align-items: start` quando os blocos tiverem alturas diferentes.
-- **Desktop apenas.**
+- **Desktop apenas por enquanto.** A responsividade de todo o sistema entra no módulo de Acabamento; até lá, não construa layouts de celular.
 
 ## 6. Componentes
 
@@ -118,7 +118,10 @@ Fundo `--color-card`, borda 1px `--color-border`, canto `--radius-xl`, sombra de
 Altura confortável, padding 1rem por 1.8rem, canto `--radius-md`, texto 1.35rem em 600. **Principal:** fundo `--color-primary`, texto branco, sombra de botão (sem gradiente). **Secundário (ghost):** fundo `--color-secondary`, sem sombra, texto `--color-text`. **Discreto (quiet):** sem fundo, texto `--color-text-muted`. **Destrutivo:** fundo `--color-destructive`. Desabilitado com opacidade 0.5. Foco visível com contorno `--color-primary-soft`.
 
 ### Campo de formulário
-Rótulo acima, 1.25rem em 500, `--color-text-muted`. Campo com fundo `--color-card-inset`, borda `--color-border-input`, canto 1.3rem, padding 1rem por 1.4rem, texto 1.4rem. Valores em dinheiro alinhados à direita. Erro: texto em `--color-negative-text` abaixo do campo, nunca só a cor.
+Rótulo acima, 1.25rem em 500, `--color-text-muted`. Campo com fundo `--color-card-inset`, borda `--color-border-input`, canto 1.3rem, padding 1rem por 1.4rem, texto 1.4rem. Valores digitados, inclusive dinheiro, ficam alinhados à esquerda como em qualquer outro campo (use `tabular-nums` no dinheiro). Erro: borda e texto em `--color-negative-text` abaixo do campo, nunca só a cor. O erro some assim que o usuário altera o campo, sem esperar um novo envio; ele só volta se o servidor recusar de novo.
+
+### Seletor de data (padrão do sistema)
+Todo campo de data usa o mesmo calendário do filtro Personalizado: o campo aceita digitação com máscara dd/mm/aaaa e tem um botão de calendário à direita (ícone lucide `Calendar`, `aria-label="Abrir calendário"`) que abre um popover. O popover traz mês e ano no topo com setas, grade de dias com iniciais D S T Q Q S S, dia selecionado em `--color-primary` e dias fora do mês esmaecidos. Navegação por teclado: setas movem o dia, Enter escolhe, Esc fecha só o popover (nunca o modal que o contém). Em campo de data única, escolher o dia preenche o campo e fecha o popover. Em intervalo (De – Até) o mesmo calendário seleciona a faixa, com `--color-accent` no meio. Dias acima do limite (ex.: depois de hoje, na data da transação) ficam desabilitados e esmaecidos. Um único componente `DatePicker` serve todo o sistema; não crie outro calendário.
 
 ### Segmento e abas
 Grupo de opções com fundo `--color-card-inset` (ou `--color-card` nas abas da página), borda fina, canto `--radius-md`, padding 0.4rem. Opção ativa com fundo `--color-accent` e texto `--color-accent-text`. As abas do Gerenciar usam esse mesmo estilo.
@@ -134,6 +137,9 @@ Altura 0.6rem, canto total, trilho `--color-border-input`, preenchimento `--colo
 
 ### Modal
 Fundo `--color-modal`, borda `--color-modal-border`, canto `--radius-2xl`, padding 2.6rem, sombra de modal, largura 56rem (62rem no de transação). Fundo escurecido com `--color-overlay`. Título 1.8rem em 700, descrição curta em `--color-text-muted`, campos com espaço de 1.4rem, rodapé com Cancelar (ghost) e ação principal à direita. Abre perto do topo (padding-top 7rem) e rola quando for alto. Entrada: fade de 0.2s. Mantém o foco preso e fecha com Esc, como o componente atual.
+
+### Confirmação de exclusão (padrão do sistema)
+Toda exclusão pede confirmação num modal do próprio sistema (componente `ConfirmDialog`, modal estreito), nunca no `confirm`, `alert` ou `prompt` do navegador. Título em forma de pergunta ("Excluir transação?", "Apagar filtro salvo?"), uma frase com o nome do item e o aviso "Essa ação não pode ser desfeita.", rodapé com Cancelar (ghost) e o botão Destrutivo com o verbo da ação ("Excluir", "Apagar"). O foco inicial fica em Cancelar. Enquanto a exclusão roda, os dois botões ficam desabilitados e o destrutivo mostra "Excluindo…". Veja `docs/design/dark/transaction-delete.png`.
 
 ### Linha de lista
 Ícone ou quadrado à esquerda, nome e apoio no meio, valor à direita; divisória 1px `--color-border` entre linhas, padding vertical 1.2rem.

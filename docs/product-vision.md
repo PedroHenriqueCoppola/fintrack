@@ -257,7 +257,7 @@ São onze módulos em sequência, mais o 3.5 de visual, cada um dependendo do an
 8. **Dashboard:** lê tudo dos módulos 4 a 7, por isso vem depois deles.
 9. **Metas:** lançamentos, estados, ritmo e gráficos.
 10. **Relatórios:** construtor, relatórios gerados, PDF e Excel.
-11. **Acabamento:** modo demo (usuário demo com 12 meses de dados fictícios coerentes com as regras), backup, README profissional escrito pelo agente (apresentação, funcionalidades, stack, como subir com Docker, regras de negócio, diagrama do banco e usuário demo; os prints são tirados pelo autor), mapa de rotas e revisão final.
+11. **Acabamento:** responsividade de todo o sistema (reduzir a janela do navegador sem quebrar elementos; isso substitui a regra "só desktop"), favicon e logo de verdade (hoje é um F branco sobre roxo), modo demo (usuário demo com 12 meses de dados fictícios coerentes com as regras), backup, README profissional escrito pelo agente (apresentação, funcionalidades, stack, como subir com Docker, regras de negócio, diagrama do banco e usuário demo; os prints são tirados pelo autor), mapa de rotas e revisão final.
 
 ## Decisões da revisão
 
@@ -282,6 +282,9 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Pendente:** não entra nos totais do resumo (receitas, despesas, saldo e média). A quantidade conta todas as transações do filtro.
 - **Filtros:** ficam na URL, os salvos entram no módulo 4 e a lista carrega de 50 em 50.
 - **Tabela densa:** fica para o Acabamento.
+- **Data da transação:** não pode ser posterior a hoje. Lançamentos futuros (contas a vencer, parcelas) nascem no Planejamento (módulo 5), como Pendentes.
+- **Receita e forma de pagamento:** a forma de pagamento continua obrigatória. Salário e outras receitas usam uma forma comum do catálogo, como "Transferência" (TED ou DOC), cadastrada em Gerenciar.
+- **Padrões de interface (a partir do módulo 4):** campo de data com o calendário do filtro Personalizado; confirmação de exclusão sempre em modal próprio; erro do campo some ao preencher; dinheiro alinhado à esquerda no campo.
 
 ### Segunda revisão
 
