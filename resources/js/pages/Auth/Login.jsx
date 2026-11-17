@@ -3,6 +3,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
 import GuestLayout from '../../layouts/GuestLayout/GuestLayout';
+import { useFieldSetter } from '../../lib/fields';
 import AuthFrame from './AuthFrame';
 import './auth.css';
 
@@ -25,6 +26,7 @@ export default function Login() {
         password: '',
         remember: false,
     });
+    const setField = useFieldSetter(form);
 
     useEffect(() => {
         const start = Number(loginLockSeconds) || 0;
@@ -84,7 +86,7 @@ export default function Login() {
                             autoComplete="email"
                             autoFocus
                             value={form.data.email}
-                            onChange={(event) => form.setData('email', event.target.value)}
+                            onChange={(event) => setField('email', event.target.value)}
                         />
                     </FormField>
                     <FormField label="Senha" error={form.errors.password}>
@@ -93,7 +95,7 @@ export default function Login() {
                             name="password"
                             autoComplete="current-password"
                             value={form.data.password}
-                            onChange={(event) => form.setData('password', event.target.value)}
+                            onChange={(event) => setField('password', event.target.value)}
                         />
                     </FormField>
                     <label className="auth-check">
@@ -101,7 +103,7 @@ export default function Login() {
                             type="checkbox"
                             name="remember"
                             checked={form.data.remember}
-                            onChange={(event) => form.setData('remember', event.target.checked)}
+                            onChange={(event) => setField('remember', event.target.checked)}
                         />
                         Manter conectado por 30 dias
                     </label>

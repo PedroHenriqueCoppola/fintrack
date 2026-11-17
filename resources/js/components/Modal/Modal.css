@@ -23,6 +23,10 @@
     box-shadow: var(--shadow-modal);
 }
 
+.modal--narrow {
+    width: min(46rem, 100%);
+}
+
 .modal:focus {
     outline: none;
 }

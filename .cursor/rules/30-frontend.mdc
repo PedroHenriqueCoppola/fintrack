@@ -28,3 +28,6 @@ alwaysApply: false
 - The app has no header: floating collapsible sidebar, a top row with the theme button and the profile menu, and the page title below it.
 - Show a short empty state with a shortcut when a block depends on data the user has not created yet.
 - Desktop only: do not build mobile layouts.
+- Never use `window.confirm`, `alert` or `prompt`. Every delete asks for confirmation with the shared `ConfirmDialog`.
+- Every date field uses the shared `DatePicker` (never `<input type="date">`), and a field error clears as soon as the user changes the field.
+- Money inputs are left aligned; displayed money values are right aligned in lists and tables.

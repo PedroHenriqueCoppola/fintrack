@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
 import GuestLayout from '../../layouts/GuestLayout/GuestLayout';
+import { useFieldSetter } from '../../lib/fields';
 import AuthFrame from './AuthFrame';
 import './auth.css';
 
@@ -12,6 +13,7 @@ export default function Register() {
         password: '',
         password_confirmation: '',
     });
+    const setField = useFieldSetter(form);
 
     function submit(event) {
         event.preventDefault();
@@ -39,7 +41,7 @@ export default function Register() {
                             autoComplete="name"
                             autoFocus
                             value={form.data.name}
-                            onChange={(event) => form.setData('name', event.target.value)}
+                            onChange={(event) => setField('name', event.target.value)}
                         />
                     </FormField>
                     <FormField label="E-mail" error={form.errors.email}>
@@ -48,7 +50,7 @@ export default function Register() {
                             name="email"
                             autoComplete="email"
                             value={form.data.email}
-                            onChange={(event) => form.setData('email', event.target.value)}
+                            onChange={(event) => setField('email', event.target.value)}
                         />
                     </FormField>
                     <FormField label="Senha" error={form.errors.password}>
@@ -57,7 +59,7 @@ export default function Register() {
                             name="password"
                             autoComplete="new-password"
                             value={form.data.password}
-                            onChange={(event) => form.setData('password', event.target.value)}
+                            onChange={(event) => setField('password', event.target.value)}
                         />
                     </FormField>
                     <FormField label="Confirmar senha" error={form.errors.password_confirmation}>
@@ -66,7 +68,7 @@ export default function Register() {
                             name="password_confirmation"
                             autoComplete="new-password"
                             value={form.data.password_confirmation}
-                            onChange={(event) => form.setData('password_confirmation', event.target.value)}
+                            onChange={(event) => setField('password_confirmation', event.target.value)}
                         />
                     </FormField>
                     <Button type="submit" disabled={form.processing}>

@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => fn () => $request->user()?->only(['id', 'name', 'email']),
             ],
+            'today' => fn () => now(config('app.timezone'))->toDateString(),
         ];
     }
 }

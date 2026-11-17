@@ -103,7 +103,7 @@ export default function CatalogList({
                     <ItemMarker item={item} fallbackIcon={fallbackIcon} />
                     <div className="manage-card__copy">
                         <div className="manage-card__title">
-                            <h2>{item.name}</h2>
+                            <h3>{item.name}</h3>
                             {item.archived ? <span className="manage-badge">Arquivado</span> : null}
                         </div>
                         <p className="manage-card__detail">{detail(item)}</p>

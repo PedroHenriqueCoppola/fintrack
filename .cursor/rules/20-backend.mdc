@@ -31,7 +31,7 @@ alwaysApply: false
 ## Database
 - PostgreSQL. Every schema change is a NEW migration. Never edit a migration that was already applied.
 - Add foreign keys and indexes (at least `user_id` and date columns).
-- Records with history are archived (`archived_at`), never hard deleted.
+- Catalog records (banks, categories, cards, payment methods) are archived (`archived_at`), never hard deleted. Transactions are the exception: deleting a transaction removes it for real, after a confirmation in the UI.
 
 ## Docs
 - When you add or change a route, update `docs/route-map.md`.

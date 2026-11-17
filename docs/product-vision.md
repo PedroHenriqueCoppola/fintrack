@@ -111,8 +111,10 @@ Lista de transações agrupada por dia, com todos os dados visíveis em cada lin
 - Cada linha mostra categoria (ícone e cor), descrição, banco, cartão ou forma de pagamento, observação e valor colorido.
 - Filtros: busca, tipo, período, banco, categoria, cartão e forma de pagamento; ordenação por data ou valor.
 - Barra de resumo que muda com o filtro: quantidade, receitas, despesas, saldo e média.
-- Opção de alternar para tabela densa.
-- Clicar numa linha abre edição, exclusão e "duplicar transação".
+- Opção de alternar para tabela densa (fica para o módulo de Acabamento).
+- Clicar numa linha abre a edição. No rodapé do modal ficam Duplicar (abre uma cópia com a data de hoje) e Excluir (definitivo, com confirmação). A transação Pendente tem um botão para marcar como paga com um clique.
+- A lista mostra 50 transações por vez, com o botão "Carregar mais". Os totais do resumo contam todas as transações do filtro, não só as carregadas.
+- Os filtros ficam na URL da página, então atualizar ou voltar no navegador os mantém. O usuário pode salvar o conjunto de filtros com um nome (e, se quiser, o período) e aplicá-lo com um clique.
 
 ### Planejamento
 
@@ -162,7 +164,7 @@ Cada entidade abaixo tem um dono (o usuário), datas de criação e atualizaçã
 
 | Entidade | Campos obrigatórios | Campos opcionais |
 | --- | --- | --- |
-| Transação | tipo (Receita ou Despesa), data, valor, descrição, categoria, banco, forma de pagamento | cartão (obrigatório se for crédito), observação, tags, status (Paga ou Pendente), data de competência, parcela x/y (gerada pelo sistema) |
+| Transação | tipo (Receita ou Despesa), data, valor, descrição, categoria, banco, forma de pagamento | cartão (obrigatório se for crédito; define o banco), observação, status (Paga ou Pendente), data de competência, parcela x/y (gerada pelo sistema, a partir do módulo 5) |
 | Banco | nome | cor |
 | Categoria | nome, aplicável a (Despesa ou Receita), natureza (Gasto ou Reserva, só para Despesa) | ícone, cor, saldo inicial (só Despesa) |
 | Cartão | nome, banco, dia de fechamento | dia de vencimento, cor |
@@ -248,14 +250,14 @@ São onze módulos em sequência, mais o 3.5 de visual, cada um dependendo do an
 2. **Login e cadastro:** conta, entrar, sair, isolamento por usuário. Pronto quando dois usuários não veem os dados um do outro.
 3. **Gerenciar:** bancos, categorias, cartões e formas de pagamento, com categorias iniciais. Pronto quando cria, edita e arquiva por modal.
    - **Módulo 3.5, novo visual:** aplicar o design de `docs/design/` e `docs/design-system.md` ao que já existe (tokens, layout sem header, componentes, login e Gerenciar), em três etapas. Pronto quando as telas existentes batem com as imagens de referência nos temas escuro e claro.
-4. **Transações e Análise:** nova transação, parcelamento, lista por dia, filtros, resumo, edição e duplicar. Pronto quando os totais batem com um conjunto de exemplo.
+4. **Transações e Análise:** nova transação, lista por dia, filtros (período personalizado, avançados e salvos), resumo, edição, duplicar, excluir e marcar como paga. O parcelamento fica para o módulo 5 e as tags para depois. Pronto quando os totais da Análise batem com o conjunto de exemplo do roteiro de testes.
 5. **Planejamento:** valor do mês, saldo disponível com acúmulo, remanejamento, fixos e parcelados, visão final e estado Rascunho/Confirmado. Pronto quando o exemplo Roupas e Outros dá 0 e 130.
 6. **Cartões e faturas:** agrupar compras no crédito por fechamento e marcar fatura como paga. Pronto quando uma compra após o fechamento cai na fatura seguinte.
 7. **Patrimônio:** saldo por banco, fechamento mensal e evolução. Pronto quando o fechamento pré-preenche com o mês anterior.
 8. **Dashboard:** lê tudo dos módulos 4 a 7, por isso vem depois deles.
 9. **Metas:** lançamentos, estados, ritmo e gráficos.
 10. **Relatórios:** construtor, relatórios gerados, PDF e Excel.
-11. **Acabamento:** modo demo (usuário demo com 12 meses de dados fictícios coerentes com as regras), backup, README profissional escrito pelo agente (apresentação, funcionalidades, stack, como subir com Docker, regras de negócio, diagrama do banco e usuário demo; os prints são tirados pelo autor), mapa de rotas e revisão final.
+11. **Acabamento:** responsividade de todo o sistema (reduzir a janela do navegador sem quebrar elementos; isso substitui a regra "só desktop"), favicon e logo de verdade (hoje é um F branco sobre roxo), modo demo (usuário demo com 12 meses de dados fictícios coerentes com as regras), backup, README profissional escrito pelo agente (apresentação, funcionalidades, stack, como subir com Docker, regras de negócio, diagrama do banco e usuário demo; os prints são tirados pelo autor), mapa de rotas e revisão final.
 
 ## Decisões da revisão
 
@@ -270,6 +272,19 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - [x] **Categorias iniciais:** conjunto genérico e editável. Gasto: Mercado, Moradia, Transporte, Saúde, Lazer e Outros. Reserva: Reserva de emergência e Investimentos. Receita: Salário e Outras receitas.
 - [x] **Botão Nova transação:** no topo do Dashboard e da Análise. A versão em todas as páginas foi abandonada junto com o header.
 - [x] **Nome do projeto:** Fintrack.
+
+### Módulo 4
+
+- **Parcelamento:** não entra no módulo 4. Nasce junto com os gastos fixos, no Planejamento (módulo 5).
+- **Tags:** ficam para depois do módulo 4. A data de competência entra agora.
+- **Exclusão de transação:** definitiva, com confirmação. A regra de nunca apagar de verdade vale para bancos, categorias, cartões e formas de pagamento.
+- **Banco e cartão:** ao escolher um cartão, o banco é o do cartão e fica travado.
+- **Pendente:** não entra nos totais do resumo (receitas, despesas, saldo e média). A quantidade conta todas as transações do filtro.
+- **Filtros:** ficam na URL, os salvos entram no módulo 4 e a lista carrega de 50 em 50.
+- **Tabela densa:** fica para o Acabamento.
+- **Data da transação:** não pode ser posterior a hoje. Lançamentos futuros (contas a vencer, parcelas) nascem no Planejamento (módulo 5), como Pendentes.
+- **Receita e forma de pagamento:** a forma de pagamento continua obrigatória. Salário e outras receitas usam uma forma comum do catálogo, como "Transferência" (TED ou DOC), cadastrada em Gerenciar.
+- **Padrões de interface (a partir do módulo 4):** campo de data com o calendário do filtro Personalizado; confirmação de exclusão sempre em modal próprio; erro do campo some ao preencher; dinheiro alinhado à esquerda no campo.
 
 ### Segunda revisão
 

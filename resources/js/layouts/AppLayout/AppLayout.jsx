@@ -158,15 +158,14 @@ export default function AppLayout({ children }) {
                                     className="profile__button"
                                     aria-label="Abrir perfil"
                                     aria-expanded={menuOpen}
-                                    aria-haspopup="menu"
                                     onClick={() => setMenuOpen((open) => !open)}
                                 >
                                     <User aria-hidden="true" strokeWidth={1.75} />
                                 </button>
                                 {menuOpen ? (
-                                    <div className="profile__menu" role="menu" aria-label="Conta">
+                                    <div className="profile__menu">
                                         <p className="profile__name">{user.name}</p>
-                                        <button type="button" className="profile__logout" role="menuitem" onClick={onLogout}>
+                                        <button type="button" className="profile__logout" onClick={onLogout}>
                                             Sair
                                         </button>
                                     </div>
