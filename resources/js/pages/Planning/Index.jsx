@@ -1,11 +1,16 @@
 import { Head } from '@inertiajs/react';
-import { Construction } from 'lucide-react';
-import Card from '../../components/Card/Card';
-import EmptyState from '../../components/EmptyState/EmptyState';
+import MonthNav from '../../components/MonthNav/MonthNav';
 import PageHeader from '../../components/PageHeader/PageHeader';
+import Tabs from '../../components/Tabs/Tabs';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
+import FixedPanel from './FixedPanel';
+import PlanMonth from './PlanMonth';
+import { visitPlanning } from './visit';
+import './Index.css';
 
-export default function Index() {
+export default function Index(props) {
+    const { month, tab, navigation, plan } = props;
+
     return (
         <>
             <Head title="Planejamento" />
@@ -13,10 +18,33 @@ export default function Index() {
                 <PageHeader
                     title="Planejamento"
                     subtitle="Defina quanto cada categoria recebe neste mês."
+                    actions={(
+                        <MonthNav
+                            label={navigation.label}
+                            previous={navigation.previous}
+                            next={navigation.next}
+                            onPrevious={() => visitPlanning(props, { month: navigation.previous })}
+                            onNext={() => visitPlanning(props, { month: navigation.next })}
+                        />
+                    )}
                 />
-                <Card className="card--fit">
-                    <EmptyState icon={Construction} message="Em construção" />
-                </Card>
+                <Tabs
+                    label="Seções do planejamento"
+                    value={tab}
+                    onChange={(next) => visitPlanning(props, { tab: next })}
+                    tabs={[
+                        {
+                            id: 'plan',
+                            label: 'Planejar o mês',
+                            panel: <PlanMonth month={month} plan={plan} />,
+                        },
+                        {
+                            id: 'fixed',
+                            label: 'Fixos e parcelados',
+                            panel: <FixedPanel page={props} />,
+                        },
+                    ]}
+                />
             </div>
         </>
     );

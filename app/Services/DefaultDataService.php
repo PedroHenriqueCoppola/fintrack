@@ -53,7 +53,6 @@ class DefaultDataService
             $category->nature = $item['nature'];
             $category->icon = $item['icon'];
             $category->color = $this->color($item['color']);
-            $category->initial_balance = '0.00';
             $category->initial_month = $item['applies_to'] === 'expense' ? $month : null;
             $category->save();
         }

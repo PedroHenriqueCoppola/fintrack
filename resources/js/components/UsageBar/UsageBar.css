@@ -1,0 +1,42 @@
+.usage {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    white-space: nowrap;
+}
+
+.usage__track {
+    display: inline-block;
+    width: 12rem;
+    height: 0.6rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--color-border-input);
+    vertical-align: middle;
+}
+
+.usage__fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-primary-fill);
+}
+
+.usage__percent {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.usage__near {
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.usage--over .usage__fill {
+    background: var(--color-destructive);
+}
+
+.usage--over .usage__percent {
+    color: var(--color-negative-text);
+}

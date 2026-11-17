@@ -19,7 +19,6 @@ class CategoryResource extends JsonResource
             'nature' => $this->nature,
             'icon' => $this->icon,
             'color' => $this->color,
-            'initial_balance' => $this->initial_balance,
             'initial_month' => $this->initial_month?->toDateString(),
             'archived' => $this->archived_at !== null,
             'usage' => null,

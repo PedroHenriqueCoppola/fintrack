@@ -49,6 +49,16 @@ class TransactionResource extends JsonResource
                 'closing_day' => $this->card->closing_day,
                 'archived' => $this->card->archived_at !== null,
             ],
+            'generated' => $this->resource->isGenerated(),
+            'fixed_expense' => $this->fixed_expense_id === null ? null : [
+                'id' => $this->fixed_expense_id,
+                'name' => $this->fixedExpense?->name,
+            ],
+            'installment' => $this->installment_id === null ? null : [
+                'id' => $this->installment_id,
+                'number' => $this->installment_number,
+                'count' => $this->installment?->installments_count,
+            ],
         ];
     }
 }

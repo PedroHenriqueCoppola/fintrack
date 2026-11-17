@@ -8,6 +8,7 @@ export default function ConfirmDialog({
     message,
     confirmLabel,
     busy = false,
+    busyLabel = 'Excluindo…',
     onConfirm,
     onCancel,
 }) {
@@ -37,7 +38,7 @@ export default function ConfirmDialog({
                         Cancelar
                     </Button>
                     <Button variant="destructive" onClick={onConfirm} disabled={busy}>
-                        {busy ? 'Excluindo…' : confirmLabel}
+                        {busy ? busyLabel : confirmLabel}
                     </Button>
                 </>
             )}

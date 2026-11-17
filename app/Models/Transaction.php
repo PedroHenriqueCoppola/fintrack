@@ -30,6 +30,8 @@ class Transaction extends Model
             'amount' => 'decimal:2',
             'date' => 'date',
             'competence_date' => 'date',
+            'installment_number' => 'integer',
+            'generated_for' => 'date',
         ];
     }
 
@@ -51,5 +53,20 @@ class Transaction extends Model
     public function card(): BelongsTo
     {
         return $this->belongsTo(Card::class);
+    }
+
+    public function fixedExpense(): BelongsTo
+    {
+        return $this->belongsTo(FixedExpense::class);
+    }
+
+    public function installment(): BelongsTo
+    {
+        return $this->belongsTo(Installment::class);
+    }
+
+    public function isGenerated(): bool
+    {
+        return $this->fixed_expense_id !== null || $this->installment_id !== null;
     }
 }

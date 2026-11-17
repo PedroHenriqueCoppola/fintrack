@@ -287,6 +287,9 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Tamanho:** módulo único, com revisão pelo próprio agente.
 - **Fixos e parcelas:** o sistema pode criar Pendentes com data futura (o lançamento manual não pode).
 - **Alto impacto:** porcentagem configurável num campo da própria página, padrão 30%.
+- **Fixos e parcelas por categoria:** a tabela do planejamento tem a coluna "Fixos e parcelas", logo depois de "Gasto no mês": quanto, entre os fixos e parcelas ativos naquele mês, pertence à categoria. Conta mesmo sem confirmar o mês. É informativa (o "Resta" continua sendo valor do mês − gasto pago) e avisa "Passa do valor do mês" quando o comprometido é maior que o planejado.
+- **Aba Fixos e parcelados:** mostra por padrão o que está ativo no mês selecionado; o que ainda não começou ou já terminou fica num grupo recolhido "Fora deste mês", com o motivo. O Pendente de cada mês só nasce quando aquele mês é confirmado.
+- **Mês de trabalho compartilhado:** o mês escolhido no Planejamento vale também para o Dashboard (quando ele existir, no módulo 8) e é lembrado enquanto o usuário estiver logado. Há o atalho "Voltar ao mês atual". A Análise lembra os próprios filtros à parte, com "Limpar filtros".
 - Esta decisão substitui as regras de saldo com acúmulo e de remanejamento das seções anteriores deste documento (inclusive "Saldo inicial da categoria" e "Caixinha" em Decisões da revisão e "Ritmo diário" na Segunda revisão).
 
 ### Segunda revisão

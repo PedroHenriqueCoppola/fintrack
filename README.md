@@ -1,12 +1,12 @@
 # Fintrack
 
-Sistema web de finanças pessoais: transações, orçamento por categoria com acúmulo, planejamento do mês, metas, patrimônio e relatórios. As regras de negócio estão em `docs/product-vision.md`.
+Sistema web de finanças pessoais: transações, orçamento do mês por categoria, planejamento, metas, patrimônio e relatórios. As regras de negócio estão em `docs/product-vision.md`.
 
 ## Funcionalidades
 
 O visual novo segue o design system: superfícies em camadas, cards com sombra suave e a fonte Plus Jakarta Sans. Não há header. A sidebar flutuante traz o nome Fintrack, os sete links e o botão Recolher. No topo da área de conteúdo ficam o botão de tema e o ícone de perfil. O tema escuro é o padrão. O botão de tema alterna para o tema claro e guarda a escolha neste navegador.
 
-Nesta etapa dá para entrar, criar conta, cadastrar em Gerenciar e lançar transações. O botão Nova transação, no Dashboard e na Análise, abre o modal. A Análise lista os lançamentos, com filtros na URL, filtros salvos e o resumo do período. O corpo do Dashboard, Planejamento, Metas, Patrimônio e Relatórios continuam em construção. As páginas internas exigem uma conta. Ainda não há usuário de demonstração.
+Nesta etapa dá para entrar, criar conta, cadastrar em Gerenciar, lançar transações e planejar o mês. O botão Nova transação, no Dashboard e na Análise, abre o modal. A Análise lista os lançamentos, com filtros na URL, filtros salvos e o resumo do período. O corpo do Dashboard, Metas, Patrimônio e Relatórios continua em construção. As páginas internas exigem uma conta. Ainda não há usuário de demonstração.
 
 ## Como subir
 
@@ -64,8 +64,6 @@ Cada conta nova recebe categorias e formas de pagamento iniciais:
 - Receita: Salário, Outras receitas
 - Formas de pagamento: Pix, Débito, Crédito (só Crédito exige cartão) e Transferência. Contas já criadas não recebem Transferência sozinhas: o cadastro fica em Gerenciar.
 
-As categorias de Despesa nascem com saldo inicial zero, valendo a partir do mês em que a conta foi criada. Receita não tem saldo inicial.
-
 O escopo `BelongsToUser` filtra toda consulta pelo usuário logado e preenche `user_id` ao criar. Numa requisição web sem usuário autenticado, a consulta não devolve registros. No tinker, nos comandos do Artisan e nos jobs não há usuário autenticado: o escopo não filtra e não gera erro. Por isso o comando abaixo precisa indicar a conta.
 
 Para aplicar os padrões a um usuário que já existia:
@@ -84,9 +82,17 @@ docker compose exec app php artisan tinker --execute='App\Models\User::query()->
 
 O modal registra despesa ou receita, paga ou pendente, com valor, data, descrição, categoria, banco e forma de pagamento. A data da transação não pode ser depois de hoje; a data de competência pode. Se a forma exige cartão, o cartão é obrigatório e o banco fica travado no banco do cartão. Data de competência e observação ficam em Mais opções. Duplicar abre uma cópia com a data de hoje e o status Paga. Excluir uma transação ou um filtro salvo pede confirmação num modal do sistema e, no caso da transação, apaga a linha.
 
+Na lista, um lançamento gerado por gasto fixo ou parcela aparece com a marca Fixo ou Parcela n/total. Uma pendente gerada pode ter data futura; ao marcá-la como paga, a data passa a ser hoje e a competência guarda o dia original, se ainda estava vazia.
+
 A página http://localhost:8000/analysis agrupa por dia no período escolhido (mês atual é o padrão; o intervalo é o do calendário, no fuso de São Paulo). O resumo — quantidade, receitas, despesas, saldo e média por despesa — é calculado no servidor sobre o filtro inteiro. Transação pendente entra na quantidade e fica de fora do dinheiro. A lista carrega de 50 em 50. Os filtros ficam na URL, então o endereço pode ser aberto em outra aba. Dá para salvar até 20 filtros por conta e apagar cada um. A busca ignora maiúsculas e acentos.
 
-Parcelamento, gasto fixo, tag e fatura ainda não existem.
+Tag e fatura ainda não existem.
+
+## Planejamento
+
+A página http://localhost:8000/planning trabalha com um mês por vez (passado, atual ou futuro). Sem mês na URL, abre o mês atual no fuso de São Paulo. A aba **Planejar o mês** mostra a renda esperada, o valor de cada categoria de despesa, o gasto pago do mês, a porcentagem usada e o que resta. Reserva só tem o valor a guardar. A sobra a alocar é a renda menos a soma dos valores; pode ficar negativa. O mês nasce como cópia do plano anterior, mas só é gravado no primeiro salvamento. Confirmar gera as despesas pendentes dos fixos e das parcelas daquele mês. Voltar para rascunho não apaga o que já foi gerado.
+
+A aba **Fixos e parcelados** cadastra o gasto que se repete e o parcelado. O valor de cada parcela é calculado no servidor: o total dividido pelo número de parcelas, arredondado para baixo, e o resto fica na última. Um fixo ou parcela que passa da porcentagem configurada (30% no início) recebe a marca **Alto impacto**.
 
 ## Proteção do login
 

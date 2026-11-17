@@ -5,8 +5,11 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FixedExpenseController;
+use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\ManageController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SavedFilterController;
 use App\Http\Controllers\SessionController;
@@ -36,7 +39,23 @@ Route::middleware(['auth', 'inertia.encrypt'])->group(function () {
 
     Route::post('/saved-filters', [SavedFilterController::class, 'store'])->name('saved-filters.store');
     Route::delete('/saved-filters/{savedFilter}', [SavedFilterController::class, 'destroy'])->name('saved-filters.destroy')->whereNumber('savedFilter');
-    Route::get('/planning', fn () => Inertia::render('Planning/Index'))->name('planning');
+    Route::get('/planning', [PlanningController::class, 'index'])->name('planning');
+    Route::put('/planning/settings', [PlanningController::class, 'settings'])->name('planning.settings');
+    Route::post('/planning/installments/preview', [PlanningController::class, 'preview'])->name('planning.installments.preview');
+    Route::put('/planning/{month}', [PlanningController::class, 'update'])->name('planning.update')->where('month', '[^/]+');
+    Route::post('/planning/{month}/copy', [PlanningController::class, 'copy'])->name('planning.copy')->where('month', '[^/]+');
+    Route::post('/planning/{month}/confirm', [PlanningController::class, 'confirm'])->name('planning.confirm')->where('month', '[^/]+');
+    Route::post('/planning/{month}/reopen', [PlanningController::class, 'reopen'])->name('planning.reopen')->where('month', '[^/]+');
+
+    Route::post('/planning/fixed-expenses', [FixedExpenseController::class, 'store'])->name('planning.fixed-expenses.store');
+    Route::put('/planning/fixed-expenses/{fixedExpense}', [FixedExpenseController::class, 'update'])->name('planning.fixed-expenses.update')->whereNumber('fixedExpense');
+    Route::post('/planning/fixed-expenses/{fixedExpense}/archive', [FixedExpenseController::class, 'archive'])->name('planning.fixed-expenses.archive')->whereNumber('fixedExpense');
+    Route::post('/planning/fixed-expenses/{fixedExpense}/restore', [FixedExpenseController::class, 'restore'])->name('planning.fixed-expenses.restore')->whereNumber('fixedExpense');
+
+    Route::post('/planning/installments', [InstallmentController::class, 'store'])->name('planning.installments.store');
+    Route::put('/planning/installments/{installment}', [InstallmentController::class, 'update'])->name('planning.installments.update')->whereNumber('installment');
+    Route::post('/planning/installments/{installment}/archive', [InstallmentController::class, 'archive'])->name('planning.installments.archive')->whereNumber('installment');
+    Route::post('/planning/installments/{installment}/restore', [InstallmentController::class, 'restore'])->name('planning.installments.restore')->whereNumber('installment');
     Route::get('/goals', fn () => Inertia::render('Goals/Index'))->name('goals');
     Route::get('/net-worth', fn () => Inertia::render('NetWorth/Index'))->name('net-worth');
     Route::get('/reports', fn () => Inertia::render('Reports/Index'))->name('reports');

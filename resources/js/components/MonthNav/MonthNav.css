@@ -1,0 +1,44 @@
+.month-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem;
+    border: 1px solid var(--color-border-input);
+    border-radius: var(--radius-md);
+    background: var(--color-card);
+}
+
+.month-nav button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    border: 0;
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.month-nav button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.month-nav button:focus-visible {
+    outline: 2px solid var(--color-primary-soft);
+    outline-offset: 2px;
+}
+
+.month-nav span {
+    padding: 0 1rem;
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+.month-nav svg {
+    width: 1.8rem;
+    height: 1.8rem;
+}
