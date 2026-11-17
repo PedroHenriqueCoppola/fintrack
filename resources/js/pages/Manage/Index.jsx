@@ -20,33 +20,12 @@ function labelFor(options, value) {
     return options.find((option) => option.value === value)?.label ?? '';
 }
 
-function unsignedMoney(value) {
-    const amount = Number(value);
-
-    if (!Number.isFinite(amount) || amount === 0) {
-        return '';
-    }
-
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    }).format(amount);
-}
-
 function categoryDetail(item, options) {
     if (item.applies_to === 'income') {
         return labelFor(options.categoryTypes, item.applies_to) || 'Receita';
     }
 
-    const nature = labelFor(options.natures, item.nature) || 'Gasto';
-
-    if (item.nature === 'reserve') {
-        const balance = unsignedMoney(item.initial_balance);
-
-        return balance ? `${nature} · saldo ${balance}` : nature;
-    }
-
-    return nature;
+    return labelFor(options.natures, item.nature) || 'Gasto';
 }
 
 function bankDetail(item, options) {

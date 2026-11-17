@@ -361,6 +361,11 @@
     font-weight: 500;
 }
 
+.tx-badge--neutral {
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+}
+
 .tx-pay {
     padding: 0.6rem 1.2rem;
     border: 0;

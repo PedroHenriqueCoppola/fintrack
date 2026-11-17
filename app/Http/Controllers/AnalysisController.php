@@ -9,17 +9,25 @@ use App\Http\Resources\TransactionResource;
 use App\Services\SavedFilterService;
 use App\Services\TransactionOptionsService;
 use App\Services\TransactionService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AnalysisController extends Controller
 {
+    public const QUERY_KEY = 'analysis_query';
+
     public function index(
         AnalysisRequest $request,
         TransactionService $transactions,
         TransactionOptionsService $options,
         SavedFilterService $savedFilters,
-    ): Response {
+    ): Response|RedirectResponse {
+        if ($redirect = $this->rememberQuery($request)) {
+            return $redirect;
+        }
+
         $filters = $request->filters();
         $page = $transactions->paginate($filters);
         $dates = $page->getCollection()
@@ -63,5 +71,60 @@ class AnalysisController extends Controller
             'savedFilters' => SavedFilterResource::collection($savedFilters->list())->resolve(),
             'options' => $options->catalog(),
         ]);
+    }
+
+    public function clear(Request $request): RedirectResponse
+    {
+        $request->session()->forget(self::QUERY_KEY);
+
+        return redirect()->route('analysis');
+    }
+
+    private function rememberQuery(AnalysisRequest $request): ?RedirectResponse
+    {
+        parse_str((string) $request->server('QUERY_STRING', ''), $query);
+        unset($query['page']);
+
+        if ($query === []) {
+            $saved = $request->session()->get(self::QUERY_KEY);
+
+            if (is_array($saved) && $saved !== []) {
+                return redirect()->route('analysis', $saved);
+            }
+
+            return null;
+        }
+
+        if ($this->queryIsDefault($query)) {
+            $request->session()->forget(self::QUERY_KEY);
+        } else {
+            $request->session()->put(self::QUERY_KEY, $query);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     */
+    private function queryIsDefault(array $query): bool
+    {
+        foreach ($query as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if ($key === 'period' && $value === 'current_month') {
+                continue;
+            }
+
+            if ($key === 'sort' && $value === 'date_desc') {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
     }
 }

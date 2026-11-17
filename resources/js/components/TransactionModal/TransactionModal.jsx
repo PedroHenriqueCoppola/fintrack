@@ -83,6 +83,7 @@ function buildInitial(mode, transaction, options, today) {
             card_id: '',
             competence_date: '',
             notes: '',
+            apply_amount_forward: false,
         };
     }
 
@@ -105,6 +106,7 @@ function buildInitial(mode, transaction, options, today) {
             : '',
         competence_date: transaction.competence_date ? formatDate(transaction.competence_date) : '',
         notes: transaction.notes ?? '',
+        apply_amount_forward: false,
     };
 }
 
@@ -184,6 +186,7 @@ export default function TransactionModal({
     const bankName = card?.bank_name
         || banks.find((item) => String(item.id) === String(card?.bank_id))?.name
         || '';
+    const generatedPending = Boolean(editing && transaction?.generated && form.data.status === 'pending');
     const missing = [];
 
     if ((catalog.categories[form.data.type] ?? []).length === 0) {
@@ -249,6 +252,7 @@ export default function TransactionModal({
             card_id: requiresCard ? (form.data.card_id || null) : null,
             competence_date: form.data.competence_date ? datePayload(form.data.competence_date) : null,
             notes: form.data.notes.trim() === '' ? null : form.data.notes.trim(),
+            apply_amount_forward: Boolean(editing && transaction?.fixed_expense && form.data.apply_amount_forward),
         };
 
         form.transform(() => payload);
@@ -370,11 +374,21 @@ export default function TransactionModal({
                     <DatePicker
                         label="Data"
                         value={form.data.date}
-                        max={today}
+                        max={generatedPending ? undefined : today}
                         error={form.errors.date}
                         onChange={(value) => setField('date', value)}
                     />
                 </div>
+                {editing && transaction?.fixed_expense ? (
+                    <label className="tx-forward">
+                        <input
+                            type="checkbox"
+                            checked={Boolean(form.data.apply_amount_forward)}
+                            onChange={(event) => setField('apply_amount_forward', event.target.checked)}
+                        />
+                        Usar este valor daqui em diante
+                    </label>
+                ) : null}
                 <FormField label="Descrição" error={form.errors.description}>
                     <input
                         type="text"

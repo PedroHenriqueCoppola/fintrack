@@ -159,12 +159,10 @@ export default function Index({
         });
     }
 
+    const filtersDiffer = period.key !== 'current_month' || chips.length > 0;
+
     function clearFilters() {
-        visitAnalysis({
-            period: period.key,
-            from: period.from,
-            to: period.to,
-        });
+        router.post('/analysis/clear');
     }
 
     function pay(transaction) {
@@ -360,7 +358,7 @@ export default function Index({
                             </button>
                         </span>
                     ))}
-                    {chips.length > 0 ? (
+                    {filtersDiffer ? (
                         <button type="button" className="filter-clear" onClick={clearFilters}>Limpar filtros</button>
                     ) : null}
                     <span className="filter-chips__spacer" />
@@ -408,8 +406,8 @@ export default function Index({
                         <EmptyState
                             icon={Receipt}
                             message={chips.length > 0 ? 'Nenhum resultado para esses filtros.' : 'Nenhuma transação neste período.'}
-                            shortcutLabel={chips.length > 0 ? 'Limpar filtros' : 'Nova transação'}
-                            onShortcut={chips.length > 0 ? clearFilters : () => setSession({ mode: 'create' })}
+                            shortcutLabel={filtersDiffer ? 'Limpar filtros' : 'Nova transação'}
+                            onShortcut={filtersDiffer ? clearFilters : () => setSession({ mode: 'create' })}
                         />
                     ) : (
                         <>

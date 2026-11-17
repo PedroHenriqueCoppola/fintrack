@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Card;
+use App\Models\FixedExpense;
 use App\Models\Transaction;
 use App\Support\Money;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -10,7 +11,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class TransactionService
 {
-    public function __construct(private PeriodRange $periods) {}
+    public function __construct(
+        private PeriodRange $periods,
+        private PlanGenerator $generator,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -29,8 +33,24 @@ class TransactionService
      */
     public function update(Transaction $transaction, array $data): Transaction
     {
+        $apply = (bool) ($data['apply_amount_forward'] ?? false);
+        $fixed = null;
+        $previous = null;
+
+        if ($apply && $transaction->fixed_expense_id) {
+            $fixed = FixedExpense::query()->find($transaction->fixed_expense_id);
+            $previous = $fixed instanceof FixedExpense ? Money::of($fixed->amount) : null;
+        }
+
         $this->fill($transaction, $data);
         $transaction->save();
+
+        if ($fixed instanceof FixedExpense && $previous !== null) {
+            $fixed->amount = Money::of($transaction->amount);
+            $fixed->save();
+            $from = $transaction->generated_for?->toDateString() ?? $transaction->date->toDateString();
+            $this->generator->applyAmountForward($fixed, $previous, $from);
+        }
 
         return $transaction;
     }
@@ -42,10 +62,23 @@ class TransactionService
 
     public function pay(Transaction $transaction): Transaction
     {
-        if ($transaction->status !== 'paid') {
-            $transaction->status = 'paid';
-            $transaction->save();
+        if ($transaction->status === 'paid') {
+            return $transaction;
         }
+
+        $today = now('America/Sao_Paulo')->toDateString();
+        $date = $transaction->date->toDateString();
+
+        if ($date > $today) {
+            if ($transaction->competence_date === null) {
+                $transaction->competence_date = $date;
+            }
+
+            $transaction->date = $today;
+        }
+
+        $transaction->status = 'paid';
+        $transaction->save();
 
         return $transaction;
     }
@@ -84,6 +117,8 @@ class TransactionService
                 'bank:id,name,archived_at',
                 'paymentMethod:id,name,requires_card,archived_at',
                 'card:id,name,closing_day,bank_id,archived_at',
+                'fixedExpense:id,name',
+                'installment:id,name,installments_count',
             ])
             ->paginate(50, ['*'], 'page', $filters['page']);
     }

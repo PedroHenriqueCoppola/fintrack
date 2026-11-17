@@ -1,0 +1,35 @@
+.month-field {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.month-field input {
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+}
+
+.month-field button {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 3.6rem;
+    height: 3.6rem;
+    padding: 0;
+    border: 1px solid var(--color-border-input);
+    border-radius: 1.3rem;
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.month-field button:focus-visible {
+    outline: 2px solid var(--color-primary-soft);
+    outline-offset: 2px;
+}
+
+.month-field svg {
+    width: 1.8rem;
+    height: 1.8rem;
+}

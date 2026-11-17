@@ -13,13 +13,11 @@ class Category extends Model
         'name',
         'icon',
         'color',
-        'initial_balance',
     ];
 
     protected function casts(): array
     {
         return [
-            'initial_balance' => 'decimal:2',
             'initial_month' => 'date',
             'archived_at' => 'datetime',
         ];

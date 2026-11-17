@@ -1,0 +1,465 @@
+.plan-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(28rem, 1fr);
+    gap: 1.6rem;
+    align-items: start;
+}
+
+.plan-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.6rem;
+    margin-bottom: 1.6rem;
+}
+
+.plan-toolbar__income,
+.plan-toolbar__actions,
+.plan-fixed__top,
+.plan-fixed__create,
+.plan-record__title,
+.plan-record__actions,
+.plan-empty-actions,
+.plan-impact,
+.plan-confirmed {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.plan-toolbar__income,
+.plan-confirmed {
+    align-items: flex-end;
+}
+
+.plan-income {
+    width: 22rem;
+}
+
+.plan-chip {
+    display: inline-block;
+    margin: 0 0 1.4rem;
+    padding: 0.2rem 0.8rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-chip-bg);
+    color: var(--color-chip-text);
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+
+.plan-record__title .plan-chip,
+.plan-fixed__top .plan-chip {
+    margin: 0;
+}
+
+.plan-chip--muted {
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+}
+
+.plan-save,
+.plan-note,
+.plan-hint,
+.plan-draft-note,
+.plan-alert,
+.plan-lead {
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.plan-save {
+    min-height: 1.6rem;
+    margin: 0;
+}
+
+.plan-alert {
+    color: var(--color-negative-text);
+}
+
+.plan-lead {
+    margin-bottom: 1.4rem;
+    font-size: 1.4rem;
+}
+
+.plan-layout > .card,
+.plan-layout .card__body {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.plan-month {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.plan-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-color: var(--color-border-strong) var(--color-card-inset);
+    scrollbar-width: thin;
+}
+
+.plan-table-wrap::-webkit-scrollbar {
+    height: 0.8rem;
+}
+
+.plan-table-wrap::-webkit-scrollbar-track {
+    background: var(--color-card-inset);
+    border-radius: 999px;
+}
+
+.plan-table-wrap::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 999px;
+}
+
+.plan-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-fill);
+}
+
+.plan-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 1.35rem;
+}
+
+.plan-table th,
+.plan-table td {
+    white-space: nowrap;
+}
+
+.plan-table th {
+    padding: 0 1rem 1rem;
+    color: var(--color-text-subtle);
+    font-size: 1.25rem;
+    font-weight: 500;
+    text-align: left;
+}
+
+.plan-table td {
+    padding: 1.2rem 1rem;
+    border-top: 1px solid var(--color-border);
+    font-variant-numeric: tabular-nums;
+    vertical-align: middle;
+}
+
+.plan-table .is-right {
+    text-align: right;
+}
+
+.plan-table__amount {
+    width: 14rem;
+}
+
+.plan-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    vertical-align: middle;
+}
+
+.plan-stack__value {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 2.4rem;
+}
+
+.plan-stack__note {
+    min-height: 1.6rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.6rem;
+}
+
+.plan-stack__note--over {
+    color: var(--color-negative-text);
+}
+
+.plan-table .form-field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.plan-cat,
+.plan-record {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.plan-cat__name,
+.plan-record__title {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.plan-tile {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 3.8rem;
+    height: 3.8rem;
+    border-radius: 1.2rem;
+    background: color-mix(in srgb, var(--item-color) 16%, var(--color-card));
+    color: color-mix(in srgb, var(--item-color) 70%, var(--color-text));
+}
+
+.plan-tile--plain {
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+}
+
+.plan-tile svg {
+    width: 1.8rem;
+    height: 1.8rem;
+}
+
+.plan-section {
+    margin: 2.2rem 0 0.6rem;
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.plan-muted {
+    color: var(--color-text-subtle);
+}
+
+.plan-negative {
+    color: var(--color-negative-text);
+}
+
+.plan-positive {
+    color: var(--color-positive);
+}
+
+.plan-kicker {
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.plan-figure {
+    margin: 0.4rem 0 1.4rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.plan-allocate {
+    margin-top: 0.4rem;
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+.plan-vision .plan-note {
+    text-align: center;
+}
+
+.plan-vision .plan-note + .plan-note {
+    margin-top: 0.6rem;
+}
+
+.plan-confirm {
+    width: 100%;
+    margin-top: 1.6rem;
+}
+
+.plan-confirmed {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 1.6rem;
+}
+
+.plan-confirmed p {
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.plan-donut {
+    display: block;
+    width: 15rem;
+    height: 15rem;
+    margin: 1.8rem auto 0.6rem;
+}
+
+.plan-donut circle {
+    fill: none;
+    stroke-width: 14;
+}
+
+.plan-donut__track {
+    stroke: var(--color-border-input);
+}
+
+.plan-donut__spend,
+.plan-donut__reserve {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: rotate(-90deg);
+}
+
+.plan-donut__spend {
+    stroke: var(--color-primary-fill);
+}
+
+.plan-donut__reserve {
+    stroke: color-mix(in srgb, var(--color-primary) 42%, var(--color-card-highlight));
+}
+
+.plan-fixed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+}
+
+.plan-fixed__top,
+.plan-fixed__create {
+    justify-content: space-between;
+}
+
+.plan-draft-note {
+    margin: 0;
+}
+
+.plan-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.6rem;
+}
+
+.card.plan-stat {
+    padding: 1.6rem 1.8rem;
+}
+
+.plan-stat__value {
+    margin-top: 0.8rem;
+    font-size: 2.1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.plan-impact input {
+    width: 7rem;
+}
+
+.plan-filters {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 1.4rem;
+}
+
+.plan-record {
+    justify-content: space-between;
+    padding: 1.2rem 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.plan-record:first-of-type {
+    border-top: 0;
+}
+
+.plan-record__copy {
+    flex: 1;
+    min-width: 0;
+}
+
+.plan-record__meta,
+.plan-record__progress {
+    margin-top: 0.2rem;
+    color: var(--color-text-subtle);
+    font-size: 1.25rem;
+}
+
+.plan-record__progress {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.plan-record__side {
+    text-align: right;
+}
+
+.plan-record__side strong {
+    font-variant-numeric: tabular-nums;
+}
+
+.plan-progress {
+    display: inline-block;
+    width: 8rem;
+    height: 0.6rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--color-border-input);
+}
+
+.plan-progress span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-primary-fill);
+}
+
+.plan-archived {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+}
+
+.plan-archived summary {
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.plan-form,
+.plan-form__row {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.plan-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.plan-fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    margin: 0;
+}
+
+.plan-fieldset:disabled {
+    opacity: 0.7;
+}
+
+.plan-preview {
+    margin: 0;
+    padding-left: 1.8rem;
+    color: var(--color-text-muted);
+    font-size: 1.35rem;
+}
+
+.plan-empty-actions {
+    margin-top: 1.2rem;
+}
+
+.plan-hint {
+    margin: 0;
+}

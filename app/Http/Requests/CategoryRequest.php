@@ -20,9 +20,6 @@ class CategoryRequest extends FormRequest
     {
         $category = $this->route('category');
         $editing = $category instanceof Category;
-        $expense = $editing
-            ? $category->applies_to === 'expense'
-            : $this->input('applies_to') === 'expense';
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
@@ -30,9 +27,6 @@ class CategoryRequest extends FormRequest
             'color' => ['nullable', 'string', Rule::in(array_column(config('fintrack.colors'), 'value'))],
             'initial_month' => ['missing'],
             'user_id' => ['missing'],
-            'initial_balance' => $expense
-                ? ['nullable', 'numeric', 'min:0', 'decimal:0,2', 'max:9999999999999.99']
-                : ['missing'],
         ];
 
         if ($editing) {
@@ -77,11 +71,6 @@ class CategoryRequest extends FormRequest
             'icon.in' => 'Escolha um ícone da lista.',
             'color.string' => 'Escolha uma cor da lista.',
             'color.in' => 'Escolha uma cor da lista.',
-            'initial_balance.missing' => 'Receita não tem saldo inicial.',
-            'initial_balance.numeric' => 'Informe o saldo inicial no formato 1.234,56.',
-            'initial_balance.min' => 'O saldo inicial não pode ser negativo.',
-            'initial_balance.decimal' => 'Informe o saldo inicial com no máximo duas casas decimais.',
-            'initial_balance.max' => 'O saldo inicial é alto demais.',
             'initial_month.missing' => 'O mês inicial é definido pelo sistema.',
             'user_id.missing' => 'O usuário não pode ser informado.',
         ];

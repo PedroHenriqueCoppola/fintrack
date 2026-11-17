@@ -49,6 +49,12 @@ function Row({ transaction, onEdit, onPay, paying }) {
                 <div className="tx-row__title">
                     <span className="tx-row__name">{transaction.description}</span>
                     {transaction.status === 'pending' ? <span className="tx-badge">Pendente</span> : null}
+                    {transaction.fixed_expense ? <span className="tx-badge tx-badge--neutral">Fixo</span> : null}
+                    {transaction.installment ? (
+                        <span className="tx-badge tx-badge--neutral">
+                            {`Parcela ${transaction.installment.number}/${transaction.installment.count}`}
+                        </span>
+                    ) : null}
                 </div>
                 <p className="tx-row__meta">{meta(transaction)}</p>
             </div>

@@ -148,6 +148,8 @@ class AnalysisRequest extends FormRequest
 
     protected function failedValidation(Validator $validator): void
     {
+        $this->session()->forget('analysis_query');
+
         throw new HttpResponseException(
             redirect()->route('analysis')->withErrors($validator)
         );

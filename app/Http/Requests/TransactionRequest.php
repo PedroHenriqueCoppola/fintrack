@@ -2,11 +2,9 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Bank;
-use App\Models\Card;
 use App\Models\Category;
-use App\Models\PaymentMethod;
 use App\Models\Transaction;
+use App\Support\CatalogGuard;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -45,11 +43,18 @@ class TransactionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $transaction = $this->route('transaction');
+        $generatedPending = $transaction instanceof Transaction
+            && $transaction->isGenerated()
+            && $this->input('status') === 'pending';
+
         return [
             'type' => ['required', 'string', Rule::in(['income', 'expense'])],
             'status' => ['required', 'string', Rule::in(['paid', 'pending'])],
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
-            'date' => ['bail', 'required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'date' => $generatedPending
+                ? ['bail', 'required', 'date_format:Y-m-d']
+                : ['bail', 'required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'competence_date' => ['bail', 'nullable', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:120'],
             'notes' => ['nullable', 'string', 'max:500'],
@@ -57,7 +62,12 @@ class TransactionRequest extends FormRequest
             'bank_id' => ['nullable', 'integer'],
             'payment_method_id' => ['required', 'integer'],
             'card_id' => ['nullable', 'integer'],
+            'apply_amount_forward' => ['sometimes', 'boolean'],
             'user_id' => ['missing'],
+            'fixed_expense_id' => ['missing'],
+            'installment_id' => ['missing'],
+            'installment_number' => ['missing'],
+            'generated_for' => ['missing'],
         ];
     }
 
@@ -89,7 +99,12 @@ class TransactionRequest extends FormRequest
             'payment_method_id.required' => 'Escolha a forma de pagamento.',
             'payment_method_id.integer' => 'Escolha a forma de pagamento.',
             'card_id.integer' => 'Escolha o cartão.',
+            'apply_amount_forward.boolean' => 'A opção de valor daqui em diante é inválida.',
             'user_id.missing' => 'O usuário não pode ser informado.',
+            'fixed_expense_id.missing' => 'Esse campo é definido pelo sistema.',
+            'installment_id.missing' => 'Esse campo é definido pelo sistema.',
+            'installment_number.missing' => 'Esse campo é definido pelo sistema.',
+            'generated_for.missing' => 'Esse campo é definido pelo sistema.',
         ];
     }
 
@@ -123,46 +138,18 @@ class TransactionRequest extends FormRequest
             $validator->errors()->add('category_id', 'Categorias de Reserva não aceitam gastos.');
         }
 
-        $method = PaymentMethod::query()->find($this->integer('payment_method_id'));
+        CatalogGuard::payment(
+            $validator,
+            $this->input('payment_method_id'),
+            $this->input('bank_id'),
+            $this->input('card_id'),
+            $current?->payment_method_id,
+            $current?->bank_id,
+            $current?->card_id,
+        );
 
-        if (! $method instanceof PaymentMethod || ! $this->usable($method, $current?->payment_method_id)) {
-            $validator->errors()->add('payment_method_id', 'Escolha uma forma de pagamento ativa.');
-
-            return;
-        }
-
-        $cardId = $this->input('card_id');
-        $card = null;
-
-        if ($method->requires_card) {
-            if (! $cardId) {
-                $validator->errors()->add('card_id', 'Escolha o cartão.');
-            }
-        } elseif ($cardId) {
-            $validator->errors()->add('card_id', 'Essa forma de pagamento não usa cartão.');
-        }
-
-        if ($cardId && ! $validator->errors()->has('card_id')) {
-            $card = Card::query()->find($cardId);
-
-            if (! $card instanceof Card || ! $this->usable($card, $current?->card_id)) {
-                $validator->errors()->add('card_id', 'Escolha um cartão ativo.');
-                $card = null;
-            }
-        }
-
-        $bankId = $card instanceof Card ? $card->bank_id : $this->input('bank_id');
-
-        if (! $bankId) {
-            $validator->errors()->add('bank_id', 'Escolha o banco.');
-
-            return;
-        }
-
-        $bank = Bank::query()->find($bankId);
-
-        if (! $bank instanceof Bank || ! $this->usable($bank, $current?->bank_id)) {
-            $validator->errors()->add('bank_id', 'Escolha um banco ativo.');
+        if ($this->boolean('apply_amount_forward') && ! ($current instanceof Transaction && $current->fixed_expense_id)) {
+            $validator->errors()->add('apply_amount_forward', 'Essa opção vale só para uma despesa gerada por gasto fixo.');
         }
     }
 

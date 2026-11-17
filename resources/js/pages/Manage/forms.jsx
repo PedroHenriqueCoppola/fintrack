@@ -2,7 +2,6 @@ import { useForm } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
-import { blurMoneyInput, formatMoneyInput, parseMoneyInput } from '../../lib/format';
 import { useFieldSetter } from '../../lib/fields';
 import ChoiceGroup from './ChoiceGroup';
 
@@ -112,14 +111,12 @@ export function CategoryForm({ item, colors, icons, categoryTypes, natures, onCl
         nature: item?.nature ?? '',
         icon: item?.icon ?? '',
         color: item?.color ?? '',
-        initial_balance: item && item.applies_to === 'expense' ? formatMoneyInput(item.initial_balance) : '',
     });
     const setField = useFieldSetter(form);
     const expense = (item?.applies_to ?? form.data.applies_to) === 'expense';
 
     function submit(event) {
         event.preventDefault();
-        const appliesTo = item ? item.applies_to : form.data.applies_to;
         const payload = {
             name: form.data.name,
             icon: form.data.icon || null,
@@ -131,17 +128,6 @@ export function CategoryForm({ item, colors, icons, categoryTypes, natures, onCl
             if (form.data.applies_to === 'expense') {
                 payload.nature = form.data.nature || null;
             }
-        }
-
-        if (appliesTo === 'expense') {
-            const rawBalance = String(form.data.initial_balance ?? '').trim();
-            const parsed = parseMoneyInput(rawBalance);
-            const kept = rawBalance !== '' && parsed === rawBalance && /[.,]/.test(rawBalance);
-            // PHP treats "12.5" as a number. A rejected dot-decimal is posted
-            // with a trailing comma so the server returns the format error.
-            const serverValue = kept && /^-?\d+(\.\d+)?$/.test(parsed) ? `${parsed},` : parsed;
-
-            payload.initial_balance = rawBalance === '' ? null : serverValue;
         }
 
         visit(form, item, '/manage/categories', payload, onClose);
@@ -187,8 +173,7 @@ export function CategoryForm({ item, colors, icons, categoryTypes, natures, onCl
                                 ...data,
                                 applies_to: value,
                                 nature: value === 'expense' ? data.nature : '',
-                                initial_balance: value === 'expense' ? data.initial_balance : '',
-                            }), 'applies_to', 'nature', 'initial_balance')}
+                            }), 'applies_to', 'nature')}
                             error={form.errors.applies_to}
                         />
                         {expense ? (
@@ -205,29 +190,6 @@ export function CategoryForm({ item, colors, icons, categoryTypes, natures, onCl
                     </div>
                 )}
                 <div className="manage-form__row">
-                    {expense ? (
-                        <FormField
-                            label="Saldo inicial"
-                            hint="Opcional. Exemplo: 1.234,56."
-                            error={form.errors.initial_balance}
-                        >
-                            <input
-                                type="text"
-                                name="initial_balance"
-                                inputMode="decimal"
-                                autoComplete="off"
-                                placeholder="0,00"
-                                value={form.data.initial_balance}
-                                onChange={(event) => setField('initial_balance', event.target.value)}
-                                onBlur={() => {
-                                    const formatted = blurMoneyInput(form.data.initial_balance);
-                                    if (formatted !== null) {
-                                        setField('initial_balance', formatted);
-                                    }
-                                }}
-                            />
-                        </FormField>
-                    ) : null}
                     <ChoiceGroup
                         legend="Cor"
                         name="category-color"

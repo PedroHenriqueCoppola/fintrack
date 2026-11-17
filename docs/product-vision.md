@@ -22,17 +22,15 @@ O Fintrack é um sistema web de finanças pessoais que substitui a planilha e o 
 
 ## Glossário
 
-Estes dez termos têm o mesmo significado em todo o sistema, nos prompts e no código.
+Estes termos têm o mesmo significado em todo o sistema, nos prompts e no código.
 
 | Termo | Significado |
 | --- | --- |
 | Banco | Instituição financeira (Nubank, Itaú, PicPay). Agrupa cartões e transações e, no fechamento do patrimônio, recebe o saldo total guardado nele. |
-| Categoria | Classifica transações (Roupas, Viagens, Outros) e concentra as regras de saldo, estouro e remanejamento. Não tem ligação com banco: o dinheiro de uma categoria é só uma conta do sistema, não um valor guardado num lugar. |
+| Categoria | Classifica transações (Roupas, Viagens, Outros) e concentra o valor do mês e o uso do planejado. Não tem ligação com banco: o dinheiro de uma categoria é só uma conta do sistema, não um valor guardado num lugar. |
 | Natureza da categoria | **Gasto** conta como despesa. **Reserva** (investimentos, guardar para o futuro, reserva de emergência) é dinheiro separado para o futuro: não é despesa e aparece separada das despesas nos totais. |
-| Valor do mês | Quanto o usuário coloca em cada categoria no começo do mês, definido no planejamento. |
-| Saldo anterior | O que sobrou da categoria no fim do mês passado. |
-| Saldo disponível | Saldo anterior + valor do mês ± remanejamentos − gastos da categoria no mês. |
-| Remanejamento | Mover valor de uma categoria para outra dentro de um mês. |
+| Valor do mês | Quanto o usuário planeja para a categoria no mês, definido no planejamento. Em categoria de Reserva é quanto ele vai guardar no mês. |
+| Uso do planejado | Quanto da categoria de Gasto já foi gasto no mês, em valor e em % do valor do mês. Passou de 100% é estouro. |
 | Cartão e fatura | Cartão de crédito de um banco, com dia de fechamento. A fatura reúne as compras no crédito de um ciclo e é "aberta" ou "paga". |
 | Fechamento do patrimônio | Foto mensal do total guardado em cada banco, digitado pelo usuário. O patrimônio é a soma dos bancos. |
 | Meta | Objetivo de valor com prazo, alimentado por um histórico de lançamentos (aportes e ajustes). |
@@ -42,11 +40,11 @@ Estes dez termos têm o mesmo significado em todo o sistema, nos prompts e no c�
 O coração do sistema é um orçamento por categorias com acúmulo: o que sobra de um mês continua disponível no seguinte. Estas regras estão confirmadas pelo autor.
 
 1. **Valor sempre positivo.** Toda transação guarda o valor positivo; o tipo (Receita ou Despesa) define o sinal. Isso corrige a inconsistência do protótipo.
-2. **Saldo disponível da categoria.** Saldo anterior + valor do mês ± remanejamentos − gastos. Exemplo: outubro termina com R$ 120 sobrando em Roupas; em novembro o autor coloca R$ 300; o disponível é R$ 420. Na primeira vez, o usuário informa o saldo inicial de cada categoria.
+2. **Uso do planejado da categoria.** Cada categoria de Gasto tem, em cada mês, o valor do mês (planejado), o gasto (despesas Pagas do mês) e o que resta (valor do mês − gasto). Exemplo: Mercado com R$ 800 planejados e R$ 612,40 gastos mostra 77% usado e R$ 187,60 de resto. Não há acúmulo no sistema: a sobra de um mês não vira saldo do seguinte, porque o dinheiro que sobra fica guardado no banco e fora do sistema.
 3. **Gasto desconta na data da transação**, seja Pix, débito ou crédito, da categoria da transação.
-4. **Estouro de categoria.** O saldo pode ficar negativo no mês e o sistema alerta. Se o mês terminar negativo, o seguinte começa em zero: o estouro não é descontado do próximo mês.
-5. **Remanejamento.** Para cobrir um estouro, o usuário move valor de outra categoria (normalmente Outros). O sistema soma o valor ao destino, subtrai da origem e guarda o histórico. Quando a origem é uma categoria de Reserva, o remanejamento aparece como "Resgate", que é como o autor trata a retirada de um cofrinho antes de gastar. Sem isso, a categoria que cedeu o valor continuaria mostrando um saldo que o autor já usou.
-6. **Categorias de Reserva** seguem a mesma regra de acúmulo, mas não contam como despesa e não têm gastos próprios: o saldo cresce com o valor do mês e a retirada é um remanejamento ("Resgate").
+4. **Estouro de categoria.** Gastar mais que o valor do mês deixa a categoria acima de 100%, com alerta. Não existe remanejamento no sistema: quando o autor cobre um estouro tirando dinheiro de outra caixinha, isso acontece no banco e não é registrado aqui.
+5. **Mês de uma despesa.** Só despesas Pagas contam no gasto. Despesa Pendente não conta até virar Paga.
+6. **Categorias de Reserva** entram no planejamento com o valor que o autor vai guardar no mês, para a renda esperada fechar com as despesas e as reservas. Não têm gastos nem barra de uso. O acompanhamento do que foi guardado fica em Metas (módulo 9).
 7. **Crédito e fatura.** A compra no crédito é uma despesa comum, descontada da categoria na data da compra. Ela entra na fatura do cartão conforme o dia de fechamento: compra feita após o fechamento cai na fatura seguinte. Marcar a fatura como paga não cria despesa nova, porque a despesa já foi contada na compra.
 8. **Parcelamento.** Lançado uma vez (valor total, número de parcelas, data da primeira). O sistema gera uma transação por mês, Pendente até ser paga; ao ser paga, cada uma desconta da categoria e entra na fatura do mês correspondente. O parcelamento pode ser criado no formulário da transação ou em Planejamento: é o mesmo cadastro.
 9. **Planejamento.** Define o valor do mês de cada categoria mais os gastos fixos e parcelados. Não altera transações já lançadas; ao ser confirmado, gera as transações Pendentes dos fixos e das parcelas do mês. Nasce como cópia do mês anterior. Renda variável não entra aqui: é lançada como receita comum.
@@ -57,22 +55,18 @@ O coração do sistema é um orçamento por categorias com acúmulo: o que sobra
 ### Regras de cálculo
 
 - **Mês da despesa:** conta no mês da data de competência; se estiver vazia, no mês da data da transação. A fatura sempre usa a data da compra.
-- **Saldo derivado:** o saldo disponível é sempre calculado a partir do histórico, nunca guardado. O saldo anterior de um mês é o maior entre zero e o saldo final do mês anterior, e alterar uma transação antiga recalcula os meses seguintes.
-- **Saldo inicial:** vale a partir do mês em que a categoria é criada.
-- **Ritmo diário:** o Dashboard mostra, em cada categoria de Gasto com valor no mês, o saldo disponível dividido pelos dias restantes. Não existe um total único somando categorias.
-- **Categoria sem planejamento:** só classifica e mostra o gasto; não tem saldo disponível.
+- **Cálculo derivado:** o gasto e o que resta de cada categoria são sempre calculados a partir das transações, nunca guardados. Alterar uma transação atualiza o mês dela e nada mais.
+- **Ritmo diário:** fora do escopo por enquanto. O Dashboard mostra o gasto, o planejado e a % usada de cada categoria, mais o total.
+- **Categoria sem planejamento:** só classifica e mostra o gasto do mês; não tem valor do mês nem barra de uso.
 
-### Exemplo dos itens 2 e 5
+### Exemplo dos itens 2 e 4
 
-Roupas gastou R$ 470 no mês e Outros cede R$ 50. Sem o remanejamento, Roupas fecharia em −R$ 50.
+Em novembro, Transporte tem R$ 400 de valor do mês e gastou R$ 468 (despesas Pagas).
 
-| Linha | Roupas (R$) | Outros (R$) |
-| --- | --- | --- |
-| Saldo anterior | 120 | 80 |
-| Valor do mês | 300 | 100 |
-| Remanejamento | +50 | −50 |
-| Gastos | −470 | 0 |
-| **Saldo disponível** | **0** | **130** |
+| Categoria | Valor do mês | Gasto | Usado | Resta |
+| --- | --- | --- | --- | --- |
+| Mercado | 800 | 612,40 | 77% | 187,60 |
+| Transporte | 400 | 468 | 117% (estouro) | −68 |
 
 ## Páginas e funcionalidades
 
@@ -97,7 +91,7 @@ Mantém o mínimo do protótipo (saldo, receitas, despesas, distribuição de ga
 
 - Estados vazios: os blocos que dependem de Planejamento, Patrimônio ou Metas mostram uma mensagem curta com atalho para a página.
 - Indicadores de saldo, receitas, despesas, cada um comparado ao período anterior.
-- Saldo disponível por categoria, com barra de progresso, alerta perto do limite e o ritmo diário (quanto ainda pode gastar por dia até o fim do mês, calculado por categoria de Gasto).
+- Uso do planejado por categoria de Gasto: planejado, gasto e % usado, com barra de progresso e alerta perto do limite ou acima dele, mais o total do mês.
 - Fatura aberta de cada cartão, com o dia de fechamento.
 - Receitas × despesas por mês (barras).
 - Gastos por categoria (rosca), com alternativa por banco ou cartão. Substitui "Por tipo de pagamento" e "Método mais usado".
@@ -118,12 +112,11 @@ Lista de transações agrupada por dia, com todos os dados visíveis em cada lin
 
 ### Planejamento
 
-Três seções e um painel de visão final que se atualiza enquanto o usuário preenche.
+Duas seções e um painel de visão final que se atualiza enquanto o usuário preenche.
 
-- **Planejar o mês:** seletor de mês, renda esperada e valor do mês por categoria, mostrando o saldo anterior e o disponível resultante. Botão "copiar do mês anterior". "Sobra a alocar" = renda esperada − soma dos valores do mês.
-- **Fixos e parcelados** (tudo do protótipo é mantido): cadastro de fixo (nome, categoria, valor padrão, mês de início e de fim, pagamento, observação) e de parcelado (nome, categoria, valor total, número de parcelas, início, pagamento, observação); indicadores de total mensal comprometido, fixos, parcelados ativos, parcelas pagas/totais, já quitado no mês e % do orçamento comprometido; filtros por categoria, valor mínimo e máximo, ordenação; alerta % configurável com a marca "Alto impacto"; barra de progresso de parcelas. Ao confirmar o planejamento, cada fixo e cada parcela do mês viram transações Pendentes, com valor editável só naquele mês.
-- **Remanejar:** mover valor entre categorias no mês, com histórico.
-- **Visão final:** painel ao lado com renda, total planejado, sobra a alocar, rosca da distribuição e quanto está comprometido com fixos e parcelados.
+- **Planejar o mês:** seletor de mês (qualquer mês, passado, atual ou futuro), renda esperada, e uma linha por categoria com o valor do mês, o gasto, a % usada e o que resta. As categorias de Reserva aparecem numa área própria, só com o valor que vai guardar. Botão "Copiar do mês anterior". "Sobra a alocar" = renda esperada − soma dos valores do mês (Gasto e Reserva); pode ficar negativa, com alerta. O mês tem estado Rascunho ou Confirmado e continua editável depois de confirmado; há um botão para voltar a Rascunho.
+- **Fixos e parcelados** (tudo do protótipo é mantido): cadastro de fixo (nome, categoria, valor padrão, mês de início e de fim, pagamento, observação) e de parcelado (nome, categoria, valor total, número de parcelas, início, pagamento, observação); indicadores de total mensal comprometido, fixos, parcelados ativos, parcelas pagas/totais, já quitado no mês e % do orçamento comprometido; filtros por categoria, valor mínimo e máximo, ordenação; alerta % configurável (campo na própria página, padrão 30%) com a marca "Alto impacto"; barra de progresso de parcelas. Ao confirmar o planejamento, cada fixo e cada parcela do mês viram transações Pendentes, com valor editável só naquele mês ou daqui em diante. O sistema pode criar Pendentes com data futura; a tela de lançamento manual continua recusando.
+- **Visão final:** painel ao lado com renda, total planejado, sobra a alocar, rosca da distribuição (gastos e reservas) e quanto está comprometido com fixos e parcelados.
 
 ### Metas
 
@@ -166,13 +159,12 @@ Cada entidade abaixo tem um dono (o usuário), datas de criação e atualizaçã
 | --- | --- | --- |
 | Transação | tipo (Receita ou Despesa), data, valor, descrição, categoria, banco, forma de pagamento | cartão (obrigatório se for crédito; define o banco), observação, status (Paga ou Pendente), data de competência, parcela x/y (gerada pelo sistema, a partir do módulo 5) |
 | Banco | nome | cor |
-| Categoria | nome, aplicável a (Despesa ou Receita), natureza (Gasto ou Reserva, só para Despesa) | ícone, cor, saldo inicial (só Despesa) |
+| Categoria | nome, aplicável a (Despesa ou Receita), natureza (Gasto ou Reserva, só para Despesa) | ícone, cor |
 | Cartão | nome, banco, dia de fechamento | dia de vencimento, cor |
 | Forma de pagamento | nome | exige cartão |
-| Planejamento do mês | mês, renda esperada, valor do mês por categoria, estado (Rascunho ou Confirmado) | observação |
+| Planejamento do mês | mês, renda esperada, valor do mês por categoria de Despesa (Gasto e Reserva), estado (Rascunho ou Confirmado) | observação |
 | Gasto fixo | nome, categoria, valor padrão, mês de início | mês de fim, forma de pagamento, observação |
 | Gasto parcelado | nome, categoria, valor total, número de parcelas, início | forma de pagamento, observação |
-| Remanejamento | mês, categoria de origem, categoria de destino, valor | observação |
 | Meta | nome, valor alvo, prazo | início, categoria, observação |
 | Lançamento de meta | meta, tipo (Aporte ou Ajuste), valor, data | observação |
 | Fechamento do patrimônio | mês de referência, saldo de cada banco | observações |
@@ -251,7 +243,7 @@ São onze módulos em sequência, mais o 3.5 de visual, cada um dependendo do an
 3. **Gerenciar:** bancos, categorias, cartões e formas de pagamento, com categorias iniciais. Pronto quando cria, edita e arquiva por modal.
    - **Módulo 3.5, novo visual:** aplicar o design de `docs/design/` e `docs/design-system.md` ao que já existe (tokens, layout sem header, componentes, login e Gerenciar), em três etapas. Pronto quando as telas existentes batem com as imagens de referência nos temas escuro e claro.
 4. **Transações e Análise:** nova transação, lista por dia, filtros (período personalizado, avançados e salvos), resumo, edição, duplicar, excluir e marcar como paga. O parcelamento fica para o módulo 5 e as tags para depois. Pronto quando os totais da Análise batem com o conjunto de exemplo do roteiro de testes.
-5. **Planejamento:** valor do mês, saldo disponível com acúmulo, remanejamento, fixos e parcelados, visão final e estado Rascunho/Confirmado. Pronto quando o exemplo Roupas e Outros dá 0 e 130.
+5. **Planejamento:** valor do mês por categoria (Gasto e Reserva), uso do planejado (gasto e %), renda e sobra a alocar, visão final, estado Rascunho/Confirmado, e gastos fixos e parcelados com as transações Pendentes geradas. Inclui a remoção do saldo inicial da categoria. Pronto quando o exemplo Mercado e Transporte dá 77% e 117% e a confirmação gera os Pendentes. O código é revisado pelo próprio agente contra este documento antes da entrega.
 6. **Cartões e faturas:** agrupar compras no crédito por fechamento e marcar fatura como paga. Pronto quando uma compra após o fechamento cai na fatura seguinte.
 7. **Patrimônio:** saldo por banco, fechamento mensal e evolução. Pronto quando o fechamento pré-preenche com o mês anterior.
 8. **Dashboard:** lê tudo dos módulos 4 a 7, por isso vem depois deles.
@@ -263,8 +255,8 @@ São onze módulos em sequência, mais o 3.5 de visual, cada um dependendo do an
 
 Todos os pontos da revisão foram respondidos pelo autor; não há pendências abertas para a etapa 2.
 
-- [x] **Saldo inicial da categoria:** confirmado. Informado ao criar a categoria.
-- [x] **Planejamento Rascunho ou Confirmado:** confirmado. O valor do mês só entra no saldo disponível depois de confirmado.
+- [x] **Saldo inicial da categoria:** confirmado na época, **removido no módulo 5** (ver "Módulo 5" abaixo).
+- [x] **Planejamento Rascunho ou Confirmado:** confirmado. Mantido no módulo 5: confirmar libera a geração dos Pendentes de fixos e parcelas.
 - [x] **Caixinha:** removida. O sistema calcula o saldo das categorias; o valor de cada banco é digitado no fechamento do mês.
 - [x] **Taxa de poupança:** fora da primeira versão. O Dashboard mostra saldo, receitas e despesas.
 - [x] **Categorias de receita:** confirmado. Cada categoria é aplicável a Despesa ou a Receita.
@@ -286,10 +278,24 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Receita e forma de pagamento:** a forma de pagamento continua obrigatória. Salário e outras receitas usam uma forma comum do catálogo, como "Transferência" (TED ou DOC), cadastrada em Gerenciar.
 - **Padrões de interface (a partir do módulo 4):** campo de data com o calendário do filtro Personalizado; confirmação de exclusão sempre em modal próprio; erro do campo some ao preencher; dinheiro alinhado à esquerda no campo.
 
+### Módulo 5 (revisão do saldo)
+
+- **Caminho escolhido:** orçamento simples do mês. Saem o saldo anterior, o saldo disponível com acúmulo, o saldo inicial da categoria, o remanejamento (e o Resgate) e o ritmo diário. A sobra de um mês fica guardada no banco, fora do sistema; mover dinheiro entre caixinhas também.
+- **Reservas:** entram no planejamento com o valor a guardar; o acompanhamento real fica em Metas.
+- **Rascunho e Confirmado:** mantidos. O mês confirmado continua editável e pode voltar a Rascunho.
+- **Meses:** qualquer mês pode ser planejado.
+- **Tamanho:** módulo único, com revisão pelo próprio agente.
+- **Fixos e parcelas:** o sistema pode criar Pendentes com data futura (o lançamento manual não pode).
+- **Alto impacto:** porcentagem configurável num campo da própria página, padrão 30%.
+- **Fixos e parcelas por categoria:** a tabela do planejamento tem a coluna "Fixos e parcelas", logo depois de "Gasto no mês": quanto, entre os fixos e parcelas ativos naquele mês, pertence à categoria. Conta mesmo sem confirmar o mês. É informativa (o "Resta" continua sendo valor do mês − gasto pago) e avisa "Passa do valor do mês" quando o comprometido é maior que o planejado.
+- **Aba Fixos e parcelados:** mostra por padrão o que está ativo no mês selecionado; o que ainda não começou ou já terminou fica num grupo recolhido "Fora deste mês", com o motivo. O Pendente de cada mês só nasce quando aquele mês é confirmado.
+- **Mês de trabalho compartilhado:** o mês escolhido no Planejamento vale também para o Dashboard (quando ele existir, no módulo 8) e é lembrado enquanto o usuário estiver logado. Há o atalho "Voltar ao mês atual". A Análise lembra os próprios filtros à parte, com "Limpar filtros".
+- Esta decisão substitui as regras de saldo com acúmulo e de remanejamento das seções anteriores deste documento (inclusive "Saldo inicial da categoria" e "Caixinha" em Decisões da revisão e "Ritmo diário" na Segunda revisão).
+
 ### Segunda revisão
 
-- **Caixinha e categoria:** a caixinha foi removida. As regras de saldo, estouro e remanejamento são da categoria; o Patrimônio é por banco, com valor digitado.
+- **Caixinha e categoria:** a caixinha foi removida. (As regras de saldo e remanejamento da categoria foram removidas no módulo 5.) O Patrimônio é por banco, com valor digitado.
 - **Fixos e parcelas:** geram transações Pendentes no mês, editáveis e marcadas como Pagas com um clique.
-- **Resgate de Reserva:** é um remanejamento da Reserva para outra categoria.
+- **Resgate de Reserva:** removido no módulo 5, junto com o remanejamento.
 - **Sem modo simples:** todas as funcionalidades para todos, nenhuma obrigatória.
-- **Ritmo diário:** calculado por categoria, nunca somado.
+- **Ritmo diário:** removido no módulo 5 (fora do escopo por enquanto).
