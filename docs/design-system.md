@@ -123,6 +123,12 @@ Rótulo acima, 1.25rem em 500, `--color-text-muted`. Campo com fundo `--color-ca
 ### Seletor de data (padrão do sistema)
 Todo campo de data usa o mesmo calendário do filtro Personalizado: o campo aceita digitação com máscara dd/mm/aaaa e tem um botão de calendário à direita (ícone lucide `Calendar`, `aria-label="Abrir calendário"`) que abre um popover. O popover traz mês e ano no topo com setas, grade de dias com iniciais D S T Q Q S S, dia selecionado em `--color-primary` e dias fora do mês esmaecidos. Navegação por teclado: setas movem o dia, Enter escolhe, Esc fecha só o popover (nunca o modal que o contém). Em campo de data única, escolher o dia preenche o campo e fecha o popover. Em intervalo (De – Até) o mesmo calendário seleciona a faixa, com `--color-accent` no meio. Dias acima do limite (ex.: depois de hoje, na data da transação) ficam desabilitados e esmaecidos. Um único componente `DatePicker` serve todo o sistema; não crie outro calendário.
 
+### Campo de mês e navegação de mês
+**Campo de mês** (`MonthField`): campo com máscara mm/aaaa e setas ‹ › para mudar o mês, no mesmo estilo do campo de formulário. Usado onde o dado é um mês (início e fim de fixo). **Navegação de mês** (`MonthNav`): o seletor do cabeçalho da página, com seta anterior, "Novembro 2026" e seta próxima (veja `docs/design/dark/planning.png`). Os dois usam os mesmos nomes de mês do calendário.
+
+### Barra de uso (planejado × gasto)
+Mesma barra de progresso, com a % ao lado. Até 100%: preenchimento `--color-primary-fill`. Acima de 100%: `--color-destructive`, % e o "resta" negativo em `--color-negative-text`, e o texto sempre mostra o número (nunca só a cor). Entre 90% e 100% aparece o texto "Perto do limite" em `--color-text-muted`, sem cor nova.
+
 ### Segmento e abas
 Grupo de opções com fundo `--color-card-inset` (ou `--color-card` nas abas da página), borda fina, canto `--radius-md`, padding 0.4rem. Opção ativa com fundo `--color-accent` e texto `--color-accent-text`. As abas do Gerenciar usam esse mesmo estilo.
 
