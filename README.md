@@ -62,7 +62,7 @@ Cada conta nova recebe categorias e formas de pagamento iniciais:
 - Gasto: Mercado, Moradia, Transporte, Saúde, Lazer, Outros
 - Reserva: Reserva de emergência, Investimentos
 - Receita: Salário, Outras receitas
-- Formas de pagamento: Pix, Débito e Crédito (só Crédito exige cartão)
+- Formas de pagamento: Pix, Débito, Crédito (só Crédito exige cartão) e Transferência. Contas já criadas não recebem Transferência sozinhas: o cadastro fica em Gerenciar.
 
 As categorias de Despesa nascem com saldo inicial zero, valendo a partir do mês em que a conta foi criada. Receita não tem saldo inicial.
 
@@ -82,7 +82,7 @@ docker compose exec app php artisan tinker --execute='App\Models\User::query()->
 
 ## Transações e Análise
 
-O modal registra despesa ou receita, paga ou pendente, com valor, data, descrição, categoria, banco e forma de pagamento. Se a forma exige cartão, o cartão é obrigatório e o banco fica travado no banco do cartão. Data de competência e observação ficam em Mais opções. Duplicar abre uma cópia com a data de hoje e o status Paga. Excluir pede confirmação e apaga a linha.
+O modal registra despesa ou receita, paga ou pendente, com valor, data, descrição, categoria, banco e forma de pagamento. A data da transação não pode ser depois de hoje; a data de competência pode. Se a forma exige cartão, o cartão é obrigatório e o banco fica travado no banco do cartão. Data de competência e observação ficam em Mais opções. Duplicar abre uma cópia com a data de hoje e o status Paga. Excluir uma transação ou um filtro salvo pede confirmação num modal do sistema e, no caso da transação, apaga a linha.
 
 A página http://localhost:8000/analysis agrupa por dia no período escolhido (mês atual é o padrão; o intervalo é o do calendário, no fuso de São Paulo). O resumo — quantidade, receitas, despesas, saldo e média por despesa — é calculado no servidor sobre o filtro inteiro. Transação pendente entra na quantidade e fica de fora do dinheiro. A lista carrega de 50 em 50. Os filtros ficam na URL, então o endereço pode ser aberto em outra aba. Dá para salvar até 20 filtros por conta e apagar cada um. A busca ignora maiúsculas e acentos.
 

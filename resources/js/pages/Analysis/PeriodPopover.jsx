@@ -1,65 +1,25 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '../../components/Button/Button';
+import Calendar, { CalendarNav } from '../../components/DatePicker/Calendar';
+import { useFocusTrap } from '../../lib/dialog';
 import {
-    MONTH_HEADINGS,
-    WEEKDAY_INITIALS,
     formatDate,
     isoFromDate,
     maskDate,
     parseBrDate,
     parseIsoDate,
-    todayIso,
+    useToday,
 } from '../../lib/format';
-import { useFocusTrap } from '../../lib/dialog';
-
-function cellsFor(monthDate) {
-    const year = monthDate.getFullYear();
-    const month = monthDate.getMonth();
-    const lead = new Date(year, month, 1).getDay();
-    const days = new Date(year, month + 1, 0).getDate();
-    const cells = [];
-
-    for (let index = 0; index < lead; index += 1) {
-        const date = new Date(year, month, index - lead + 1);
-        cells.push({ iso: isoFromDate(date), label: date.getDate(), outside: true });
-    }
-
-    for (let day = 1; day <= days; day += 1) {
-        cells.push({ iso: isoFromDate(new Date(year, month, day)), label: day, outside: false });
-    }
-
-    let extra = 1;
-
-    while (cells.length % 7 !== 0) {
-        const date = new Date(year, month + 1, extra);
-        cells.push({ iso: isoFromDate(date), label: date.getDate(), outside: true });
-        extra += 1;
-    }
-
-    return cells;
-}
-
-function shiftIso(iso, days) {
-    const date = parseIsoDate(iso);
-
-    if (!date) {
-        return iso;
-    }
-
-    date.setDate(date.getDate() + days);
-
-    return isoFromDate(date);
-}
 
 export default function PeriodPopover({ open, initialFrom, initialTo, onClose, onApply }) {
     const dialogRef = useFocusTrap(open, onClose);
-    const start = parseIsoDate(initialFrom) ?? parseIsoDate(todayIso());
-    const [fromText, setFromText] = useState(formatDate(initialFrom || todayIso()));
-    const [toText, setToText] = useState(formatDate(initialTo || initialFrom || todayIso()));
-    const [fromIso, setFromIso] = useState(initialFrom || todayIso());
-    const [toIso, setToIso] = useState(initialTo || initialFrom || todayIso());
-    const [anchor, setAnchor] = useState(initialFrom || todayIso());
+    const today = useToday();
+    const start = parseIsoDate(initialFrom) ?? parseIsoDate(today) ?? new Date();
+    const [fromText, setFromText] = useState(formatDate(initialFrom || today));
+    const [toText, setToText] = useState(formatDate(initialTo || initialFrom || today));
+    const [fromIso, setFromIso] = useState(initialFrom || today);
+    const [toIso, setToIso] = useState(initialTo || initialFrom || today);
+    const [anchor, setAnchor] = useState(initialFrom || today);
     const [finished, setFinished] = useState(true);
     const [month, setMonth] = useState(new Date(start.getFullYear(), start.getMonth(), 1));
     const [error, setError] = useState('');
@@ -69,9 +29,9 @@ export default function PeriodPopover({ open, initialFrom, initialTo, onClose, o
             return;
         }
 
-        const from = initialFrom || todayIso();
+        const from = initialFrom || today;
         const to = initialTo || from;
-        const parsed = parseIsoDate(from) ?? new Date();
+        const parsed = parseIsoDate(from) ?? parseIsoDate(today);
         setFromText(formatDate(from));
         setToText(formatDate(to));
         setFromIso(from);
@@ -80,7 +40,7 @@ export default function PeriodPopover({ open, initialFrom, initialTo, onClose, o
         setFinished(true);
         setMonth(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
         setError('');
-    }, [open, initialFrom, initialTo]);
+    }, [open, initialFrom, initialTo, today]);
 
     if (!open) {
         return null;
@@ -162,34 +122,6 @@ export default function PeriodPopover({ open, initialFrom, initialTo, onClose, o
         onApply(fromValue, toValue);
     }
 
-    function onDayKeyDown(event, iso) {
-        const steps = {
-            ArrowLeft: -1,
-            ArrowRight: 1,
-            ArrowUp: -7,
-            ArrowDown: 7,
-        };
-        const step = steps[event.key];
-
-        if (!step) {
-            return;
-        }
-
-        event.preventDefault();
-        const next = shiftIso(iso, step);
-        const parsed = parseIsoDate(next);
-
-        if (parsed) {
-            setMonth(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
-        }
-
-        requestAnimationFrame(() => {
-            dialogRef.current?.querySelector(`[data-date="${next}"]`)?.focus();
-        });
-    }
-
-    const cells = cellsFor(month);
-
     return (
         <div
             className="popover popover--calendar"
@@ -200,47 +132,17 @@ export default function PeriodPopover({ open, initialFrom, initialTo, onClose, o
         >
             <div className="popover__title-row">
                 <p className="popover__title">Período personalizado</p>
-                <div className="calendar-nav">
-                    <button type="button" aria-label="Mês anterior" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>
-                        <ChevronLeft aria-hidden="true" strokeWidth={1.75} />
-                    </button>
-                    <span>{`${MONTH_HEADINGS[month.getMonth()]} ${month.getFullYear()}`}</span>
-                    <button type="button" aria-label="Próximo mês" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>
-                        <ChevronRight aria-hidden="true" strokeWidth={1.75} />
-                    </button>
-                </div>
+                <CalendarNav month={month} onMonthChange={setMonth} />
             </div>
-            <div className="calendar" role="grid" aria-label="Calendário">
-                {WEEKDAY_INITIALS.map((label, index) => (
-                    <span key={`${label}-${index}`} className="calendar__weekday" role="columnheader">{label}</span>
-                ))}
-                {cells.map((cell) => {
-                    const edge = cell.iso === fromIso || cell.iso === toIso;
-                    const inside = fromIso && toIso && cell.iso > fromIso && cell.iso < toIso;
-                    const className = [
-                        'calendar__day',
-                        cell.outside ? 'calendar__day--outside' : '',
-                        inside ? 'calendar__day--range' : '',
-                        edge ? 'calendar__day--edge' : '',
-                    ].filter(Boolean).join(' ');
-
-                    return (
-                        <button
-                            key={cell.iso}
-                            type="button"
-                            role="gridcell"
-                            className={className}
-                            data-date={cell.iso}
-                            aria-selected={edge || inside}
-                            aria-label={formatDate(cell.iso)}
-                            onClick={() => selectDay(cell.iso)}
-                            onKeyDown={(event) => onDayKeyDown(event, cell.iso)}
-                        >
-                            {cell.label}
-                        </button>
-                    );
-                })}
-            </div>
+            <Calendar
+                mode="range"
+                showNav={false}
+                from={fromIso}
+                to={toIso}
+                month={month}
+                onMonthChange={setMonth}
+                onSelect={selectDay}
+            />
             <div className="popover__dates">
                 <label className="filter-field">
                     <span>De</span>

@@ -67,7 +67,16 @@ class DefaultDataService
             ->map(fn (string $name) => $this->names->key($name))
             ->all();
 
-        foreach ($this->paymentMethods() as $item) {
+        $methods = $this->paymentMethods();
+
+        if ($existing !== []) {
+            $methods = array_values(array_filter(
+                $methods,
+                fn (array $item) => $item['name'] !== 'Transferência',
+            ));
+        }
+
+        foreach ($methods as $item) {
             if (in_array($this->names->key($item['name']), $existing, true)) {
                 continue;
             }
@@ -119,6 +128,7 @@ class DefaultDataService
             ['name' => 'Pix', 'requires_card' => false],
             ['name' => 'Débito', 'requires_card' => false],
             ['name' => 'Crédito', 'requires_card' => true],
+            ['name' => 'Transferência', 'requires_card' => false],
         ];
     }
 }

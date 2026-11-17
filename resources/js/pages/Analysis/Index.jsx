@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Calendar, ChevronDown, Receipt, Search, X } from 'lucide-react';
 import Button from '../../components/Button/Button';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import Card from '../../components/Card/Card';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import Money from '../../components/Money/Money';
@@ -94,6 +95,8 @@ export default function Index({
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [moreOpen, setMoreOpen] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [filterToDelete, setFilterToDelete] = useState(null);
+    const [deletingFilter, setDeletingFilter] = useState(false);
     const [session, setSession] = useState(null);
     const [payingId, setPayingId] = useState(null);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -371,15 +374,7 @@ export default function Index({
                                 type="button"
                                 className="saved-chip__remove"
                                 aria-label={`Apagar filtro salvo ${item.name}`}
-                                onClick={() => {
-                                    if (window.confirm(`Apagar o filtro "${item.name}"?`)) {
-                                        router.delete(`/saved-filters/${item.id}`, {
-                                            preserveScroll: true,
-                                            preserveState: true,
-                                            only: ['savedFilters'],
-                                        });
-                                    }
-                                }}
+                                onClick={() => setFilterToDelete(item)}
                             >
                                 <X aria-hidden="true" strokeWidth={1.75} />
                             </button>
@@ -454,6 +449,30 @@ export default function Index({
                     onClose={() => setSession(null)}
                 />
             ) : null}
+            <ConfirmDialog
+                open={filterToDelete !== null}
+                title="Apagar filtro salvo?"
+                message={filterToDelete ? `${filterToDelete.name}. Essa ação não pode ser desfeita.` : ''}
+                confirmLabel="Apagar"
+                busy={deletingFilter}
+                onCancel={() => setFilterToDelete(null)}
+                onConfirm={() => {
+                    if (!filterToDelete) {
+                        return;
+                    }
+
+                    setDeletingFilter(true);
+                    router.delete(`/saved-filters/${filterToDelete.id}`, {
+                        preserveScroll: true,
+                        preserveState: true,
+                        only: ['savedFilters'],
+                        onFinish: () => {
+                            setDeletingFilter(false);
+                            setFilterToDelete(null);
+                        },
+                    });
+                }}
+            />
             {saving ? (
                 <SaveFilterModal
                     filters={filters}

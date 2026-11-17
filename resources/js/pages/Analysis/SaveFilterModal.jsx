@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
+import { useFieldSetter } from '../../lib/fields';
 
 function storedFilters(filters, period, includePeriod) {
     const payload = {};
@@ -35,6 +36,7 @@ export default function SaveFilterModal({ filters, period, chips, onClose }) {
         include_period: false,
         filters: {},
     });
+    const setField = useFieldSetter(form);
 
     function submit(event) {
         event.preventDefault();
@@ -74,7 +76,7 @@ export default function SaveFilterModal({ filters, period, chips, onClose }) {
                         autoComplete="off"
                         maxLength={40}
                         value={form.data.name}
-                        onChange={(event) => form.setData('name', event.target.value)}
+                        onChange={(event) => setField('name', event.target.value, 'filters')}
                     />
                 </FormField>
                 <div>
@@ -93,7 +95,7 @@ export default function SaveFilterModal({ filters, period, chips, onClose }) {
                     <input
                         type="checkbox"
                         checked={form.data.include_period}
-                        onChange={(event) => form.setData('include_period', event.target.checked)}
+                        onChange={(event) => setField('include_period', event.target.checked, 'filters')}
                     />
                     <span>{`Guardar também o período (${period.label})`}</span>
                 </label>

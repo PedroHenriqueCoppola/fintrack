@@ -1,3 +1,5 @@
+import { usePage } from '@inertiajs/react';
+
 export function formatMoney(value) {
     const amount = Number(value);
     const safe = Number.isFinite(amount) ? amount : 0;
@@ -64,6 +66,16 @@ export function formatMoneyInput(value) {
     return `${negative ? '-' : ''}${grouped},${cents}`;
 }
 
+export function blurMoneyInput(value) {
+    const parsed = parseMoneyInput(String(value ?? '').replace(/\s/g, '').replace(/^R\$/i, ''));
+
+    if (!/^\d+(\.\d{1,2})?$/.test(parsed)) {
+        return null;
+    }
+
+    return formatMoneyInput(parsed);
+}
+
 export function formatPlainMoney(value) {
     const amount = Number(value);
     const safe = Number.isFinite(amount) ? Math.abs(amount) : 0;
@@ -92,6 +104,16 @@ export function todayIso() {
     const day = String(now.getDate()).padStart(2, '0');
 
     return `${now.getFullYear()}-${month}-${day}`;
+}
+
+export function useToday() {
+    const { today } = usePage().props;
+
+    if (typeof today === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(today)) {
+        return today;
+    }
+
+    return todayIso();
 }
 
 export function isoFromDate(date) {

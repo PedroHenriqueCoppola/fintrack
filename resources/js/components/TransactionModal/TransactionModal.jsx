@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { Link, router, useForm } from '@inertiajs/react';
 import { ChevronDown, Plus } from 'lucide-react';
 import Button from '../Button/Button';
+import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
+import DatePicker from '../DatePicker/DatePicker';
 import FormField from '../FormField/FormField';
 import Modal from '../Modal/Modal';
+import { useFieldSetter } from '../../lib/fields';
 import {
+    blurMoneyInput,
     formatDate,
     formatMoneyInput,
     formatPlainMoney,
     isoFromDate,
-    maskDate,
     parseBrDate,
     parseMoneyInput,
-    todayIso,
+    useToday,
 } from '../../lib/format';
 import './TransactionModal.css';
 
@@ -66,13 +69,13 @@ function optionLabel(item) {
     return item.archived ? `${item.name} (arquivado)` : item.name;
 }
 
-function buildInitial(mode, transaction, options) {
+function buildInitial(mode, transaction, options, today) {
     if (!transaction || mode === 'create') {
         return {
             type: 'expense',
             status: 'paid',
             amount: '',
-            date: formatDate(todayIso()),
+            date: formatDate(today),
             description: '',
             category_id: '',
             bank_id: '',
@@ -90,7 +93,7 @@ function buildInitial(mode, transaction, options) {
         type: transaction.type,
         status: duplicate ? 'paid' : transaction.status,
         amount: formatMoneyInput(transaction.amount),
-        date: formatDate(duplicate ? todayIso() : transaction.date),
+        date: formatDate(duplicate ? today : transaction.date),
         description: transaction.description ?? '',
         category_id: duplicate ? known(categories, transaction.category?.id) : String(transaction.category?.id ?? ''),
         bank_id: duplicate ? known(options.banks, transaction.bank?.id) : String(transaction.bank?.id ?? ''),
@@ -145,13 +148,15 @@ export default function TransactionModal({
     options = EMPTY_OPTIONS,
     onClose,
 }) {
+    const today = useToday();
     const catalog = {
         categories: options.categories ?? EMPTY_OPTIONS.categories,
         banks: options.banks ?? [],
         cards: options.cards ?? [],
         paymentMethods: options.paymentMethods ?? [],
     };
-    const form = useForm(() => buildInitial(mode, transaction, catalog));
+    const form = useForm(() => buildInitial(mode, transaction, catalog, today));
+    const setField = useFieldSetter(form);
     const [screen, setScreen] = useState(mode === 'edit' ? 'edit' : 'create');
     const [more, setMore] = useState(() => Boolean(
         transaction && (transaction.competence_date || transaction.notes) && mode !== 'create',
@@ -194,28 +199,25 @@ export default function TransactionModal({
     }
 
     function changeType(type) {
-        form.setData((data) => ({ ...data, type, category_id: '' }));
-        form.clearErrors('category_id');
+        setField((data) => ({ ...data, type, category_id: '' }), 'type', 'category_id');
     }
 
     function changeMethod(id) {
         const next = paymentMethods.find((item) => String(item.id) === id);
-        form.setData((data) => ({
+        setField((data) => ({
             ...data,
             payment_method_id: id,
             card_id: next?.requires_card ? data.card_id : '',
-        }));
-        form.clearErrors('card_id', 'bank_id');
+        }), 'payment_method_id', 'card_id', 'bank_id');
     }
 
     function changeCard(id) {
         const next = cards.find((item) => String(item.id) === id);
-        form.setData((data) => ({
+        setField((data) => ({
             ...data,
             card_id: id,
             bank_id: next ? String(next.bank_id) : data.bank_id,
-        }));
-        form.clearErrors('card_id', 'bank_id');
+        }), 'card_id', 'bank_id');
     }
 
     function duplicate() {
@@ -224,7 +226,7 @@ export default function TransactionModal({
         form.clearErrors();
         form.setData((data) => ({
             ...data,
-            date: formatDate(todayIso()),
+            date: formatDate(today),
             status: 'paid',
             category_id: known(catalog.categories[data.type] ?? [], data.category_id),
             bank_id: known(catalog.banks, data.bank_id),
@@ -279,26 +281,15 @@ export default function TransactionModal({
 
     if (confirming && transaction) {
         return (
-            <Modal
+            <ConfirmDialog
                 open
-                className="modal--narrow"
                 title="Excluir transação?"
-                onClose={() => setConfirming(false)}
-                footer={(
-                    <>
-                        <Button variant="secondary" onClick={() => setConfirming(false)} disabled={deleting}>
-                            Cancelar
-                        </Button>
-                        <Button variant="destructive" onClick={remove} disabled={deleting}>
-                            {deleting ? 'Excluindo…' : 'Excluir'}
-                        </Button>
-                    </>
-                )}
-            >
-                <p className="tx-delete-copy">
-                    {`${transaction.description}, ${formatPlainMoney(transaction.amount)}, em ${formatDate(transaction.date)}. Essa ação não pode ser desfeita.`}
-                </p>
-            </Modal>
+                message={`${transaction.description}, ${formatPlainMoney(transaction.amount)}, em ${formatDate(transaction.date)}. Essa ação não pode ser desfeita.`}
+                confirmLabel="Excluir"
+                busy={deleting}
+                onConfirm={remove}
+                onCancel={() => setConfirming(false)}
+            />
         );
     }
 
@@ -351,7 +342,7 @@ export default function TransactionModal({
                     <Segment
                         label="Status"
                         value={form.data.status}
-                        onChange={(status) => form.setData('status', status)}
+                        onChange={(status) => setField('status', status)}
                         options={[
                             { value: 'paid', label: 'Paga' },
                             { value: 'pending', label: 'Pendente' },
@@ -367,25 +358,22 @@ export default function TransactionModal({
                             inputMode="decimal"
                             autoComplete="off"
                             value={form.data.amount}
-                            onChange={(event) => form.setData('amount', event.target.value)}
+                            onChange={(event) => setField('amount', event.target.value)}
                             onBlur={() => {
-                                const parsed = moneyPayload(form.data.amount);
-                                if (/^\d+(\.\d{1,2})?$/.test(parsed)) {
-                                    form.setData('amount', formatMoneyInput(parsed));
+                                const formatted = blurMoneyInput(form.data.amount);
+                                if (formatted !== null) {
+                                    setField('amount', formatted);
                                 }
                             }}
                         />
                     </FormField>
-                    <FormField label="Data" error={form.errors.date}>
-                        <input
-                            inputMode="numeric"
-                            autoComplete="off"
-                            placeholder="dd/mm/aaaa"
-                            maxLength={10}
-                            value={form.data.date}
-                            onChange={(event) => form.setData('date', maskDate(event.target.value))}
-                        />
-                    </FormField>
+                    <DatePicker
+                        label="Data"
+                        value={form.data.date}
+                        max={today}
+                        error={form.errors.date}
+                        onChange={(value) => setField('date', value)}
+                    />
                 </div>
                 <FormField label="Descrição" error={form.errors.description}>
                     <input
@@ -393,14 +381,14 @@ export default function TransactionModal({
                         autoComplete="off"
                         maxLength={120}
                         value={form.data.description}
-                        onChange={(event) => form.setData('description', event.target.value)}
+                        onChange={(event) => setField('description', event.target.value)}
                     />
                 </FormField>
                 <div className="tx-grid">
                     <FormField label="Categoria" error={form.errors.category_id}>
                         <SelectField
                             value={form.data.category_id}
-                            onChange={(value) => form.setData('category_id', value)}
+                            onChange={(value) => setField('category_id', value)}
                         >
                             <option value="">Escolha</option>
                             {categories.map((item) => (
@@ -415,7 +403,7 @@ export default function TransactionModal({
                             ) : (
                                 <SelectField
                                     value={form.data.bank_id}
-                                    onChange={(value) => form.setData('bank_id', value)}
+                                    onChange={(value) => setField('bank_id', value)}
                                 >
                                     <option value="">Escolha</option>
                                     {banks.map((item) => (
@@ -459,23 +447,19 @@ export default function TransactionModal({
                 </button>
                 {more ? (
                     <div className="tx-extra">
-                        <FormField label="Data de competência (opcional)" error={form.errors.competence_date}>
-                            <input
-                                inputMode="numeric"
-                                autoComplete="off"
-                                placeholder="dd/mm/aaaa"
-                                maxLength={10}
-                                value={form.data.competence_date}
-                                onChange={(event) => form.setData('competence_date', maskDate(event.target.value))}
-                            />
-                        </FormField>
+                        <DatePicker
+                            label="Data de competência (opcional)"
+                            value={form.data.competence_date}
+                            error={form.errors.competence_date}
+                            onChange={(value) => setField('competence_date', value)}
+                        />
                         <FormField label="Observação (opcional)" error={form.errors.notes}>
                             <input
                                 type="text"
                                 autoComplete="off"
                                 maxLength={500}
                                 value={form.data.notes}
-                                onChange={(event) => form.setData('notes', event.target.value)}
+                                onChange={(event) => setField('notes', event.target.value)}
                             />
                         </FormField>
                     </div>

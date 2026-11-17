@@ -2,10 +2,6 @@
     width: min(62rem, 100%);
 }
 
-.modal--narrow {
-    width: min(46rem, 100%);
-}
-
 .tx-form {
     display: flex;
     flex-direction: column;
@@ -62,7 +58,6 @@
 
 .tx-money {
     font-variant-numeric: tabular-nums;
-    text-align: right;
 }
 
 .tx-select {

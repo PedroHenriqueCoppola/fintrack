@@ -30,7 +30,6 @@
 
 .form-field__control input[inputmode='decimal'] {
     font-variant-numeric: tabular-nums;
-    text-align: right;
 }
 
 .form-field__control input:not([type='checkbox']):not([type='radio']):focus-visible,

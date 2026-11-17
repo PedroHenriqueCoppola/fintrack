@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import Button from '../../components/Button/Button';
-import { formatMoneyInput, parseMoneyInput } from '../../lib/format';
+import { blurMoneyInput, formatMoneyInput, parseMoneyInput } from '../../lib/format';
 import { useFocusTrap } from '../../lib/dialog';
 
 const SORTS = [
@@ -140,6 +140,12 @@ export default function MoreFilters({ open, filters, cards, onClose, onApply, on
                             autoComplete="off"
                             value={draft.min_amount}
                             onChange={(event) => setDraft((current) => ({ ...current, min_amount: event.target.value }))}
+                            onBlur={() => {
+                                const formatted = blurMoneyInput(draft.min_amount);
+                                if (formatted !== null) {
+                                    setDraft((current) => ({ ...current, min_amount: formatted }));
+                                }
+                            }}
                         />
                     </label>
                     <label className="filter-field">
@@ -150,6 +156,12 @@ export default function MoreFilters({ open, filters, cards, onClose, onApply, on
                             autoComplete="off"
                             value={draft.max_amount}
                             onChange={(event) => setDraft((current) => ({ ...current, max_amount: event.target.value }))}
+                            onBlur={() => {
+                                const formatted = blurMoneyInput(draft.max_amount);
+                                if (formatted !== null) {
+                                    setDraft((current) => ({ ...current, max_amount: formatted }));
+                                }
+                            }}
                         />
                     </label>
                 </div>
