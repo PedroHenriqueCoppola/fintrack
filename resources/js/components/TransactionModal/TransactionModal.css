@@ -130,6 +130,17 @@
     gap: 1.4rem;
 }
 
+.tx-competence {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.2rem;
+}
+
+.tx-competence .form-field {
+    flex: 1;
+    min-width: 0;
+}
+
 .tx-inline-error,
 .tx-hint {
     margin: 0;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Calendar, ChevronDown, Receipt, Search, X } from 'lucide-react';
 import Button from '../../components/Button/Button';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
@@ -87,6 +87,7 @@ export default function Index({
     transactions,
     savedFilters,
     options,
+    forecastNotice = null,
 }) {
     const pageErrors = usePage().props.errors;
     const [query, setQuery] = useState(filters.q ?? '');
@@ -402,6 +403,14 @@ export default function Index({
                     </Card>
                 </div>
                 <Card>
+                    {forecastNotice ? (
+                        <p className="analysis-notice">
+                            {`${forecastNotice.message} `}
+                            <Link href={`/planning?month=${forecastNotice.month}`}>
+                                Confirme o planejamento para gerar os pendentes.
+                            </Link>
+                        </p>
+                    ) : null}
                     {summary.count === 0 ? (
                         <EmptyState
                             icon={Receipt}

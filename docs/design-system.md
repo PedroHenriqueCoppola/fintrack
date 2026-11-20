@@ -102,7 +102,7 @@ Plus Jakarta Sans (já instalada). Números de dinheiro e tabelas usam `font-var
 ## 5. Layout
 
 - **Sem header.** O nome do projeto fica no topo da sidebar.
-- **Sidebar flutuante:** largura 22.8rem, margem 1.4rem, canto 2.2rem, `position: sticky; top: 1.4rem; height: calc(100vh - 2.8rem)`, sempre com a altura da tela e com todos os 7 itens mais o botão Recolher no rodapé. Recolhida: 7.2rem, só ícones (com `title`). Item: ícone 1.8rem, texto 1.4rem, padding 1rem por 1.2rem, canto 1.4rem. Item ativo: fundo `--color-accent`, texto `--color-accent-text`, borda interna de 1px roxa a 22%. Logo: quadrado roxo 2.8rem com um F branco.
+- **Sidebar flutuante:** largura 22.8rem, margem 1.4rem, canto 2.2rem, `position: sticky; top: 1.4rem; height: calc(100vh - 2.8rem)`, sempre com a altura da tela e com todos os 8 itens (Dashboard, Análise, Faturas, Planejamento, Metas, Patrimônio, Relatórios, Gerenciar) mais o botão Recolher no rodapé. Recolhida: 7.2rem, só ícones (com `title`). Item: ícone 1.8rem, texto 1.4rem, padding 1rem por 1.2rem, canto 1.4rem. Item ativo: fundo `--color-accent`, texto `--color-accent-text`, borda interna de 1px roxa a 22%. Logo: quadrado roxo 2.8rem com um F branco.
 - **Área de conteúdo:** ocupa toda a largura restante. Largura máxima 168rem, centralizada em telas maiores (`--container-max`).
 - **Linha do topo:** altura 4.4rem, alinhada à direita, com o botão de tema (3.8rem, quadrado arredondado) e o ícone de perfil (3.8rem, redondo). O ícone abre um menu pequeno com o nome do usuário e a opção **Sair**.
 - **Cabeçalho da página:** título e subtítulo à esquerda, ações à direita (ex.: botão Nova transação, seletor de mês). Margem de 1rem em cima e 2.4rem embaixo.
@@ -134,6 +134,12 @@ Grupo de opções com fundo `--color-card-inset` (ou `--color-card` nas abas da 
 
 ### Chip e selo
 Canto 0.8rem, padding 0.2rem por 0.8rem, texto 1.15rem em 500. Padrão em `--color-chip-bg` e `--color-chip-text`. Variantes: neutra (fundo `--color-card-inset`, texto `--color-text-muted`) e concluída (verde suave, como o quadrado de ícone verde).
+
+### Chips de situação da fatura
+Mesmo chip da seção anterior. **Aberta**: neutra. **Fechada**: padrão (roxo suave). **Paga**: concluída (verde suave), com a data ("Paga em 10/11"). **Previsto** e **Lançado** nomeiam os dois totais da fatura e os dois grupos da lista: Lançado em texto normal e Previsto em `--color-text-muted`. Nunca só cor: o rótulo sempre aparece. Veja `docs/design/dark/invoices.png`.
+
+### Selo de referência e pago antecipado
+Chip neutro (fundo `--color-card-inset`, texto `--color-text-muted`) com o texto "Ref. dez/2026", ao lado da descrição ou da data, só quando a competência cai em mês diferente do da data. No Planejamento, o fixo ou a parcela quitada antes usa o chip de concluída (verde suave) com "Pago antecipado em 20/11". O texto sempre aparece; nunca só cor.
 
 ### Quadrado de ícone da categoria
 38px (3.8rem), canto 1.2rem. A cor vem da categoria (HSL gravado no servidor). Fundo: `color-mix(in srgb, var(--item-color) 16%, var(--color-card))`. Ícone: `color-mix(in srgb, var(--item-color) 70%, var(--color-text))`. Sem cor: fundo `--color-card-inset`, ícone `--color-text-muted`. Ícones da biblioteca lucide, traço 1.75.
@@ -179,7 +185,7 @@ Rótulo em todo campo, foco visível, o estado nunca depende só de cor, texto d
 
 ## 9. Mapa das telas
 
-Imagens em `docs/design/dark/` (todas) e `docs/design/light/` (dashboard, analysis, goals, manage-modal e transaction-edit). HTML com os valores reais em `docs/design/html/`.
+Imagens em `docs/design/dark/` (todas) e `docs/design/light/` (dashboard, analysis, planning, invoices, goals, manage-modal e transaction-edit). HTML com os valores reais em `docs/design/html/`.
 
 | Arquivo | Tela | Módulo que implementa o conteúdo |
 | --- | --- | --- |
@@ -188,6 +194,7 @@ Imagens em `docs/design/dark/` (todas) e `docs/design/light/` (dashboard, analys
 | `dashboard`, `dashboard-empty` | Dashboard cheio e vazio | 8 (estrutura visual no 3.5) |
 | `analysis`, `transaction-modal`, `transaction-edit`, `transaction-delete`, `filters-open`, `filter-save` | Análise, nova transação, editar (com Duplicar e Excluir), confirmar exclusão, filtros abertos e salvar filtro | 4 |
 | `planning` | Planejamento | 5 |
+| `invoices` | Faturas (cartão, totais Lançado e Previsto, lista e histórico) | 6 |
 | `net-worth`, `net-worth-closing` | Patrimônio e fechamento por banco | 7 |
 | `goals`, `goal-detail` | Metas e meta em detalhe | 9 |
 | `reports` | Relatórios | 10 |

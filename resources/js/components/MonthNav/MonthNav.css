@@ -36,6 +36,7 @@
     padding: 0 1rem;
     font-size: 1.35rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .month-nav svg {

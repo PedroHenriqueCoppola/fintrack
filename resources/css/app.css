@@ -22,6 +22,8 @@
     --color-accent-text: #dccbfb;
     --color-chip-bg: #2a2142;
     --color-chip-text: #cdb4fa;
+    --color-chip-ok-bg: #1f3330;
+    --color-chip-ok-text: #86cdb7;
     --color-positive: #bc9cf7;
     --color-negative-text: #f08a8c;
     --color-destructive: #d9696c;
@@ -67,6 +69,8 @@
     --color-accent-text: #5a2fb0;
     --color-chip-bg: #ece4fb;
     --color-chip-text: #5a2fb0;
+    --color-chip-ok-bg: #e0f2ec;
+    --color-chip-ok-text: #2a7a62;
     --color-positive: #6d3fc4;
     --color-negative-text: #c23b43;
     --color-destructive: #c23b43;

@@ -30,6 +30,7 @@ function RecordRow({ item, kind, onEdit, onArchive, onRestore }) {
                 <div className="plan-record__title">
                     <span>{item.name}</span>
                     {item.high_impact ? <span className="plan-chip">Alto impacto</span> : null}
+                    {item.paid_early_label ? <span className="plan-chip plan-chip--ok">{item.paid_early_label}</span> : null}
                     {item.reason ? <span className="plan-chip plan-chip--muted">{item.reason}</span> : null}
                 </div>
                 <p className="plan-record__meta">

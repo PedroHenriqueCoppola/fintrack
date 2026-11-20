@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FixedExpenseController;
 use App\Http\Controllers\InstallmentController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ManageController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PlanningController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SavedFilterController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Middleware\SyncCurrentPendings;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,10 +30,15 @@ Route::post('/logout', [SessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware(['auth', 'inertia.encrypt'])->group(function () {
+Route::middleware(['auth', 'inertia.encrypt', SyncCurrentPendings::class])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/analysis', [AnalysisController::class, 'index'])->name('analysis');
     Route::post('/analysis/clear', [AnalysisController::class, 'clear'])->name('analysis.clear');
+
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');
+    Route::post('/invoices/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+    Route::delete('/invoices/pay', [InvoiceController::class, 'unpay'])->name('invoices.unpay');
+    Route::get('/cards/{card}/invoice-preview', [InvoiceController::class, 'preview'])->name('cards.invoice-preview')->whereNumber('card');
 
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update')->whereNumber('transaction');

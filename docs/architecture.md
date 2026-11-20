@@ -66,16 +66,18 @@ As tabelas padrão do Laravel (`sessions`, `cache`, `jobs`, `password_reset_toke
 | users | name, email (único), password, remember_token, high_impact_percent (1 a 100, padrão 30) | login por sessão; a porcentagem não entra no preenchimento em massa, só muda pelo endpoint do planejamento |
 | banks | user_id, name, color?, archived_at? | |
 | categories | user_id, name, applies_to (expense, income), nature? (spending, reserve; só para expense), icon?, color?, initial_month?, archived_at? | o valor do mês fica em monthly_plan_items; o gasto do mês é calculado |
-| cards | user_id, bank_id, name, closing_day, due_day?, color?, archived_at? | faturas são derivadas das transações |
+| cards | user_id, bank_id, name, closing_day, due_day?, color?, archived_at? | faturas são derivadas das transações; o ciclo fica em `CardInvoiceCalculator` |
 | payment_methods | user_id, name, requires_card (bool), archived_at? | |
-| transactions | user_id, type (income, expense), status (paid, pending), amount (DECIMAL(15,2), sempre positivo), date, competence_date?, description (até 120), category_id, bank_id, payment_method_id, card_id?, notes? (até 500), fixed_expense_id?, installment_id?, installment_number?, generated_for? (dia 1) | chaves estrangeiras com restrict; índices em (user_id, date), (user_id, category_id), (user_id, bank_id), (user_id, status) e (user_id, generated_for); únicos parciais (fixed_expense_id, generated_for) e (installment_id, installment_number); nunca os dois vínculos ao mesmo tempo; sem archived_at; exclusão apaga a linha; `pending` não entra no gasto do planejamento |
+| transactions | user_id, type (income, expense), status (paid, pending), amount (DECIMAL(15,2), sempre positivo), date, competence_date?, description (até 120), category_id, bank_id, payment_method_id, card_id?, notes? (até 500), fixed_expense_id?, installment_id?, installment_number?, generated_for? (dia 1) | chaves estrangeiras com restrict; índices em (user_id, date), (user_id, category_id), (user_id, bank_id), (user_id, status) e (user_id, generated_for); únicos parciais (fixed_expense_id, generated_for) e (installment_id, installment_number); nunca os dois vínculos ao mesmo tempo; sem archived_at; exclusão apaga a linha; `pending` não entra no gasto do planejamento; apagar uma pendente gerada grava `generated_skips` e a geração não a recria |
 | saved_filters | user_id, name (até 40), filters (json) | no máximo 20 por usuário; nome único por usuário sem diferenciar maiúsculas nem acentos, validado no serviço; o json só guarda chaves de filtro e ordenação que o servidor aceita, e o período só quando o usuário marca para guardar |
 | tags | user_id, name | |
 | tag_transaction | tag_id, transaction_id | |
 | monthly_plans | user_id, month (dia 1), expected_income (>= 0, padrão 0), status (draft, confirmed), notes? (até 500) | único por (user_id, month) |
 | monthly_plan_items | user_id, monthly_plan_id, category_id, amount (>= 0) | único por (monthly_plan_id, category_id); o plano apagado remove os itens; só categorias de despesa |
-| fixed_expenses | user_id, name (até 120), category_id, amount (> 0), due_day (1 a 31), start_month (dia 1), end_month? (dia 1), bank_id, payment_method_id, card_id?, notes? (até 500), archived_at? | categoria de gasto ativa; banco e forma obrigatórios; confirmar o mês gera uma transação `pending` |
-| installments | user_id, name (até 120), category_id, total_amount (> 0), installments_count (2 a 120), first_date, bank_id, payment_method_id, card_id?, notes? (até 500), archived_at? | a parcela n cai no mês da primeira data mais n − 1 meses; o resto dos centavos fica na última |
+| fixed_expenses | user_id, name (até 120), category_id, amount (> 0), due_day (1 a 31), start_month (dia 1), end_month? (dia 1), bank_id, payment_method_id, card_id?, notes? (até 500), archived_at? | categoria de gasto ativa; banco e forma obrigatórios; o mês atual gera a pendente ao criar, editar ou arquivar, e também na entrada do mês; meses futuros só quando o plano está confirmado |
+| installments | user_id, name (até 120), category_id, total_amount (> 0), installments_count (2 a 120), first_date, bank_id, payment_method_id, card_id?, notes? (até 500), archived_at? | a parcela n cai no mês da primeira data mais n − 1 meses; o resto dos centavos fica na última; a geração segue a mesma regra híbrida dos fixos |
+| generated_skips | user_id, fixed_expense_id?, installment_id?, installment_number?, generated_for (dia 1) | exatamente um dos dois vínculos; únicos parciais como em `transactions`; apagar o fixo ou o parcelado apaga os skips em cascata; a geração (automática e na confirmação) não recria o mês pulado |
+| card_invoice_payments | user_id, card_id, closing_month (dia 1), paid_on | único por (card_id, closing_month); o valor da fatura não é guardado |
 | goals | user_id, name, target_amount, start_date?, deadline, category_id?, note?, archived_at? | valor atual = soma dos lançamentos |
 | goal_entries | goal_id, type (deposit, adjustment), amount (com sinal), date, note? | |
 | net_worth_closings | user_id, reference_month, note? | único por (user_id, reference_month) |
@@ -87,6 +89,14 @@ Campos com `?` são opcionais.
 ## Valores derivados (nunca guardados)
 
 Gasto do mês por categoria, porcentagem usada, o que resta, totais do planejamento (renda, planejado, sobra a alocar, comprometido e o comprometido de cada categoria), faturas dos cartões, valor atual das metas e total do patrimônio. Todos calculados no backend, em Services, a partir das tabelas acima. O comprometido de cada categoria soma os fixos ativos naquele mês e a parcela que cai nele; não é uma coluna gravada. O planejamento fica em `PlanningService`, `SpendingService`, `FixedExpenseService`, `InstallmentService`, `InstallmentCalculator` e `PlanGenerator`.
+
+A fatura não é uma tabela. `CardInvoiceCalculator` (sem consulta ao banco) define o fechamento, o ciclo, o vencimento e a situação. `CardInvoiceService` soma as despesas do cartão com `Money` (bcmath): Paga entra em Lançado e Pendente em Previsto. Receita com cartão não entra. A página lê as despesas do cartão numa consulta e os pagamentos noutra; a lista da fatura aberta é uma terceira consulta, com categoria, banco e forma de pagamento. O resumo não faz uma consulta por fatura.
+
+## Pendentes do mês atual
+
+`PlanGenerator` gera o mês atual mesmo sem plano confirmado. Meses posteriores ao atual continuam dependendo da confirmação. Meses passados não são gerados por uma mudança de cadastro. Criar, editar ou arquivar um fixo ou parcelado chama `syncFixed` ou `syncInstallment`. O middleware `SyncCurrentPendings`, no grupo autenticado, compara a chave de sessão `pendings_synced_month` com o mês atual (America/Sao_Paulo) e, se for diferente, chama `generateMonth` do mês atual. Uma falha é registrada no log e a página abre mesmo assim; a chave só é gravada quando a geração termina. Essa geração não cria linha em `monthly_plans`.
+
+Uma transação gerada e ainda Pendente, quando o usuário a exclui, ganha uma linha em `generated_skips`. A geração seguinte não a recria. Pago não é alterado. Pendente cujo valor foi ajustado à mão permanece com esse valor.
 
 ## Mês de trabalho e filtros da Análise
 
