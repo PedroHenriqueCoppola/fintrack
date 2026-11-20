@@ -61,7 +61,7 @@ class TransactionService
     public function delete(Transaction $transaction): void
     {
         DB::transaction(function () use ($transaction) {
-            if ($transaction->status === 'pending' && $transaction->isGenerated()) {
+            if ($transaction->isGenerated()) {
                 $this->rememberSkip($transaction);
             }
 
@@ -70,7 +70,7 @@ class TransactionService
     }
 
     /**
-     * A generated pending the user deleted must not be created again.
+     * A generated row the user deleted, paid or pending, must not be created again.
      */
     private function rememberSkip(Transaction $transaction): void
     {
@@ -95,8 +95,9 @@ class TransactionService
 
         $today = now('America/Sao_Paulo')->toDateString();
         $date = $transaction->date->toDateString();
+        $movesToToday = $date > $today || ($date < $today && $transaction->card_id === null);
 
-        if ($date > $today) {
+        if ($movesToToday) {
             if ($transaction->competence_date === null) {
                 $transaction->competence_date = $date;
             }

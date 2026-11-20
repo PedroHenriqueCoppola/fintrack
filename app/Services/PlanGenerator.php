@@ -149,10 +149,12 @@ class PlanGenerator
             return null;
         }
 
-        $word = $count === 1 ? 'fixo' : 'fixos';
+        $message = $count === 1
+            ? 'Há 1 lançamento previsto (fixo ou parcela) para este mês.'
+            : "Há {$count} lançamentos previstos (fixos e parcelas) para este mês.";
 
         return [
-            'message' => "Há {$count} {$word} e parcelas previstos para este mês.",
+            'message' => $message,
             'month' => $key,
         ];
     }

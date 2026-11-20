@@ -286,7 +286,7 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Pendente:** não entra nos totais do resumo (receitas, despesas, saldo e média). A quantidade conta todas as transações do filtro.
 - **Filtros:** ficam na URL, os salvos entram no módulo 4 e a lista carrega de 50 em 50.
 - **Tabela densa:** fica para o Acabamento.
-- **Data da transação:** a transação **Paga** não pode ter data posterior a hoje. A **Pendente** pode ter data futura, também no lançamento manual (boleto, conta a vencer); essa regra foi ajustada no módulo 6. Ao marcar uma Pendente futura como paga, a data vira hoje e a competência guarda a data original.
+- **Data da transação:** a transação **Paga** não pode ter data posterior a hoje. A **Pendente** pode ter data futura, também no lançamento manual (boleto, conta a vencer); essa regra foi ajustada no módulo 6. Ao marcar uma Pendente como paga: se a data é futura, ela vira hoje; se a data é passada e a forma de pagamento **não** é cartão (Pix, débito, boleto), ela também vira hoje, porque a data é o dia em que o dinheiro saiu; no cartão, a data passada é mantida, porque ela decide a fatura. Em todos os casos a competência guarda a data original.
 - **Receita e forma de pagamento:** a forma de pagamento continua obrigatória. Salário e outras receitas usam uma forma comum do catálogo, como "Transferência" (TED ou DOC), cadastrada em Gerenciar.
 - **Padrões de interface (a partir do módulo 4):** campo de data com o calendário do filtro Personalizado; confirmação de exclusão sempre em modal próprio; erro do campo some ao preencher; dinheiro alinhado à esquerda no campo.
 

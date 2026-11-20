@@ -629,8 +629,8 @@ class PlanningService
     }
 
     /**
-     * Paid generated rows whose payment date falls in another month.
-     * One query for the whole month.
+     * Paid generated rows whose payment month differs from generated_for.
+     * One query for the whole month. An earlier month is early; a later month is late.
      *
      * @return array{fixed: array<int, string>, installments: array<string, string>}
      */
@@ -640,13 +640,21 @@ class PlanningService
             ->where('status', 'paid')
             ->whereDate('generated_for', $monthStart)
             ->whereRaw("to_char(date, 'YYYY-MM') <> to_char(generated_for, 'YYYY-MM')")
-            ->get(['fixed_expense_id', 'installment_id', 'installment_number', 'date']);
+            ->get(['fixed_expense_id', 'installment_id', 'installment_number', 'date', 'generated_for']);
 
         $fixed = [];
         $installments = [];
 
         foreach ($rows as $row) {
-            $label = 'Pago antecipado em '.$row->date->format('d/m');
+            $paidKey = $row->date->format('Y-m');
+            $referenceKey = $row->generated_for->format('Y-m');
+
+            if ($paidKey === $referenceKey) {
+                continue;
+            }
+
+            $prefix = $paidKey < $referenceKey ? 'Pago antecipado em ' : 'Pago em ';
+            $label = $prefix.$row->date->format('d/m');
 
             if ($row->fixed_expense_id !== null) {
                 $fixed[(int) $row->fixed_expense_id] = $label;

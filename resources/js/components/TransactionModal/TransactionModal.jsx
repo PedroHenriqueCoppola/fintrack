@@ -400,7 +400,7 @@ export default function TransactionModal({
                 onCancel={() => setConfirming(false)}
             >
                 {`${transaction.description}, ${formatPlainMoney(transaction.amount)}, em ${formatDate(transaction.date)}. Essa ação não pode ser desfeita.`}
-                {transaction.generated && transaction.status === 'pending' ? (
+                {transaction.generated ? (
                     <>
                         {' '}
                         <strong>O sistema não vai recriá-la neste mês.</strong>
