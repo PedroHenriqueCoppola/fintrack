@@ -3,6 +3,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import {
     CalendarRange,
     ChartColumn,
+    CreditCard,
     FileBarChart,
     Landmark,
     LayoutDashboard,
@@ -23,6 +24,7 @@ const SIDEBAR_KEY = 'sidebar-collapsed';
 const NAV_ITEMS = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/analysis', label: 'Análise', icon: ChartColumn },
+    { href: '/invoices', label: 'Faturas', icon: CreditCard },
     { href: '/planning', label: 'Planejamento', icon: CalendarRange },
     { href: '/goals', label: 'Metas', icon: Target },
     { href: '/net-worth', label: 'Patrimônio', icon: Landmark },

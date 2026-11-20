@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Bank;
+use App\Models\Card;
 use App\Models\Category;
 use App\Models\FixedExpense;
 use App\Models\Installment;
 use App\Models\MonthlyPlan;
 use App\Models\MonthlyPlanItem;
+use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Money;
@@ -486,6 +489,7 @@ class PlanningService
             })
             ->selectRaw('coalesce(sum(amount), 0)::text as total')
             ->value('total');
+        $early = $this->earlyPayments($monthStart);
 
         $fixedCount = 0;
         $fixedAmount = '0.00';
@@ -506,13 +510,16 @@ class PlanningService
 
             if ($expense->archived_at !== null) {
                 $archivedFixed[] = $row;
+
                 continue;
             }
 
             if ($this->generator->fixedApplies($expense, $monthStart)) {
                 $fixedCount++;
                 $fixedAmount = Money::add($fixedAmount, $expense->amount);
+                $row['paid_early_label'] = $early['fixed'][$expense->id] ?? null;
                 $activeFixed[] = $row;
+
                 continue;
             }
 
@@ -543,6 +550,7 @@ class PlanningService
 
             if ($installment->archived_at !== null) {
                 $archivedInstallments[] = $row;
+
                 continue;
             }
 
@@ -550,7 +558,9 @@ class PlanningService
                 $activeInstallments++;
                 $paidTotal += $paid;
                 $parcelTotal += (int) $installment->installments_count;
+                $row['paid_early_label'] = $early['installments'][$installment->id.'-'.$number] ?? null;
                 $activeInstallmentsRows[] = $row;
+
                 continue;
             }
 
@@ -613,7 +623,43 @@ class PlanningService
             'payment_method' => $this->methodPayload($expense->paymentMethod),
             'card' => $this->cardPayload($expense->card),
             'payment_label' => $this->paymentLabel($expense->bank?->name, $expense->paymentMethod?->name, $expense->card?->name),
+            'paid_early_label' => null,
             'reason' => null,
+        ];
+    }
+
+    /**
+     * Paid generated rows whose payment date falls in another month.
+     * One query for the whole month.
+     *
+     * @return array{fixed: array<int, string>, installments: array<string, string>}
+     */
+    private function earlyPayments(string $monthStart): array
+    {
+        $rows = Transaction::query()
+            ->where('status', 'paid')
+            ->whereDate('generated_for', $monthStart)
+            ->whereRaw("to_char(date, 'YYYY-MM') <> to_char(generated_for, 'YYYY-MM')")
+            ->get(['fixed_expense_id', 'installment_id', 'installment_number', 'date']);
+
+        $fixed = [];
+        $installments = [];
+
+        foreach ($rows as $row) {
+            $label = 'Pago antecipado em '.$row->date->format('d/m');
+
+            if ($row->fixed_expense_id !== null) {
+                $fixed[(int) $row->fixed_expense_id] = $label;
+            }
+
+            if ($row->installment_id !== null) {
+                $installments[(int) $row->installment_id.'-'.(int) $row->installment_number] = $label;
+            }
+        }
+
+        return [
+            'fixed' => $fixed,
+            'installments' => $installments,
         ];
     }
 
@@ -673,6 +719,7 @@ class PlanningService
             'payment_method' => $this->methodPayload($installment->paymentMethod),
             'card' => $this->cardPayload($installment->card),
             'payment_label' => $this->paymentLabel($installment->bank?->name, $installment->paymentMethod?->name, $installment->card?->name),
+            'paid_early_label' => null,
         ];
     }
 
@@ -729,16 +776,16 @@ class PlanningService
                 'id' => $category->id,
                 'name' => $category->archived_at === null ? $category->name : $category->name.' (arquivado)',
             ])->all(),
-            'banks' => \App\Models\Bank::query()->whereNull('archived_at')->orderBy('name')->get(['id', 'name'])
+            'banks' => Bank::query()->whereNull('archived_at')->orderBy('name')->get(['id', 'name'])
                 ->map(fn ($bank) => ['id' => $bank->id, 'name' => $bank->name])->all(),
-            'cards' => \App\Models\Card::query()->with('bank:id,name')->whereNull('archived_at')->orderBy('name')->get()
+            'cards' => Card::query()->with('bank:id,name')->whereNull('archived_at')->orderBy('name')->get()
                 ->map(fn ($card) => [
                     'id' => $card->id,
                     'name' => $card->name,
                     'bank_id' => $card->bank_id,
                     'bank_name' => $card->bank?->name,
                 ])->all(),
-            'payment_methods' => \App\Models\PaymentMethod::query()->whereNull('archived_at')->orderBy('name')->get()
+            'payment_methods' => PaymentMethod::query()->whereNull('archived_at')->orderBy('name')->get()
                 ->map(fn ($method) => [
                     'id' => $method->id,
                     'name' => $method->name,

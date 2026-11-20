@@ -31,7 +31,7 @@ Estes termos têm o mesmo significado em todo o sistema, nos prompts e no códig
 | Natureza da categoria | **Gasto** conta como despesa. **Reserva** (investimentos, guardar para o futuro, reserva de emergência) é dinheiro separado para o futuro: não é despesa e aparece separada das despesas nos totais. |
 | Valor do mês | Quanto o usuário planeja para a categoria no mês, definido no planejamento. Em categoria de Reserva é quanto ele vai guardar no mês. |
 | Uso do planejado | Quanto da categoria de Gasto já foi gasto no mês, em valor e em % do valor do mês. Passou de 100% é estouro. |
-| Cartão e fatura | Cartão de crédito de um banco, com dia de fechamento. A fatura reúne as compras no crédito de um ciclo e é "aberta" ou "paga". |
+| Cartão e fatura | Cartão de crédito de um banco, com dia de fechamento. A fatura reúne as compras no crédito de um ciclo. Ela é calculada a partir das transações (não é guardada); só o pagamento é registrado. Situação: Aberta, Fechada (passou o fechamento) ou Paga. |
 | Fechamento do patrimônio | Foto mensal do total guardado em cada banco, digitado pelo usuário. O patrimônio é a soma dos bancos. |
 | Meta | Objetivo de valor com prazo, alimentado por um histórico de lançamentos (aportes e ajustes). |
 
@@ -45,8 +45,8 @@ O coração do sistema é um orçamento por categorias com acúmulo: o que sobra
 4. **Estouro de categoria.** Gastar mais que o valor do mês deixa a categoria acima de 100%, com alerta. Não existe remanejamento no sistema: quando o autor cobre um estouro tirando dinheiro de outra caixinha, isso acontece no banco e não é registrado aqui.
 5. **Mês de uma despesa.** Só despesas Pagas contam no gasto. Despesa Pendente não conta até virar Paga.
 6. **Categorias de Reserva** entram no planejamento com o valor que o autor vai guardar no mês, para a renda esperada fechar com as despesas e as reservas. Não têm gastos nem barra de uso. O acompanhamento do que foi guardado fica em Metas (módulo 9).
-7. **Crédito e fatura.** A compra no crédito é uma despesa comum, descontada da categoria na data da compra. Ela entra na fatura do cartão conforme o dia de fechamento: compra feita após o fechamento cai na fatura seguinte. Marcar a fatura como paga não cria despesa nova, porque a despesa já foi contada na compra.
-8. **Parcelamento.** Lançado uma vez (valor total, número de parcelas, data da primeira). O sistema gera uma transação por mês, Pendente até ser paga; ao ser paga, cada uma desconta da categoria e entra na fatura do mês correspondente. O parcelamento pode ser criado no formulário da transação ou em Planejamento: é o mesmo cadastro.
+7. **Crédito e fatura.** A compra no crédito é uma despesa comum, descontada da categoria na data da compra. Ela entra na fatura do cartão conforme o dia de fechamento: a compra feita no dia do fechamento ou depois dele cai na fatura seguinte. Marcar a fatura como paga só registra a data do pagamento: não cria despesa nova (a despesa já foi contada na compra) e não altera as transações.
+8. **Parcelamento.** Lançado uma vez (valor total, número de parcelas, data da primeira). O sistema gera uma transação por mês, Pendente até ser paga; ao ser paga, cada uma desconta da categoria. Na fatura, a parcela Pendente aparece como "Previsto" e, depois de paga, como "Lançado". O parcelamento pode ser criado no formulário da transação ou em Planejamento: é o mesmo cadastro.
 9. **Planejamento.** Define o valor do mês de cada categoria mais os gastos fixos e parcelados. Não altera transações já lançadas; ao ser confirmado, gera as transações Pendentes dos fixos e das parcelas do mês. Nasce como cópia do mês anterior. Renda variável não entra aqui: é lançada como receita comum.
 10. **Gastos fixos.** Cada fixo tem um valor padrão, mês de início e, opcionalmente, mês de fim; cancelar um fixo é definir o mês de fim. Ao confirmar o planejamento do mês, o sistema gera uma transação Pendente para cada fixo ativo, e o usuário marca como Paga com um clique, podendo ajustar o valor só daquele mês ou daqui em diante (altera o valor padrão). Os fixos contam dentro do valor do mês da categoria, não somados a ele. Um fixo ou parcela cujo valor mensal passa de uma porcentagem configurável do planejado (30% no protótipo) recebe a marca "Alto impacto".
 11. **Metas.** O valor atual é sempre a soma de um histórico de lançamentos. O usuário lança um aporte (valor e data) ou digita "agora tenho X", e o sistema registra a diferença como ajuste.
@@ -70,11 +70,11 @@ Em novembro, Transporte tem R$ 400 de valor do mês e gastou R$ 468 (despesas Pa
 
 ## Páginas e funcionalidades
 
-São sete páginas mais a tela de acesso; cada uma mantém o que o autor valorizou no protótipo e corrige o que ele apontou.
+São oito páginas mais a tela de acesso; cada uma mantém o que o autor valorizou no protótipo e corrige o que ele apontou.
 
 ### Estrutura comum
 
-- Não há header. A sidebar é flutuante e recolhível, traz o nome do projeto no topo e os links: Dashboard, Análise, Planejamento, Metas, Patrimônio, Relatórios e Gerenciar.
+- Não há header. A sidebar é flutuante e recolhível, traz o nome do projeto no topo e os links: Dashboard, Análise, Faturas, Planejamento, Metas, Patrimônio, Relatórios e Gerenciar.
 - No topo da área de conteúdo ficam o botão de modo claro/escuro e o ícone de perfil, que abre um menu pequeno com o nome do usuário e a opção Sair. A edição de perfil (nome e senha) fica para depois.
 - Cada página tem título e subtítulo explicando o que acontece nela. No Dashboard o título é a saudação "Bom dia", "Boa tarde" ou "Boa noite" seguida do primeiro nome.
 - Criar e editar acontecem em modais. O botão "Nova transação" fica no topo do Dashboard e da Análise, à direita do título (a ideia de colocá-lo em todas as páginas foi testada e abandonada).
@@ -109,6 +109,17 @@ Lista de transações agrupada por dia, com todos os dados visíveis em cada lin
 - Clicar numa linha abre a edição. No rodapé do modal ficam Duplicar (abre uma cópia com a data de hoje) e Excluir (definitivo, com confirmação). A transação Pendente tem um botão para marcar como paga com um clique.
 - A lista mostra 50 transações por vez, com o botão "Carregar mais". Os totais do resumo contam todas as transações do filtro, não só as carregadas.
 - Os filtros ficam na URL da página, então atualizar ou voltar no navegador os mantém. O usuário pode salvar o conjunto de filtros com um nome (e, se quiser, o período) e aplicá-lo com um clique.
+
+### Faturas
+
+Página própria, entre Análise e Planejamento.
+
+- Seletor de cartão (cartões ativos) e, para o cartão escolhido, a fatura do ciclo atual: período do ciclo, data de fechamento, vencimento (se o cartão tiver dia de vencimento), situação e totais.
+- **Lançado:** compras no crédito Pagas do ciclo. **Previsto:** parcelas e fixos Pendentes no crédito, que ainda vão entrar. O total estimado é a soma dos dois, mostrados separados.
+- Lista das transações da fatura, agrupadas em Lançado e Previsto; clicar numa linha abre a edição da transação.
+- Navegação entre faturas (anterior e próxima) e histórico de faturas anteriores com o total e a situação.
+- **Marcar como paga:** só depois do fechamento, com a data do pagamento. Só registra a marca; não cria despesa, não mexe nas transações e os Pendentes continuam Pendentes. Dá para desfazer a marca.
+- A fatura leva o nome do mês do fechamento (fatura de novembro fecha em novembro).
 
 ### Planejamento
 
@@ -161,6 +172,7 @@ Cada entidade abaixo tem um dono (o usuário), datas de criação e atualizaçã
 | Banco | nome | cor |
 | Categoria | nome, aplicável a (Despesa ou Receita), natureza (Gasto ou Reserva, só para Despesa) | ícone, cor |
 | Cartão | nome, banco, dia de fechamento | dia de vencimento, cor |
+| Pagamento de fatura | cartão, mês do fechamento, data do pagamento | |
 | Forma de pagamento | nome | exige cartão |
 | Planejamento do mês | mês, renda esperada, valor do mês por categoria de Despesa (Gasto e Reserva), estado (Rascunho ou Confirmado) | observação |
 | Gasto fixo | nome, categoria, valor padrão, mês de início | mês de fim, forma de pagamento, observação |
@@ -244,7 +256,7 @@ São onze módulos em sequência, mais o 3.5 de visual, cada um dependendo do an
    - **Módulo 3.5, novo visual:** aplicar o design de `docs/design/` e `docs/design-system.md` ao que já existe (tokens, layout sem header, componentes, login e Gerenciar), em três etapas. Pronto quando as telas existentes batem com as imagens de referência nos temas escuro e claro.
 4. **Transações e Análise:** nova transação, lista por dia, filtros (período personalizado, avançados e salvos), resumo, edição, duplicar, excluir e marcar como paga. O parcelamento fica para o módulo 5 e as tags para depois. Pronto quando os totais da Análise batem com o conjunto de exemplo do roteiro de testes.
 5. **Planejamento:** valor do mês por categoria (Gasto e Reserva), uso do planejado (gasto e %), renda e sobra a alocar, visão final, estado Rascunho/Confirmado, e gastos fixos e parcelados com as transações Pendentes geradas. Inclui a remoção do saldo inicial da categoria. Pronto quando o exemplo Mercado e Transporte dá 77% e 117% e a confirmação gera os Pendentes. O código é revisado pelo próprio agente contra este documento antes da entrega.
-6. **Cartões e faturas:** agrupar compras no crédito por fechamento e marcar fatura como paga. Pronto quando uma compra após o fechamento cai na fatura seguinte.
+6. **Cartões e faturas:** página Faturas, com a fatura calculada por ciclo (Lançado e Previsto), histórico e marcação de pago. Inclui a geração automática dos Pendentes do mês atual. Pronto quando uma compra feita no dia do fechamento ou depois dele cai na fatura seguinte. O código é revisado pelo próprio agente contra este documento antes da entrega.
 7. **Patrimônio:** saldo por banco, fechamento mensal e evolução. Pronto quando o fechamento pré-preenche com o mês anterior.
 8. **Dashboard:** lê tudo dos módulos 4 a 7, por isso vem depois deles.
 9. **Metas:** lançamentos, estados, ritmo e gráficos.
@@ -274,7 +286,7 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Pendente:** não entra nos totais do resumo (receitas, despesas, saldo e média). A quantidade conta todas as transações do filtro.
 - **Filtros:** ficam na URL, os salvos entram no módulo 4 e a lista carrega de 50 em 50.
 - **Tabela densa:** fica para o Acabamento.
-- **Data da transação:** não pode ser posterior a hoje. Lançamentos futuros (contas a vencer, parcelas) nascem no Planejamento (módulo 5), como Pendentes.
+- **Data da transação:** a transação **Paga** não pode ter data posterior a hoje. A **Pendente** pode ter data futura, também no lançamento manual (boleto, conta a vencer); essa regra foi ajustada no módulo 6. Ao marcar uma Pendente futura como paga, a data vira hoje e a competência guarda a data original.
 - **Receita e forma de pagamento:** a forma de pagamento continua obrigatória. Salário e outras receitas usam uma forma comum do catálogo, como "Transferência" (TED ou DOC), cadastrada em Gerenciar.
 - **Padrões de interface (a partir do módulo 4):** campo de data com o calendário do filtro Personalizado; confirmação de exclusão sempre em modal próprio; erro do campo some ao preencher; dinheiro alinhado à esquerda no campo.
 
@@ -291,6 +303,16 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Aba Fixos e parcelados:** mostra por padrão o que está ativo no mês selecionado; o que ainda não começou ou já terminou fica num grupo recolhido "Fora deste mês", com o motivo. O Pendente de cada mês só nasce quando aquele mês é confirmado.
 - **Mês de trabalho compartilhado:** o mês escolhido no Planejamento vale também para o Dashboard (quando ele existir, no módulo 8) e é lembrado enquanto o usuário estiver logado. Há o atalho "Voltar ao mês atual". A Análise lembra os próprios filtros à parte, com "Limpar filtros".
 - Esta decisão substitui as regras de saldo com acúmulo e de remanejamento das seções anteriores deste documento (inclusive "Saldo inicial da categoria" e "Caixinha" em Decisões da revisão e "Ritmo diário" na Segunda revisão).
+
+### Módulo 6
+
+- **Onde ficam as faturas:** página nova "Faturas" na sidebar, entre Análise e Planejamento.
+- **Dia do fechamento:** a compra feita exatamente no dia do fechamento entra na fatura **seguinte**. Dia de fechamento 29, 30 ou 31 em mês mais curto vale o último dia do mês.
+- **Pendentes na fatura:** parcelas e fixos Pendentes no crédito aparecem como "Previsto", separados do "Lançado".
+- **Pagar a fatura:** só marca com a data. Não cria despesa nem altera transações.
+- **Geração dos Pendentes (regra híbrida):** o mês atual gera os Pendentes de fixos e parcelas sozinho (ao criar, editar ou arquivar um fixo ou parcelado, e ao entrar no sistema, uma vez por sessão). Meses futuros só geram quando o planejamento é confirmado. Quando o usuário vê na Análise um mês com fixos ou parcelas previstos e planejamento não confirmado, aparece um aviso com link para o Planejamento.
+
+- **Pago antes do mês (ajuste do módulo 6):** quando uma transação tem competência em mês diferente do da data (por exemplo, um fixo de dezembro pago em novembro), ela mostra o selo "Ref. dez/2026" na Análise, no modal de edição e na lista da Fatura. No Planejamento, o fixo ou a parcela daquele mês aparece como "Pago antecipado em 20/11" em vez de sumir da lista.
 
 ### Segunda revisão
 

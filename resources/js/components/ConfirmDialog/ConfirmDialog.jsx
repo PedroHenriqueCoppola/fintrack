@@ -5,7 +5,8 @@ import './ConfirmDialog.css';
 export default function ConfirmDialog({
     open,
     title,
-    message,
+    message = null,
+    children = null,
     confirmLabel,
     busy = false,
     busyLabel = 'Excluindo…',
@@ -43,7 +44,7 @@ export default function ConfirmDialog({
                 </>
             )}
         >
-            <p className="confirm-dialog__message">{message}</p>
+            <p className="confirm-dialog__message">{children ?? message}</p>
         </Modal>
     );
 }

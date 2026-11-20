@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\FixedExpense;
+use App\Models\GeneratedSkip;
 use App\Models\Installment;
 use App\Models\MonthlyPlan;
 use App\Models\Transaction;
@@ -15,8 +16,10 @@ class PlanGenerator
     public function __construct(private InstallmentCalculator $installments) {}
 
     /**
-     * Create the missing pending transactions of one confirmed month.
+     * Create the missing pending transactions of one month.
      * An existing transaction is left as it is, paid or pending.
+     * A month the user removed stays removed (generated_skips).
+     * This does not create a monthly plan.
      */
     public function generateMonth(string $monthStart): void
     {
@@ -58,7 +61,7 @@ class PlanGenerator
     {
         $this->pruneFixed($expense);
 
-        foreach ($this->confirmedStarts() as $monthStart) {
+        foreach ($this->monthsToSync() as $monthStart) {
             if (! $this->fixedApplies($expense, $monthStart)) {
                 continue;
             }
@@ -77,7 +80,7 @@ class PlanGenerator
             return;
         }
 
-        foreach ($this->confirmedStarts() as $monthStart) {
+        foreach ($this->monthsToSync() as $monthStart) {
             $key = Month::key($monthStart);
             $number = $this->installments->numberInMonth($installment, $key);
 
@@ -116,15 +119,52 @@ class PlanGenerator
         return $expense->end_month === null || $expense->end_month->toDateString() >= $monthStart;
     }
 
+    /**
+     * Notice for a single full month after the current one, when that plan
+     * is not confirmed and at least one fixed expense or installment falls in it.
+     *
+     * @return array{message: string, month: string}|null
+     */
+    public function futureForecastNotice(?string $from, ?string $to): ?array
+    {
+        $key = $this->fullMonthAfterCurrent($from, $to);
+
+        if ($key === null) {
+            return null;
+        }
+
+        $start = Month::start($key);
+        $confirmed = MonthlyPlan::query()
+            ->whereDate('month', $start)
+            ->where('status', 'confirmed')
+            ->exists();
+
+        if ($confirmed) {
+            return null;
+        }
+
+        $count = $this->scheduledCount($start, $key);
+
+        if ($count === 0) {
+            return null;
+        }
+
+        $word = $count === 1 ? 'fixo' : 'fixos';
+
+        return [
+            'message' => "Há {$count} {$word} e parcelas previstos para este mês.",
+            'month' => $key,
+        ];
+    }
+
     private function createFixedIfMissing(FixedExpense $expense, string $monthStart, string $key): void
     {
-        // Deleting a generated pending does not skip the month: the next sync creates it again.
         $exists = Transaction::query()
             ->where('fixed_expense_id', $expense->id)
             ->whereDate('generated_for', $monthStart)
             ->exists();
 
-        if ($exists) {
+        if ($exists || $this->fixedWasSkipped($expense, $monthStart)) {
             return;
         }
 
@@ -168,7 +208,7 @@ class PlanGenerator
             ->where('installment_number', $number)
             ->exists();
 
-        if ($exists) {
+        if ($exists || $this->installmentWasSkipped($installment, $number)) {
             return;
         }
 
@@ -239,6 +279,81 @@ class PlanGenerator
             ->where('status', 'pending')
             ->whereDate('generated_for', '>', $monthStart)
             ->delete();
+    }
+
+    /**
+     * The current month is always generated. Later months only when that plan
+     * is confirmed. Past months are never generated from a catalog change.
+     *
+     * @return array<int, string>
+     */
+    private function monthsToSync(): array
+    {
+        $current = Month::currentStart();
+        $months = [$current];
+
+        foreach ($this->confirmedStarts() as $monthStart) {
+            if ($monthStart > $current) {
+                $months[] = $monthStart;
+            }
+        }
+
+        return $months;
+    }
+
+    private function fixedWasSkipped(FixedExpense $expense, string $monthStart): bool
+    {
+        return GeneratedSkip::query()
+            ->where('fixed_expense_id', $expense->id)
+            ->whereDate('generated_for', $monthStart)
+            ->exists();
+    }
+
+    private function installmentWasSkipped(Installment $installment, int $number): bool
+    {
+        return GeneratedSkip::query()
+            ->where('installment_id', $installment->id)
+            ->where('installment_number', $number)
+            ->exists();
+    }
+
+    private function fullMonthAfterCurrent(?string $from, ?string $to): ?string
+    {
+        if ($from === null || $to === null || ! preg_match('/^(\d{4})-(\d{2})-01$/', $from, $match)) {
+            return null;
+        }
+
+        $key = $match[1].'-'.$match[2];
+
+        if (Month::startOrNull($key) === null || Month::end($key) !== $to || $key <= Month::currentKey()) {
+            return null;
+        }
+
+        return $key;
+    }
+
+    private function scheduledCount(string $monthStart, string $monthKey): int
+    {
+        $fixed = FixedExpense::query()
+            ->whereNull('archived_at')
+            ->whereDate('start_month', '<=', $monthStart)
+            ->where(function ($query) use ($monthStart) {
+                $query->whereNull('end_month')
+                    ->orWhereDate('end_month', '>=', $monthStart);
+            })
+            ->count();
+
+        $year = (int) substr($monthKey, 0, 4);
+        $month = (int) substr($monthKey, 5, 2);
+        $installments = Installment::query()
+            ->whereNull('archived_at')
+            ->whereRaw(
+                '((CAST(? AS int) - CAST(extract(year from first_date) AS int)) * 12 + (CAST(? AS int) - CAST(extract(month from first_date) AS int)) + 1) between 1 and installments_count',
+                [$year, $month],
+            )
+            ->count();
+
+        return $fixed + $installments;
     }
 
     /**

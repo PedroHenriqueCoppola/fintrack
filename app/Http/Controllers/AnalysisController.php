@@ -6,6 +6,7 @@ use App\Http\Requests\AnalysisRequest;
 use App\Http\Resources\AnalysisSummaryResource;
 use App\Http\Resources\SavedFilterResource;
 use App\Http\Resources\TransactionResource;
+use App\Services\PlanGenerator;
 use App\Services\SavedFilterService;
 use App\Services\TransactionOptionsService;
 use App\Services\TransactionService;
@@ -23,12 +24,14 @@ class AnalysisController extends Controller
         TransactionService $transactions,
         TransactionOptionsService $options,
         SavedFilterService $savedFilters,
+        PlanGenerator $generator,
     ): Response|RedirectResponse {
         if ($redirect = $this->rememberQuery($request)) {
             return $redirect;
         }
 
         $filters = $request->filters();
+        $period = $transactions->period($filters);
         $page = $transactions->paginate($filters);
         $dates = $page->getCollection()
             ->map(fn ($transaction) => $transaction->date?->toDateString())
@@ -60,7 +63,8 @@ class AnalysisController extends Controller
                 'q' => $filters['q'],
                 'sort' => $filters['sort'],
             ],
-            'period' => $transactions->period($filters),
+            'period' => $period,
+            'forecastNotice' => $generator->futureForecastNotice($period['from'], $period['to']),
             'summary' => (new AnalysisSummaryResource($transactions->summary($filters)))->resolve(),
             'transactions' => Inertia::merge([
                 'data' => TransactionResource::collection($page->getCollection())->resolve(),

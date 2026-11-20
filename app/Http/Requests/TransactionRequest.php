@@ -43,18 +43,11 @@ class TransactionRequest extends FormRequest
      */
     public function rules(): array
     {
-        $transaction = $this->route('transaction');
-        $generatedPending = $transaction instanceof Transaction
-            && $transaction->isGenerated()
-            && $this->input('status') === 'pending';
-
         return [
             'type' => ['required', 'string', Rule::in(['income', 'expense'])],
             'status' => ['required', 'string', Rule::in(['paid', 'pending'])],
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
-            'date' => $generatedPending
-                ? ['bail', 'required', 'date_format:Y-m-d']
-                : ['bail', 'required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'date' => ['bail', 'required', 'date_format:Y-m-d'],
             'competence_date' => ['bail', 'nullable', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:120'],
             'notes' => ['nullable', 'string', 'max:500'],
@@ -88,7 +81,6 @@ class TransactionRequest extends FormRequest
             'amount.max' => 'O valor é alto demais.',
             'date.required' => 'Informe a data.',
             'date.date_format' => 'Informe uma data válida.',
-            'date.before_or_equal' => 'A data não pode ser posterior a hoje.',
             'competence_date.date_format' => 'Informe uma data válida.',
             'description.required' => 'Informe a descrição.',
             'description.max' => 'A descrição pode ter no máximo 120 caracteres.',
@@ -115,8 +107,41 @@ class TransactionRequest extends FormRequest
                 return;
             }
 
+            $this->validateDate($validator);
             $this->validateRelations($validator);
         });
+    }
+
+    private function validateDate(Validator $validator): void
+    {
+        $date = $this->input('date');
+
+        if (! is_string($date)) {
+            return;
+        }
+
+        $today = now('America/Sao_Paulo')->toDateString();
+
+        if ($this->input('status') === 'paid' && $date > $today) {
+            $validator->errors()->add('date', 'Transação paga não pode ter data futura.');
+
+            return;
+        }
+
+        if ($date > $this->latestDate($today)) {
+            $validator->errors()->add('date', 'A data não pode ser mais de 5 anos à frente.');
+        }
+    }
+
+    private function latestDate(string $today): string
+    {
+        $current = new \DateTimeImmutable($today);
+        $year = (int) $current->format('Y') + 5;
+        $month = (int) $current->format('n');
+        $day = (int) $current->format('j');
+        $last = (int) (new \DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month)))->format('t');
+
+        return sprintf('%04d-%02d-%02d', $year, $month, min($day, $last));
     }
 
     private function validateRelations(Validator $validator): void

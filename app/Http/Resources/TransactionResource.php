@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\Month;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,6 +20,10 @@ class TransactionResource extends JsonResource
             'amount' => $this->amount,
             'date' => $this->date?->toDateString(),
             'competence_date' => $this->competence_date?->toDateString(),
+            'competence_label' => Month::competenceLabel(
+                $this->date?->toDateString(),
+                $this->competence_date?->toDateString(),
+            ),
             'description' => $this->description,
             'notes' => $this->notes,
             'day_total' => $this->day_total,

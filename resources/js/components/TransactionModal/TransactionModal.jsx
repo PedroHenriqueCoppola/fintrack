@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, router, useForm } from '@inertiajs/react';
 import { ChevronDown, Plus } from 'lucide-react';
 import Button from '../Button/Button';
@@ -6,6 +6,7 @@ import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import DatePicker from '../DatePicker/DatePicker';
 import FormField from '../FormField/FormField';
 import Modal from '../Modal/Modal';
+import ReferenceSeal from '../ReferenceSeal/ReferenceSeal';
 import { useFieldSetter } from '../../lib/fields';
 import {
     blurMoneyInput,
@@ -18,6 +19,35 @@ import {
     useToday,
 } from '../../lib/format';
 import './TransactionModal.css';
+
+const FUTURE_PAID_ERROR = 'Transação paga não pode ter data futura.';
+
+function isoDate(value) {
+    const parsed = parseBrDate(value);
+
+    return parsed ? isoFromDate(parsed) : '';
+}
+
+function plusYears(iso, years) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+
+    if (!match) {
+        return iso;
+    }
+
+    const year = Number(match[1]) + years;
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const probe = new Date(year, month - 1, day);
+
+    if (probe.getFullYear() === year && probe.getMonth() === month - 1 && probe.getDate() === day) {
+        return `${String(year).padStart(4, '0')}-${match[2]}-${match[3]}`;
+    }
+
+    const last = new Date(year, month, 0).getDate();
+
+    return `${String(year).padStart(4, '0')}-${match[2]}-${String(last).padStart(2, '0')}`;
+}
 
 const EMPTY_OPTIONS = {
     categories: { expense: [], income: [] },
@@ -110,6 +140,61 @@ function buildInitial(mode, transaction, options, today) {
     };
 }
 
+function InvoiceHint({ cardId, date, enabled }) {
+    const [text, setText] = useState('');
+    const requestId = useRef(0);
+
+    useEffect(() => {
+        if (!enabled || !cardId || !date) {
+            setText('');
+            return undefined;
+        }
+
+        const iso = datePayload(date);
+
+        if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+            setText('');
+            return undefined;
+        }
+
+        setText('');
+        const current = requestId.current + 1;
+        requestId.current = current;
+        const timer = window.setTimeout(() => {
+            fetch(`/cards/${cardId}/invoice-preview?date=${encodeURIComponent(iso)}`, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then((response) => (response.ok ? response.json() : null))
+                .then((body) => {
+                    if (requestId.current !== current) {
+                        return;
+                    }
+
+                    setText(typeof body?.label === 'string' ? body.label : '');
+                })
+                .catch(() => {
+                    if (requestId.current === current) {
+                        setText('');
+                    }
+                });
+        }, 300);
+
+        return () => {
+            window.clearTimeout(timer);
+            requestId.current += 1;
+        };
+    }, [cardId, date, enabled]);
+
+    if (!text) {
+        return null;
+    }
+
+    return <p className="tx-hint">{text}</p>;
+}
+
 function Segment({ label, value, options, onChange }) {
     return (
         <div className="tx-segment" role="radiogroup" aria-label={label}>
@@ -186,7 +271,7 @@ export default function TransactionModal({
     const bankName = card?.bank_name
         || banks.find((item) => String(item.id) === String(card?.bank_id))?.name
         || '';
-    const generatedPending = Boolean(editing && transaction?.generated && form.data.status === 'pending');
+    const dateLimit = form.data.status === 'pending' ? plusYears(today, 5) : today;
     const missing = [];
 
     if ((catalog.categories[form.data.type] ?? []).length === 0) {
@@ -199,6 +284,27 @@ export default function TransactionModal({
 
     if (catalog.paymentMethods.length === 0) {
         missing.push('uma forma de pagamento');
+    }
+
+    function changeStatus(status) {
+        setField('status', status);
+
+        if (status === 'paid' && isoDate(form.data.date) > today) {
+            form.setError('date', FUTURE_PAID_ERROR);
+            return;
+        }
+
+        if (status === 'pending') {
+            form.clearErrors('date');
+        }
+    }
+
+    function changeDate(value) {
+        setField('date', value);
+
+        if (form.data.status === 'paid' && isoDate(value) > today) {
+            form.setError('date', FUTURE_PAID_ERROR);
+        }
     }
 
     function changeType(type) {
@@ -288,12 +394,19 @@ export default function TransactionModal({
             <ConfirmDialog
                 open
                 title="Excluir transação?"
-                message={`${transaction.description}, ${formatPlainMoney(transaction.amount)}, em ${formatDate(transaction.date)}. Essa ação não pode ser desfeita.`}
                 confirmLabel="Excluir"
                 busy={deleting}
                 onConfirm={remove}
                 onCancel={() => setConfirming(false)}
-            />
+            >
+                {`${transaction.description}, ${formatPlainMoney(transaction.amount)}, em ${formatDate(transaction.date)}. Essa ação não pode ser desfeita.`}
+                {transaction.generated && transaction.status === 'pending' ? (
+                    <>
+                        {' '}
+                        <strong>O sistema não vai recriá-la neste mês.</strong>
+                    </>
+                ) : null}
+            </ConfirmDialog>
         );
     }
 
@@ -346,7 +459,7 @@ export default function TransactionModal({
                     <Segment
                         label="Status"
                         value={form.data.status}
-                        onChange={(status) => setField('status', status)}
+                        onChange={changeStatus}
                         options={[
                             { value: 'paid', label: 'Paga' },
                             { value: 'pending', label: 'Pendente' },
@@ -374,11 +487,16 @@ export default function TransactionModal({
                     <DatePicker
                         label="Data"
                         value={form.data.date}
-                        max={generatedPending ? undefined : today}
+                        max={dateLimit}
                         error={form.errors.date}
-                        onChange={(value) => setField('date', value)}
+                        onChange={changeDate}
                     />
                 </div>
+                <InvoiceHint
+                    cardId={form.data.card_id}
+                    date={form.data.date}
+                    enabled={form.data.type === 'expense' && requiresCard && Boolean(form.data.card_id)}
+                />
                 {editing && transaction?.fixed_expense ? (
                     <label className="tx-forward">
                         <input
@@ -461,12 +579,15 @@ export default function TransactionModal({
                 </button>
                 {more ? (
                     <div className="tx-extra">
-                        <DatePicker
-                            label="Data de competência (opcional)"
-                            value={form.data.competence_date}
-                            error={form.errors.competence_date}
-                            onChange={(value) => setField('competence_date', value)}
-                        />
+                        <div className="tx-competence">
+                            <DatePicker
+                                label="Data de competência (opcional)"
+                                value={form.data.competence_date}
+                                error={form.errors.competence_date}
+                                onChange={(value) => setField('competence_date', value)}
+                            />
+                            <ReferenceSeal label={editing ? transaction?.competence_label : null} />
+                        </div>
                         <FormField label="Observação (opcional)" error={form.errors.notes}>
                             <input
                                 type="text"

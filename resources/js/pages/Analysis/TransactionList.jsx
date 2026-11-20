@@ -1,5 +1,6 @@
 import { formatLongDate } from '../../lib/format';
 import Money from '../../components/Money/Money';
+import ReferenceSeal from '../../components/ReferenceSeal/ReferenceSeal';
 import CatalogIcon from '../Manage/icons';
 
 function meta(transaction) {
@@ -48,6 +49,7 @@ function Row({ transaction, onEdit, onPay, paying }) {
             <div className="tx-row__copy">
                 <div className="tx-row__title">
                     <span className="tx-row__name">{transaction.description}</span>
+                    <ReferenceSeal label={transaction.competence_label} />
                     {transaction.status === 'pending' ? <span className="tx-badge">Pendente</span> : null}
                     {transaction.fixed_expense ? <span className="tx-badge tx-badge--neutral">Fixo</span> : null}
                     {transaction.installment ? (

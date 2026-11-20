@@ -14,6 +14,24 @@ class Month
     /**
      * @var array<int, string>
      */
+    private const SHORT = [
+        1 => 'jan',
+        2 => 'fev',
+        3 => 'mar',
+        4 => 'abr',
+        5 => 'mai',
+        6 => 'jun',
+        7 => 'jul',
+        8 => 'ago',
+        9 => 'set',
+        10 => 'out',
+        11 => 'nov',
+        12 => 'dez',
+    ];
+
+    /**
+     * @var array<int, string>
+     */
     private const NAMES = [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
@@ -72,6 +90,32 @@ class Month
     public static function key(string $start): string
     {
         return substr($start, 0, 7);
+    }
+
+    /**
+     * "dez/2026" when the competence month differs from the transaction month.
+     */
+    public static function competenceLabel(?string $date, ?string $competence): ?string
+    {
+        if ($date === null || $competence === null || strlen($date) < 7 || strlen($competence) < 7) {
+            return null;
+        }
+
+        $dateKey = substr($date, 0, 7);
+        $competenceKey = substr($competence, 0, 7);
+
+        if ($dateKey === $competenceKey) {
+            return null;
+        }
+
+        $month = (int) substr($competenceKey, 5, 2);
+        $year = substr($competenceKey, 0, 4);
+
+        if (! isset(self::SHORT[$month]) || strlen($year) !== 4) {
+            return null;
+        }
+
+        return self::SHORT[$month].'/'.$year;
     }
 
     public static function label(string $key): string

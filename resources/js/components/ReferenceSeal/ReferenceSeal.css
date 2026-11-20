@@ -1,0 +1,12 @@
+.reference-seal {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    padding: 0.2rem 0.8rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+    font-size: 1.15rem;
+    font-weight: 500;
+    white-space: nowrap;
+}

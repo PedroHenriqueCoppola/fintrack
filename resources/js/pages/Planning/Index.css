@@ -57,6 +57,11 @@
     color: var(--color-text-muted);
 }
 
+.plan-chip--ok {
+    background: var(--color-chip-ok-bg);
+    color: var(--color-chip-ok-text);
+}
+
 .plan-save,
 .plan-note,
 .plan-hint,
@@ -196,6 +201,7 @@
 
 .plan-cat__name,
 .plan-record__title {
+    flex-wrap: wrap;
     font-size: 1.4rem;
     font-weight: 600;
 }

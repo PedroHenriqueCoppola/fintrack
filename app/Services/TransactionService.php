@@ -4,10 +4,13 @@ namespace App\Services;
 
 use App\Models\Card;
 use App\Models\FixedExpense;
+use App\Models\GeneratedSkip;
 use App\Models\Transaction;
 use App\Support\Money;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 
 class TransactionService
 {
@@ -57,7 +60,31 @@ class TransactionService
 
     public function delete(Transaction $transaction): void
     {
-        $transaction->delete();
+        DB::transaction(function () use ($transaction) {
+            if ($transaction->status === 'pending' && $transaction->isGenerated()) {
+                $this->rememberSkip($transaction);
+            }
+
+            $transaction->delete();
+        });
+    }
+
+    /**
+     * A generated pending the user deleted must not be created again.
+     */
+    private function rememberSkip(Transaction $transaction): void
+    {
+        $skip = new GeneratedSkip;
+        $skip->fixed_expense_id = $transaction->fixed_expense_id;
+        $skip->installment_id = $transaction->installment_id;
+        $skip->installment_number = $transaction->installment_number;
+        $skip->generated_for = $transaction->generated_for?->toDateString();
+
+        try {
+            $skip->save();
+        } catch (UniqueConstraintViolationException) {
+            // This month was already skipped.
+        }
     }
 
     public function pay(Transaction $transaction): Transaction
