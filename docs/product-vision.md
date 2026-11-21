@@ -144,7 +144,7 @@ Duas seções e um painel de visão final que se atualiza enquanto o usuário pr
 Mantém o que o autor mais gostou, com o fechamento feito por banco.
 
 - Saldo do mês de cada banco, como "Nubank: R$ 8.200,00".
-- Fechamento mensal: lista os bancos ativos, cada um com o saldo pré-preenchido pelo fechamento anterior e a variação em relação a ele; o usuário digita o que mudou, vê o total somado e salva com observações. O botão do topo é "Fechar novembro" (mês atual) ou "Editar fechamento de novembro" quando já existe; o modal permite escolher outro mês, qualquer um até o atual.
+- Fechamento mensal: lista os bancos ativos, cada um com o saldo pré-preenchido pelo fechamento anterior e a variação em relação a ele; o usuário digita o que mudou, vê o total somado e salva com observações. O botão do topo é sempre "Registrar fechamento" (serve para criar e para editar): abre o modal no mês mais recente ainda sem fechamento (até o atual); se todos já estão fechados, abre o mês atual em edição. Dentro do modal o mês pode ser trocado (até o atual) e o modal diz se o mês escolhido está "sem fechamento" ou "já fechado (editando)". Editar um fechamento antigo é clicar na linha dele em "Registros por mês".
 - Indicadores: patrimônio atual (último fechamento), variação desde o fechamento anterior e mês do último fechamento, mais a quantidade de registros do período.
 - Por banco: saldo e variação de cada banco no último fechamento ("Sem alteração", "Novo" quando o banco não existia no anterior).
 - Evolução do patrimônio (linha, uma ponta por fechamento do período), com o filtro de período padrão; abaixo, os registros por mês (total, variação, observação e o saldo de cada banco), com editar e excluir.

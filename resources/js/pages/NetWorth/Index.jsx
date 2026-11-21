@@ -66,6 +66,21 @@ function amountVariation(kind, variation) {
     return formatMoney(variation);
 }
 
+const MONTHS = [
+    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
+
+function closingPhrase(key) {
+    const match = /^(\d{4})-(\d{2})$/.exec(key ?? '');
+
+    if (!match) {
+        return key ?? '';
+    }
+
+    return `${MONTHS[parseInt(match[2], 10) - 1]} de ${match[1]}`;
+}
+
 function periodError(errors) {
     for (const key of ['period', 'from', 'to']) {
         const value = errors?.[key];
@@ -87,8 +102,7 @@ export default function Index({
     has_banks: hasBanks,
     has_closings: hasClosings,
     current_month: currentMonth,
-    current_month_name: currentMonthName,
-    current_closing_id: currentClosingId,
+    suggested_month: suggestedMonth,
     indicators,
     by_bank: byBank,
     chart,
@@ -98,9 +112,6 @@ export default function Index({
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [modalMonth, setModalMonth] = useState(null);
     const activePeriod = calendarOpen ? 'custom' : period.key;
-    const closeLabel = currentClosingId
-        ? `Editar fechamento de ${currentMonthName}`
-        : `Fechar ${currentMonthName}`;
     const banner = periodError(pageErrors);
 
     function choosePeriod(key) {
@@ -121,7 +132,7 @@ export default function Index({
                     title="Patrimônio"
                     subtitle="O que você tem guardado, banco a banco."
                     actions={hasBanks ? (
-                        <Button onClick={() => setModalMonth(currentMonth)}>{closeLabel}</Button>
+                        <Button onClick={() => setModalMonth(suggestedMonth)}>Registrar fechamento</Button>
                     ) : null}
                 />
                 {banner ? <p className="net-worth-alert" role="alert">{banner}</p> : null}
@@ -189,15 +200,15 @@ export default function Index({
                         <EmptyState
                             icon={Landmark}
                             message="Nenhum fechamento ainda. Feche o mês atual para começar."
-                            shortcutLabel={closeLabel}
-                            onShortcut={() => setModalMonth(currentMonth)}
+                            shortcutLabel="Registrar fechamento"
+                            onShortcut={() => setModalMonth(suggestedMonth)}
                         />
                     </Card>
                 ) : null}
                 {hasBanks && hasClosings ? (
                     <>
                         <div className="net-worth-grid">
-                            <Card className="card--highlight net-worth-span-4">
+                            <Card className="card--highlight net-worth-span-4 net-worth-indicator">
                                 <p className="net-worth-label">Patrimônio atual</p>
                                 <p className="net-worth-value">{formatPlainMoney(indicators.total)}</p>
                                 <p className="net-worth-note">
@@ -214,17 +225,15 @@ export default function Index({
                                     {indicators.variation_kind === 'none' ? '—' : null}
                                 </p>
                             </Card>
-                            <Card className="net-worth-span-4">
+                            <Card className="net-worth-span-4 net-worth-indicator">
                                 <p className="net-worth-label">Último fechamento</p>
                                 <p className="net-worth-value net-worth-value--md">{indicators.last_label}</p>
                             </Card>
-                            <Card className="net-worth-span-4">
+                            <Card className="net-worth-span-4 net-worth-indicator">
                                 <p className="net-worth-label">Registros</p>
                                 <p className="net-worth-value net-worth-value--md">{indicators.records_label}</p>
                             </Card>
-                        </div>
-                        <div className="net-worth-grid">
-                            <Card className="net-worth-span-7" title="Evolução do patrimônio">
+                            <Card className="net-worth-span-12" title="Evolução do patrimônio">
                                 {chart.points.length > 0 ? (
                                     <EvolutionChart points={chart.points} ariaLabel={chart.aria_label} />
                                 ) : (
@@ -256,17 +265,22 @@ export default function Index({
                                     </div>
                                 </Card>
                             ) : null}
-                        </div>
-                        <Card title="Registros por mês">
+                            <Card className="net-worth-span-7 net-worth-records-card" title="Registros por mês">
                             {records.length === 0 ? (
                                 <EmptyState icon={Landmark} message="Nenhum fechamento neste período." />
                             ) : (
-                                <div className="net-worth-records">
+                                <div
+                                    className="net-worth-records"
+                                    tabIndex={0}
+                                    role="region"
+                                    aria-label="Registros por mês"
+                                >
                                     {records.map((record) => (
                                         <button
                                             key={record.id}
                                             type="button"
                                             className="net-worth-record"
+                                            aria-label={`Editar fechamento de ${closingPhrase(record.month)}`}
                                             onClick={() => setModalMonth(record.month)}
                                         >
                                             <div className="net-worth-record__main">
@@ -287,10 +301,11 @@ export default function Index({
                                 </div>
                             )}
                         </Card>
+                        </div>
                     </>
                 ) : null}
             </div>
-            <ClosingModal month={modalMonth} onClose={() => setModalMonth(null)} />
+            <ClosingModal month={modalMonth} maxMonth={currentMonth} onClose={() => setModalMonth(null)} />
         </>
     );
 }

@@ -267,6 +267,7 @@ class NetWorthService
             'current_month' => $currentKey,
             'current_month_name' => Month::name($currentKey, true),
             'current_closing_id' => $currentId,
+            'suggested_month' => $this->suggestedMonth($currentKey),
             'indicators' => [
                 'total' => $latest['total'] ?? null,
                 'variation' => $latest['variation'] ?? null,
@@ -433,6 +434,43 @@ class NetWorthService
         }
 
         return Month::name($fromKey, true).' de '.$fromYear.' a '.Month::name($toKey, true).' de '.$toYear;
+    }
+
+    /**
+     * Month the register button opens. The current month when it is still open.
+     * Otherwise the latest gap between the first closing and the current month,
+     * or the current month itself when that span has no gap.
+     */
+    private function suggestedMonth(string $current): string
+    {
+        $closed = NetWorthClosing::query()
+            ->orderBy('month')
+            ->pluck('month')
+            ->map(function ($month) {
+                if ($month instanceof \DateTimeInterface) {
+                    return $month->format('Y-m');
+                }
+
+                return substr((string) $month, 0, 7);
+            })
+            ->all();
+
+        if (! in_array($current, $closed, true)) {
+            return $current;
+        }
+
+        $cursor = $closed[0];
+        $gap = null;
+
+        while ($cursor !== null && $cursor < $current) {
+            if (! in_array($cursor, $closed, true)) {
+                $gap = $cursor;
+            }
+
+            $cursor = Month::shift($cursor, 1);
+        }
+
+        return $gap ?? $current;
     }
 
     private function recordsLabel(int $count): string

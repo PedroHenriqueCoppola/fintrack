@@ -4,6 +4,32 @@
     gap: 1.4rem;
 }
 
+.closing-month {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+}
+
+.closing-month .form-field {
+    width: 100%;
+}
+
+.closing-chip {
+    margin: 0;
+    padding: 0.2rem 0.8rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-chip-bg);
+    color: var(--color-chip-text);
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+
+.closing-chip--open {
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+}
+
 .closing-lead,
 .closing-notice,
 .closing-variation {

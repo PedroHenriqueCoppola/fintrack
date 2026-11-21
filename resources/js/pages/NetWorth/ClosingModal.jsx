@@ -79,18 +79,17 @@ function payloadBalance(value) {
     return String(value ?? '');
 }
 
-export default function ClosingModal({ month, onClose }) {
+export default function ClosingModal({ month, maxMonth, onClose }) {
     const open = month !== null;
     const [monthText, setMonthText] = useState('');
     const [monthError, setMonthError] = useState('');
     const [reference, setReference] = useState(null);
     const [phrase, setPhrase] = useState('');
     const [existingId, setExistingId] = useState(null);
-    const [notice, setNotice] = useState('');
+    const [closed, setClosed] = useState(null);
     const [ready, setReady] = useState(false);
     const [confirming, setConfirming] = useState(false);
     const [deleting, setDeleting] = useState(false);
-    const openedMonth = useRef(null);
     const requestId = useRef(0);
     const form = useForm({ month: '', notes: '', items: [] });
     const setField = useFieldSetter(form);
@@ -99,13 +98,12 @@ export default function ClosingModal({ month, onClose }) {
         if (!open) {
             setReady(false);
             setConfirming(false);
-            setNotice('');
+            setClosed(null);
             setMonthError('');
 
             return;
         }
 
-        openedMonth.current = month;
         setPhrase(phraseFromKey(month));
         setMonthText(fieldMonth(month));
     }, [open, month]);
@@ -145,12 +143,8 @@ export default function ClosingModal({ month, onClose }) {
                     setMonthError('');
                     setPhrase(body.month_phrase || phraseFromKey(key));
                     setExistingId(body.existing_id ?? null);
+                    setClosed(Boolean(body.existing_id));
                     setReference(body.reference ?? null);
-                    setNotice(
-                        body.existing_id && body.month !== openedMonth.current
-                            ? 'Este mês já tem fechamento. Você está editando esse registro.'
-                            : '',
-                    );
                     form.setData({
                         month: body.month,
                         notes: body.notes ?? '',
@@ -300,13 +294,21 @@ export default function ClosingModal({ month, onClose }) {
         >
             <form id="closing-form" className="closing-form" noValidate onSubmit={submit}>
                 <p className="closing-lead">Os valores vêm do mês passado. Ajuste o que mudou em cada banco.</p>
-                <MonthField
-                    label="Mês"
-                    value={monthText}
-                    error={monthError || message(form.errors, 'month')}
-                    onChange={changeMonth}
-                />
-                {notice ? <p className="closing-notice">{notice}</p> : null}
+                <div className="closing-month">
+                    <MonthField
+                        label="Mês"
+                        value={monthText}
+                        min="01/2000"
+                        max={fieldMonth(maxMonth)}
+                        error={monthError || message(form.errors, 'month')}
+                        onChange={changeMonth}
+                    />
+                    {closed === null ? null : (
+                        <p className={closed ? 'closing-chip' : 'closing-chip closing-chip--open'}>
+                            {closed ? 'Já fechado: você está editando' : 'Sem fechamento'}
+                        </p>
+                    )}
+                </div>
                 {itemsError ? <p className="closing-form-error" role="alert">{itemsError}</p> : null}
                 {ready && items.length === 0 ? (
                     <p className="closing-notice">Não há banco para este fechamento.</p>

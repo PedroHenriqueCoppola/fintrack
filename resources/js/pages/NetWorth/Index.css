@@ -164,8 +164,31 @@
 .net-worth-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: stretch;
     gap: 1.6rem;
     margin-bottom: 1.6rem;
+}
+
+.net-worth-grid > .card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.net-worth-grid > .card > .card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 0;
+}
+
+.net-worth-records-card {
+    max-height: 44rem;
+    overflow: hidden;
 }
 
 .net-worth-span-4 {
@@ -178,6 +201,10 @@
 
 .net-worth-span-7 {
     grid-column: span 7;
+}
+
+.net-worth-span-12 {
+    grid-column: span 12;
 }
 
 .net-worth-label {
@@ -199,7 +226,13 @@
     letter-spacing: -0.025em;
 }
 
+.net-worth-indicator .net-worth-label,
+.net-worth-indicator .net-worth-value {
+    flex: none;
+}
+
 .net-worth-note {
+    flex: none;
     margin-top: 0.6rem;
     color: var(--color-text-subtle);
     font-size: 1.25rem;
@@ -297,29 +330,58 @@
     font-size: 1.4rem;
 }
 
+.net-worth-records-card > .card__body {
+    overflow: hidden;
+}
+
 .net-worth-records {
     display: flex;
+    flex: 1;
     flex-direction: column;
+    width: calc(100% + 2rem);
+    min-height: 0;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .net-worth-record {
-    width: 100%;
-    padding: 1.2rem 0;
+    box-sizing: border-box;
+    width: calc(100% + 2rem);
+    margin: 0 -1rem;
+    padding: 1.2rem 1rem;
     border: 0;
-    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     background: transparent;
     color: inherit;
     text-align: left;
     cursor: pointer;
+    transition:
+        background var(--transition),
+        border-color var(--transition),
+        color var(--transition);
 }
 
-.net-worth-record:first-child {
-    border-top: 0;
-    padding-top: 0;
+.net-worth-record:last-child {
+    border-bottom-color: transparent;
 }
 
-.net-worth-record:hover {
-    background: var(--color-card-inset);
+.net-worth-record:hover,
+.net-worth-record:focus-visible {
+    background: color-mix(in srgb, var(--color-accent) 70%, transparent);
+    border-bottom-color: transparent;
+}
+
+.net-worth-record:focus-visible {
+    outline: 2px solid var(--color-primary-soft);
+    outline-offset: 2px;
+}
+
+.net-worth-record:has(+ .net-worth-record:hover),
+.net-worth-record:has(+ .net-worth-record:focus-visible) {
+    border-bottom-color: transparent;
 }
 
 .net-worth-record__main {
@@ -365,10 +427,11 @@
     font-size: 1.4rem;
 }
 
-@media (max-width: 110rem) {
+@media (max-width: 1100px) {
     .net-worth-span-4,
     .net-worth-span-5,
-    .net-worth-span-7 {
+    .net-worth-span-7,
+    .net-worth-span-12 {
         grid-column: span 12;
     }
 }
