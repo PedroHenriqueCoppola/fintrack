@@ -9,6 +9,7 @@ use App\Http\Controllers\FixedExpenseController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ManageController;
+use App\Http\Controllers\NetWorthController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\RegistrationController;
@@ -65,7 +66,11 @@ Route::middleware(['auth', 'inertia.encrypt', SyncCurrentPendings::class])->grou
     Route::post('/planning/installments/{installment}/archive', [InstallmentController::class, 'archive'])->name('planning.installments.archive')->whereNumber('installment');
     Route::post('/planning/installments/{installment}/restore', [InstallmentController::class, 'restore'])->name('planning.installments.restore')->whereNumber('installment');
     Route::get('/goals', fn () => Inertia::render('Goals/Index'))->name('goals');
-    Route::get('/net-worth', fn () => Inertia::render('NetWorth/Index'))->name('net-worth');
+    Route::get('/net-worth', [NetWorthController::class, 'index'])->name('net-worth');
+    Route::get('/net-worth/form', [NetWorthController::class, 'form'])->name('net-worth.form');
+    Route::post('/net-worth', [NetWorthController::class, 'store'])->name('net-worth.store');
+    Route::put('/net-worth/{closing}', [NetWorthController::class, 'update'])->name('net-worth.update')->whereNumber('closing');
+    Route::delete('/net-worth/{closing}', [NetWorthController::class, 'destroy'])->name('net-worth.destroy')->whereNumber('closing');
     Route::get('/reports', fn () => Inertia::render('Reports/Index'))->name('reports');
     Route::get('/manage', [ManageController::class, 'index'])->name('manage');
 

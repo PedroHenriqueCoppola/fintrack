@@ -127,6 +127,29 @@ class Month
         return self::NAMES[$month - 1].' '.$year;
     }
 
+    public static function name(string $key, bool $lower = false): string
+    {
+        $start = self::start($key);
+        $name = self::NAMES[((int) substr($start, 5, 2)) - 1];
+
+        return $lower ? mb_strtolower($name, 'UTF-8') : $name;
+    }
+
+    public static function short(string $key): string
+    {
+        $start = self::start($key);
+
+        return self::SHORT[(int) substr($start, 5, 2)];
+    }
+
+    /**
+     * "novembro de 2026".
+     */
+    public static function phrase(string $key): string
+    {
+        return self::name($key, true).' de '.substr(self::start($key), 0, 4);
+    }
+
     public static function shift(string $key, int $delta): ?string
     {
         $start = self::startOrNull($key);

@@ -144,9 +144,10 @@ Duas seções e um painel de visão final que se atualiza enquanto o usuário pr
 Mantém o que o autor mais gostou, com o fechamento feito por banco.
 
 - Saldo do mês de cada banco, como "Nubank: R$ 8.200,00".
-- Fechamento mensal: lista os bancos ativos, cada um com o saldo pré-preenchido pelo fechamento anterior e a variação em relação a ele; o usuário digita o que mudou, vê o total somado e salva com observações.
-- Indicadores: total atual, variação desde o último fechamento e último fechamento.
-- Evolução do patrimônio (linha), observações mensais e registros por mês organizados por banco.
+- Fechamento mensal: lista os bancos ativos, cada um com o saldo pré-preenchido pelo fechamento anterior e a variação em relação a ele; o usuário digita o que mudou, vê o total somado e salva com observações. O botão do topo é "Fechar novembro" (mês atual) ou "Editar fechamento de novembro" quando já existe; o modal permite escolher outro mês, qualquer um até o atual.
+- Indicadores: patrimônio atual (último fechamento), variação desde o fechamento anterior e mês do último fechamento, mais a quantidade de registros do período.
+- Por banco: saldo e variação de cada banco no último fechamento ("Sem alteração", "Novo" quando o banco não existia no anterior).
+- Evolução do patrimônio (linha, uma ponta por fechamento do período), com o filtro de período padrão; abaixo, os registros por mês (total, variação, observação e o saldo de cada banco), com editar e excluir.
 
 ### Gerenciar
 
@@ -313,6 +314,16 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Geração dos Pendentes (regra híbrida):** o mês atual gera os Pendentes de fixos e parcelas sozinho (ao criar, editar ou arquivar um fixo ou parcelado, e ao entrar no sistema, uma vez por sessão). Meses futuros só geram quando o planejamento é confirmado. Quando o usuário vê na Análise um mês com fixos ou parcelas previstos e planejamento não confirmado, aparece um aviso com link para o Planejamento.
 
 - **Pago antes do mês (ajuste do módulo 6):** quando uma transação tem competência em mês diferente do da data (por exemplo, um fixo de dezembro pago em novembro), ela mostra o selo "Ref. dez/2026" na Análise, no modal de edição e na lista da Fatura. No Planejamento, o fixo ou a parcela daquele mês aparece como "Pago antecipado em 20/11" em vez de sumir da lista.
+
+### Módulo 7
+
+- **Meses:** o fechamento aceita qualquer mês até o atual (dá para montar o histórico), um por mês, editável e excluível depois.
+- **Variação:** sempre contra o fechamento imediatamente anterior, mesmo que meses tenham sido pulados. É calculada, não guardada; corrigir um mês antigo atualiza a variação do seguinte.
+- **Bancos no fechamento:** bancos ativos sempre aparecem (banco novo entra com saldo 0). Banco arquivado só aparece se o fechamento de referência tinha saldo nele, para o usuário poder zerá-lo.
+- **Saldo:** valor digitado, zero ou maior; não há saldo negativo. O total do patrimônio é a soma dos bancos e não é guardado.
+- **Gráfico:** a linha de evolução entra já no módulo 7, com a biblioteca Recharts, que o Dashboard (módulo 8) reaproveita.
+- **Período padrão:** Ano. O Patrimônio não usa o mês de trabalho do Planejamento.
+- **Princípio daqui em diante:** priorizar o que simplifica o dia a dia e dá boas visualizações; antes de cada módulo, cortar o que só complica.
 
 ### Segunda revisão
 

@@ -6,7 +6,7 @@ Sistema web de finanças pessoais: transações, orçamento do mês por categori
 
 O visual novo segue o design system: superfícies em camadas, cards com sombra suave e a fonte Plus Jakarta Sans. Não há header. A sidebar flutuante traz o nome Fintrack, os oito links (Dashboard, Análise, Faturas, Planejamento, Metas, Patrimônio, Relatórios e Gerenciar) e o botão Recolher. No topo da área de conteúdo ficam o botão de tema e o ícone de perfil. O tema escuro é o padrão. O botão de tema alterna para o tema claro e guarda a escolha neste navegador.
 
-Nesta etapa dá para entrar, criar conta, cadastrar em Gerenciar, lançar transações, planejar o mês e acompanhar a fatura de cada cartão. O botão Nova transação, no Dashboard e na Análise, abre o modal. A Análise lista os lançamentos, com filtros na URL, filtros salvos e o resumo do período. Faturas mostra o ciclo do cartão, o que já foi lançado e o que ainda está previsto. O corpo do Dashboard, Metas, Patrimônio e Relatórios continua em construção. As páginas internas exigem uma conta. Ainda não há usuário de demonstração.
+Nesta etapa dá para entrar, criar conta, cadastrar em Gerenciar, lançar transações, planejar o mês, acompanhar a fatura de cada cartão e fechar o patrimônio do mês. O botão Nova transação, no Dashboard e na Análise, abre o modal. A Análise lista os lançamentos, com filtros na URL, filtros salvos e o resumo do período. Faturas mostra o ciclo do cartão, o que já foi lançado e o que ainda está previsto. Patrimônio guarda o saldo de cada banco no fechamento do mês. O corpo do Dashboard, Metas e Relatórios continua em construção. As páginas internas exigem uma conta. Ainda não há usuário de demonstração.
 
 ## Como subir
 
@@ -99,6 +99,10 @@ O mês atual recebe as pendentes dos fixos e das parcelas sozinho: ao criar, edi
 ## Faturas
 
 A página http://localhost:8000/invoices lista os cartões ativos. A fatura leva o nome do mês em que fecha. A compra feita no dia do fechamento entra na fatura seguinte. **Lançado** são as despesas pagas do ciclo; **Previsto**, as pendentes, inclusive a pendente manual com data futura. Quando a competência cai em outro mês, a linha mostra o selo "Ref. dez/2026". O total estimado é a soma dos dois, calculada no servidor. Dá para ver as faturas anteriores e, depois do fechamento, marcar a fatura como paga (e desmarcar). A marca só guarda a data: não cria despesa e não muda as transações. No modal de transação, com cartão e data escolhidos, uma dica diz em qual fatura a compra entra.
+
+## Patrimônio
+
+A página http://localhost:8000/net-worth mostra o que está guardado em cada banco. O fechamento é mensal: o botão **Fechar novembro** (o mês atual) abre o modal com o saldo do fechamento anterior já preenchido. Se o mês atual já foi fechado, o botão vira **Editar fechamento de novembro**. Dá para escolher qualquer mês até o atual, um por mês. O total e a variação são calculados no servidor. A variação compara com o fechamento anterior, mesmo que um mês tenha sido pulado. O filtro de período (padrão: ano) muda o gráfico e a lista; o patrimônio atual e o bloco por banco continuam sendo os do último fechamento. Excluir um fechamento tira só aquele registro.
 
 ## Proteção do login
 

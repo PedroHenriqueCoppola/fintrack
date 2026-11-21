@@ -1,0 +1,157 @@
+.closing-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.closing-lead,
+.closing-notice,
+.closing-variation {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 1.35rem;
+    font-weight: 500;
+}
+
+.closing-notice,
+.closing-variation,
+.closing-form-error {
+    font-size: 1.25rem;
+}
+
+.closing-form-error {
+    margin: 0;
+    color: var(--color-negative-text);
+    font-weight: 500;
+}
+
+.closing-banks {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.closing-bank {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+}
+
+.closing-tile {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 3.8rem;
+    height: 3.8rem;
+    border-radius: 1.2rem;
+    background: color-mix(in srgb, var(--item-color) 16%, var(--color-card));
+    color: color-mix(in srgb, var(--item-color) 70%, var(--color-text));
+}
+
+.closing-tile--plain {
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+}
+
+.closing-tile svg {
+    width: 1.8rem;
+    height: 1.8rem;
+}
+
+.closing-bank__name {
+    flex: 1;
+    min-width: 0;
+}
+
+.closing-bank__name strong,
+.closing-bank__name span {
+    display: block;
+}
+
+.closing-bank__name strong {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.closing-bank__name span {
+    color: var(--color-text-subtle);
+    font-size: 1.25rem;
+}
+
+.closing-bank .form-field {
+    flex: 0 0 16rem;
+}
+
+.closing-bank .form-field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.closing-balance {
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+}
+
+.closing-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.closing-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.2rem;
+    padding: 1.4rem 1.6rem;
+    border: 1px solid var(--color-border-highlight);
+    border-radius: 1.6rem;
+    background: var(--color-card-highlight);
+}
+
+.closing-total span {
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+    font-weight: 500;
+}
+
+.closing-total strong {
+    color: var(--color-positive);
+    font-size: 2rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.closing-variation.is-positive {
+    color: var(--color-positive);
+}
+
+.closing-variation.is-negative {
+    color: var(--color-negative-text);
+}
+
+.closing-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+}
+
+.closing-footer__side {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.closing-delete {
+    color: var(--color-negative-text);
+}

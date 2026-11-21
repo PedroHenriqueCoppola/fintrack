@@ -168,7 +168,7 @@ Quadrado de ícone 4.4rem em `--color-accent`, uma frase curta em `--color-text-
 ### Filtro de período (usado a partir do módulo 4)
 Linha acima do conteúdo: segmento com Mês atual, Mês anterior, Trimestre, Semestre, Ano, Todo o período e Personalizado; caixa com as datas (De – Até) e, quando houver, botões Mais filtros e Salvar filtro. Personalizado abre um popover com calendário (faixa selecionada em `--color-accent`, extremos em `--color-primary`) e campos De e Até. Filtros ativos viram chips removíveis, com "Limpar filtros" e, à direita, os filtros salvos como chips tracejados. Veja `docs/design/dark/filters-open.png`.
 
-### Gráficos (usados a partir do módulo 8)
+### Gráficos (usados a partir do módulo 7)
 Linha principal em `--color-primary-soft`, 2.4px, pontas arredondadas, ponto final destacado, com área abaixo em gradiente de 22% de opacidade até 0. Linhas de grade em `--color-border`. Eixos em 1.1rem `--color-text-subtle`. Séries extras: azul `#6f9ee0`, verde-água `#7cc4ac`, laranja `#e6b08d` (no claro: `#2f64b0`, `#2a7a62`, `#a65a24`). Legenda sempre em texto. Rosca com espessura 14 e trilho `--color-border-input`. Vermelho só para despesas.
 
 ## 7. Movimento

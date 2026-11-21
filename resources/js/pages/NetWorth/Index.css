@@ -1,0 +1,374 @@
+.net-worth {
+    gap: 0;
+}
+
+.net-worth .page-header {
+    margin-bottom: 2.4rem;
+}
+
+.net-worth-alert {
+    margin: 0 0 1.6rem;
+    color: var(--color-negative-text);
+    font-size: 1.35rem;
+    font-weight: 500;
+}
+
+.net-worth-tools {
+    position: relative;
+    z-index: 30;
+}
+
+.popover-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    border: 0;
+    background: transparent;
+    cursor: default;
+}
+
+.period-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    margin: 0 0 1.8rem;
+}
+
+.period-seg {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.4rem;
+    border: 1px solid var(--color-border-input);
+    border-radius: var(--radius-md);
+    background: var(--color-card-inset);
+}
+
+.period-seg button {
+    padding: 0.7rem 1.3rem;
+    border: 0;
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.period-seg button[aria-pressed='true'] {
+    background: var(--color-accent);
+    color: var(--color-accent-text);
+}
+
+.period-range {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem 1.4rem;
+    border: 1px solid var(--color-border-input);
+    border-radius: var(--radius-md);
+    background: var(--color-card);
+    color: var(--color-text);
+    font-size: 1.3rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.period-range svg {
+    width: 1.8rem;
+    height: 1.8rem;
+    color: var(--color-text-muted);
+}
+
+.period-range i {
+    color: var(--color-text-subtle);
+    font-style: normal;
+}
+
+.popover {
+    position: absolute;
+    z-index: 40;
+    padding: 1.8rem;
+    border: 1px solid var(--color-modal-border);
+    border-radius: 2rem;
+    background: var(--color-modal);
+    box-shadow: var(--shadow-modal);
+}
+
+.popover:focus {
+    outline: none;
+}
+
+.popover--calendar {
+    top: calc(100% + 0.8rem);
+    left: 0;
+    width: 36rem;
+}
+
+.popover__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.2rem;
+}
+
+.popover__title {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.popover__dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.4rem;
+    margin-top: 1.4rem;
+}
+
+.popover__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.6rem;
+}
+
+.popover__error {
+    margin: 1rem 0 0;
+    color: var(--color-negative-text);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.filter-field input {
+    width: 100%;
+    padding: 1rem 1.4rem;
+    border: 1px solid var(--color-border-input);
+    border-radius: 1.3rem;
+    background: var(--color-card-inset);
+    color: var(--color-text);
+    font-size: 1.4rem;
+}
+
+.net-worth-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.6rem;
+    margin-bottom: 1.6rem;
+}
+
+.net-worth-span-4 {
+    grid-column: span 4;
+}
+
+.net-worth-span-5 {
+    grid-column: span 5;
+}
+
+.net-worth-span-7 {
+    grid-column: span 7;
+}
+
+.net-worth-label {
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+    font-weight: 500;
+}
+
+.net-worth-value {
+    margin-top: 1rem;
+    font-size: 3.2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+.net-worth-value--md {
+    font-size: 2.4rem;
+    letter-spacing: -0.025em;
+}
+
+.net-worth-note {
+    margin-top: 0.6rem;
+    color: var(--color-text-subtle);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.is-positive {
+    color: var(--color-positive);
+}
+
+.is-negative {
+    color: var(--color-negative-text);
+}
+
+.net-worth-banks {
+    display: flex;
+    flex-direction: column;
+}
+
+.net-worth-bank,
+.net-worth-record {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+}
+
+.net-worth-bank {
+    padding: 1.2rem 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.net-worth-bank:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.net-worth-tile {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 3.8rem;
+    height: 3.8rem;
+    border-radius: 1.2rem;
+    background: color-mix(in srgb, var(--item-color) 16%, var(--color-card));
+    color: color-mix(in srgb, var(--item-color) 70%, var(--color-text));
+}
+
+.net-worth-tile--plain {
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+}
+
+.net-worth-tile svg {
+    width: 1.8rem;
+    height: 1.8rem;
+}
+
+.net-worth-bank__name {
+    flex: 1;
+    min-width: 0;
+}
+
+.net-worth-bank__name strong,
+.net-worth-bank__name span {
+    display: block;
+}
+
+.net-worth-bank__name strong {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.net-worth-bank__name span {
+    color: var(--color-text-subtle);
+    font-size: 1.25rem;
+}
+
+.net-worth-bank__name span.is-positive {
+    color: var(--color-positive);
+}
+
+.net-worth-bank__name span.is-negative {
+    color: var(--color-negative-text);
+}
+
+.net-worth-bank__balance,
+.net-worth-record__values span:first-child {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.net-worth-bank__balance {
+    text-align: right;
+    font-size: 1.4rem;
+}
+
+.net-worth-records {
+    display: flex;
+    flex-direction: column;
+}
+
+.net-worth-record {
+    width: 100%;
+    padding: 1.2rem 0;
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.net-worth-record:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.net-worth-record:hover {
+    background: var(--color-card-inset);
+}
+
+.net-worth-record__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.net-worth-record__main strong,
+.net-worth-record__notes,
+.net-worth-record__banks {
+    display: block;
+}
+
+.net-worth-record__main strong {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.net-worth-record__notes,
+.net-worth-record__banks,
+.net-worth-record__values span:last-child {
+    color: var(--color-text-subtle);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.net-worth-record__values span.is-positive {
+    color: var(--color-positive);
+}
+
+.net-worth-record__values span.is-negative {
+    color: var(--color-negative-text);
+}
+
+.net-worth-record__values {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
+}
+
+.net-worth-record__values span:first-child {
+    font-size: 1.4rem;
+}
+
+@media (max-width: 110rem) {
+    .net-worth-span-4,
+    .net-worth-span-5,
+    .net-worth-span-7 {
+        grid-column: span 12;
+    }
+}
