@@ -674,10 +674,10 @@ class PlanningService
     private function fixedReason(FixedExpense $expense, string $monthStart): string
     {
         if ($expense->start_month->toDateString() > $monthStart) {
-            return 'Começa em '.$expense->start_month->format('m/Y');
+            return 'Começa em '.Month::phrase($expense->start_month->format('Y-m'));
         }
 
-        return 'Terminou em '.$expense->end_month->format('m/Y');
+        return 'Terminou em '.Month::phrase($expense->end_month->format('Y-m'));
     }
 
     private function installmentReason(Installment $installment, string $monthKey): string
@@ -685,7 +685,7 @@ class PlanningService
         $first = $installment->first_date->format('Y-m');
 
         if ($monthKey < $first) {
-            return 'Começa em '.$installment->first_date->format('m/Y');
+            return 'Começa em '.Month::phrase($installment->first_date->format('Y-m'));
         }
 
         return 'Quitado';

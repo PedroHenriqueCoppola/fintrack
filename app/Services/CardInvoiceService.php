@@ -33,24 +33,6 @@ class CardInvoiceService
     ];
 
     /**
-     * @var array<int, string>
-     */
-    private const SHORT = [
-        1 => 'Jan',
-        2 => 'Fev',
-        3 => 'Mar',
-        4 => 'Abr',
-        5 => 'Mai',
-        6 => 'Jun',
-        7 => 'Jul',
-        8 => 'Ago',
-        9 => 'Set',
-        10 => 'Out',
-        11 => 'Nov',
-        12 => 'Dez',
-    ];
-
-    /**
      * Active cards in the same order as Gerenciar (name, then id).
      *
      * @return Collection<int, Card>
@@ -552,7 +534,7 @@ class CardInvoiceService
 
     private function navLabel(string $key): string
     {
-        return self::SHORT[(int) substr($key, 5, 2)].' '.substr($key, 0, 4);
+        return $this->monthTitle($key);
     }
 
     private function short(string $date): string

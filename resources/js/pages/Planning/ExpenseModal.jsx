@@ -191,6 +191,7 @@ export function FixedExpenseModal({ item, options, onClose }) {
                         value={form.data.end_month}
                         error={form.errors.end_month}
                         hint="Opcional."
+                        clearable
                         onChange={(value) => setField('end_month', value)}
                     />
                 </div>

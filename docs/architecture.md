@@ -80,8 +80,8 @@ As tabelas padrão do Laravel (`sessions`, `cache`, `jobs`, `password_reset_toke
 | card_invoice_payments | user_id, card_id, closing_month (dia 1), paid_on | único por (card_id, closing_month); o valor da fatura não é guardado |
 | goals | user_id, name, target_amount, start_date?, deadline, category_id?, note?, archived_at? | valor atual = soma dos lançamentos |
 | goal_entries | goal_id, type (deposit, adjustment), amount (com sinal), date, note? | |
-| net_worth_closings | user_id, reference_month, note? | único por (user_id, reference_month) |
-| net_worth_closing_items | net_worth_closing_id, bank_id, balance | saldo digitado no fechamento |
+| net_worth_closings | user_id, month (dia 1), notes? (até 500) | único por (user_id, month); o mês vai de 2000-01 até o mês atual |
+| net_worth_closing_items | user_id, closing_id, bank_id, balance (DECIMAL(15,2), >= 0) | único por (closing_id, bank_id); apagar o fechamento remove os itens; banco com fechamento não é apagado (restrict) |
 | saved_reports | user_id, name, period (json), included_data (json), filters? (json), grouping? | |
 
 Campos com `?` são opcionais.
@@ -89,6 +89,19 @@ Campos com `?` são opcionais.
 ## Valores derivados (nunca guardados)
 
 Gasto do mês por categoria, porcentagem usada, o que resta, totais do planejamento (renda, planejado, sobra a alocar, comprometido e o comprometido de cada categoria), faturas dos cartões, valor atual das metas e total do patrimônio. Todos calculados no backend, em Services, a partir das tabelas acima. O comprometido de cada categoria soma os fixos ativos naquele mês e a parcela que cai nele; não é uma coluna gravada. O planejamento fica em `PlanningService`, `SpendingService`, `FixedExpenseService`, `InstallmentService`, `InstallmentCalculator` e `PlanGenerator`.
+
+## Patrimônio
+
+`NetWorthService` soma os saldos digitados. O total, a variação e o patrimônio atual não são colunas.
+
+- `previousClosing(month)`: fechamento com o maior mês estritamente anterior, mesmo que meses tenham sido pulados.
+- `current()`: total do último fechamento e a variação contra o anterior (`null` quando é o primeiro). O Dashboard (módulo 8) usa este método.
+- `series(from, to)`: um total já somado por fechamento, do mais antigo ao mais novo. `from` e `to` nulos significam todo o histórico. O Dashboard reaproveita esta série.
+- A variação é o valor do fechamento menos o imediatamente anterior. Banco que não estava no anterior entra como "Novo", com a variação igual ao saldo inteiro. Sem anterior, não há variação.
+- O formulário de um mês novo lista os bancos ativos e os arquivados que tinham saldo maior que zero na referência. A edição lista os bancos daquele fechamento mais os ativos que ainda não estavam nele.
+- A página lê os fechamentos do período com itens e banco num eager load, e o fechamento anterior ao primeiro do período em outra consulta, para a variação do primeiro registro. O último fechamento de todos os tempos só é lido de novo quando cai fora do período, porque os indicadores não seguem o filtro.
+
+O gráfico fica em `resources/js/components/EvolutionChart` e usa `recharts` 3.11.0 (com `react-is` 19.2.0), compatível com React 19 e Vite 8. Ele recebe pontos `{ label, value, caption, cents }` e desenha com as variáveis CSS do tema. O Dashboard reaproveita o componente.
 
 A fatura não é uma tabela. `CardInvoiceCalculator` (sem consulta ao banco) define o fechamento, o ciclo, o vencimento e a situação. `CardInvoiceService` soma as despesas do cartão com `Money` (bcmath): Paga entra em Lançado e Pendente em Previsto. Receita com cartão não entra. A página lê as despesas do cartão numa consulta e os pagamentos noutra; a lista da fatura aberta é uma terceira consulta, com categoria, banco e forma de pagamento. O resumo não faz uma consulta por fatura.
 
