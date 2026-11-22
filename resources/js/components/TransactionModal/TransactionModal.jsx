@@ -256,9 +256,13 @@ export default function TransactionModal({
         editing ? transaction?.category : null,
     );
     const banks = withCurrent(catalog.banks, editing ? transaction?.bank : null);
+    const methodSource = form.data.type === 'reserve'
+        ? catalog.paymentMethods.filter((item) => !item.requires_card)
+        : catalog.paymentMethods;
+    const currentMethod = editing ? transaction?.payment_method : null;
     const paymentMethods = withCurrent(
-        catalog.paymentMethods,
-        editing ? transaction?.payment_method : null,
+        methodSource,
+        currentMethod && !(form.data.type === 'reserve' && currentMethod.requires_card) ? currentMethod : null,
     );
     const cards = withCurrent(catalog.cards, editing && transaction?.card ? {
         ...transaction.card,
@@ -274,7 +278,9 @@ export default function TransactionModal({
     const dateLimit = form.data.status === 'pending' ? plusYears(today, 5) : today;
     const missing = [];
 
-    if ((catalog.categories[form.data.type] ?? []).length === 0) {
+    const noReserveCategory = form.data.type === 'reserve' && (catalog.categories.reserve ?? []).length === 0;
+
+    if (!noReserveCategory && (catalog.categories[form.data.type] ?? []).length === 0) {
         missing.push('uma categoria');
     }
 
@@ -308,7 +314,18 @@ export default function TransactionModal({
     }
 
     function changeType(type) {
-        setField((data) => ({ ...data, type, category_id: '' }), 'type', 'category_id');
+        setField((data) => {
+            const current = catalog.paymentMethods.find((item) => String(item.id) === String(data.payment_method_id));
+            const dropCard = type === 'reserve' && Boolean(current?.requires_card);
+
+            return {
+                ...data,
+                type,
+                category_id: '',
+                payment_method_id: dropCard ? '' : data.payment_method_id,
+                card_id: type === 'reserve' ? '' : data.card_id,
+            };
+        }, 'type', 'category_id', 'payment_method_id', 'card_id');
     }
 
     function changeMethod(id) {
@@ -346,6 +363,11 @@ export default function TransactionModal({
 
     function submit(event) {
         event.preventDefault();
+
+        if (form.data.type === 'reserve' && (catalog.categories.reserve ?? []).length === 0) {
+            return;
+        }
+
         const payload = {
             type: form.data.type,
             status: form.data.status,
@@ -426,7 +448,7 @@ export default function TransactionModal({
                     </div>
                     <div className="tx-footer__side">
                         <Button variant="secondary" onClick={onClose} disabled={form.processing}>Cancelar</Button>
-                        <Button type="submit" form="transaction-form" disabled={form.processing}>
+                        <Button type="submit" form="transaction-form" disabled={form.processing || noReserveCategory}>
                             {form.processing ? 'Salvando…' : 'Salvar'}
                         </Button>
                     </div>
@@ -434,7 +456,7 @@ export default function TransactionModal({
             ) : (
                 <>
                     <Button variant="secondary" onClick={onClose} disabled={form.processing}>Cancelar</Button>
-                    <Button type="submit" form="transaction-form" disabled={form.processing}>
+                    <Button type="submit" form="transaction-form" disabled={form.processing || noReserveCategory}>
                         {form.processing ? 'Salvando…' : 'Salvar'}
                     </Button>
                 </>
@@ -444,7 +466,7 @@ export default function TransactionModal({
                 <p className="tx-lead">
                     {editing
                         ? 'Altere o que precisar. Duplicar abre uma cópia com a data de hoje.'
-                        : 'Registre uma receita ou uma despesa.'}
+                        : 'Registre uma despesa, uma receita ou uma reserva.'}
                 </p>
                 <div className="tx-types">
                     <Segment
@@ -454,6 +476,7 @@ export default function TransactionModal({
                         options={[
                             { value: 'expense', label: 'Despesa' },
                             { value: 'income', label: 'Receita' },
+                            { value: 'reserve', label: 'Reserva' },
                         ]}
                     />
                     <Segment
@@ -512,6 +535,7 @@ export default function TransactionModal({
                         type="text"
                         autoComplete="off"
                         maxLength={120}
+                        placeholder={form.data.type === 'reserve' ? 'Ex.: Aporte reserva de emergência' : undefined}
                         value={form.data.description}
                         onChange={(event) => setField('description', event.target.value)}
                     />
@@ -598,6 +622,11 @@ export default function TransactionModal({
                             />
                         </FormField>
                     </div>
+                ) : null}
+                {noReserveCategory ? (
+                    <p className="tx-hint">
+                        Cadastre uma categoria de Reserva em <Link href="/manage">Gerenciar</Link>.
+                    </p>
                 ) : null}
                 {missing.length > 0 ? (
                     <p className="tx-hint">

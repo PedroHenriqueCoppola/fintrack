@@ -7,6 +7,7 @@
 
 .plan-toolbar {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
     gap: 1.6rem;
@@ -15,8 +16,7 @@
 
 .plan-toolbar__income,
 .plan-toolbar__actions,
-.plan-fixed__top,
-.plan-fixed__create,
+.plan-fixed__actions,
 .plan-record__title,
 .plan-record__actions,
 .plan-empty-actions,
@@ -30,6 +30,15 @@
 .plan-toolbar__income,
 .plan-confirmed {
     align-items: flex-end;
+}
+
+.plan-toolbar__income {
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
+.plan-toolbar__actions {
+    margin-left: auto;
 }
 
 .plan-income {
@@ -48,7 +57,7 @@
 }
 
 .plan-record__title .plan-chip,
-.plan-fixed__top .plan-chip {
+.plan-fixed__actions .plan-chip {
     margin: 0;
 }
 
@@ -67,7 +76,10 @@
 .plan-hint,
 .plan-draft-note,
 .plan-alert,
-.plan-lead {
+.plan-auto,
+.plan-lead,
+.plan-banner,
+.plan-saved {
     color: var(--color-text-muted);
     font-size: 1.25rem;
     font-weight: 500;
@@ -75,6 +87,14 @@
 
 .plan-save {
     min-height: 1.6rem;
+    margin: 0;
+}
+
+.plan-banner {
+    margin: 0;
+}
+
+.plan-auto {
     margin: 0;
 }
 
@@ -326,11 +346,6 @@
     display: flex;
     flex-direction: column;
     gap: 1.6rem;
-}
-
-.plan-fixed__top,
-.plan-fixed__create {
-    justify-content: space-between;
 }
 
 .plan-draft-note {

@@ -1,4 +1,6 @@
-import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, usePage } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
 import Button from '../../components/Button/Button';
 import MonthNav from '../../components/MonthNav/MonthNav';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -11,6 +13,9 @@ import './Index.css';
 
 export default function Index(props) {
     const { month, tab, navigation, plan } = props;
+    const monthError = usePage().props.errors?.month;
+    const [fixedEditor, setFixedEditor] = useState(null);
+    const draft = plan.status !== 'confirmed';
 
     return (
         <>
@@ -36,20 +41,36 @@ export default function Index(props) {
                         </div>
                     )}
                 />
+                {monthError ? <p className="plan-banner" role="alert">{monthError}</p> : null}
                 <Tabs
                     label="Seções do planejamento"
                     value={tab}
                     onChange={(next) => visitPlanning(props, { tab: next })}
+                    aside={tab === 'fixed' ? (
+                        <div className="plan-fixed__actions">
+                            {navigation.is_future ? (
+                                <span className="plan-chip">{draft ? 'Rascunho' : 'Confirmado'}</span>
+                            ) : null}
+                            <Button onClick={() => setFixedEditor({ kind: 'fixed', item: null })}>
+                                <Plus aria-hidden="true" strokeWidth={1.75} />
+                                Novo fixo
+                            </Button>
+                            <Button variant="secondary" onClick={() => setFixedEditor({ kind: 'installment', item: null })}>
+                                <Plus aria-hidden="true" strokeWidth={1.75} />
+                                Novo parcelado
+                            </Button>
+                        </div>
+                    ) : null}
                     tabs={[
                         {
                             id: 'plan',
                             label: 'Planejar o mês',
-                            panel: <PlanMonth month={month} plan={plan} />,
+                            panel: <PlanMonth month={month} plan={plan} navigation={navigation} />,
                         },
                         {
                             id: 'fixed',
                             label: 'Fixos e parcelados',
-                            panel: <FixedPanel page={props} />,
+                            panel: <FixedPanel page={props} editor={fixedEditor} setEditor={setFixedEditor} />,
                         },
                     ]}
                 />

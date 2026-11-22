@@ -29,6 +29,57 @@ class PeriodRange
     }
 
     /**
+     * The window of the same length immediately before the resolved period.
+     * "Todo o período" has no comparison.
+     *
+     * @return array{from: string, to: string}|null
+     */
+    public function previous(string $period, ?string $from, ?string $to): ?array
+    {
+        if ($period === 'all') {
+            return null;
+        }
+
+        $current = $this->resolve($period, $from, $to);
+
+        if ($current['from'] === null || $current['to'] === null) {
+            return null;
+        }
+
+        $start = Carbon::parse($current['from'], 'America/Sao_Paulo')->startOfDay();
+        $end = Carbon::parse($current['to'], 'America/Sao_Paulo')->startOfDay();
+
+        return match ($period) {
+            'quarter' => $this->bounds(
+                $start->copy()->subMonthsNoOverflow(3)->startOfQuarter(),
+                $start->copy()->subMonthsNoOverflow(3)->endOfQuarter(),
+            ),
+            'semester' => $this->previousSemester($start),
+            'year' => $this->bounds(
+                $start->copy()->subYear()->startOfYear(),
+                $start->copy()->subYear()->endOfYear(),
+            ),
+            'custom' => $this->previousCustom($start, $end),
+            default => $this->month($start->copy()->subMonth()),
+        };
+    }
+
+    /**
+     * Phrase shown next to an indicator variation. Null when there is no comparison.
+     */
+    public function comparisonLabel(string $period): ?string
+    {
+        return match ($period) {
+            'current_month', 'previous_month' => 'vs mês anterior',
+            'quarter' => 'vs trimestre anterior',
+            'semester' => 'vs semestre anterior',
+            'year' => 'vs ano anterior',
+            'custom' => 'vs período anterior',
+            default => null,
+        };
+    }
+
+    /**
      * @return array{from: string, to: string}
      */
     private function month(Carbon $day): array
@@ -44,6 +95,33 @@ class PeriodRange
         $start = $today->copy()->month($today->month <= 6 ? 1 : 7)->startOfMonth();
 
         return $this->bounds($start, $start->copy()->addMonths(5)->endOfMonth());
+    }
+
+    /**
+     * @return array{from: string, to: string}
+     */
+    private function previousSemester(Carbon $start): array
+    {
+        if ($start->month <= 6) {
+            $from = $start->copy()->subYear()->month(7)->startOfMonth();
+        } else {
+            $from = $start->copy()->month(1)->startOfMonth();
+        }
+
+        return $this->bounds($from, $from->copy()->addMonths(5)->endOfMonth());
+    }
+
+    /**
+     * Same number of days, ending the day before $from.
+     *
+     * @return array{from: string, to: string}
+     */
+    private function previousCustom(Carbon $from, Carbon $to): array
+    {
+        $span = (int) $from->copy()->startOfDay()->diffInDays($to->copy()->startOfDay());
+        $previousTo = $from->copy()->subDay();
+
+        return $this->bounds($previousTo->copy()->subDays($span), $previousTo);
     }
 
     /**

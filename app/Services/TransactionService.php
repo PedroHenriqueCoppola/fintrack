@@ -153,35 +153,51 @@ class TransactionService
 
     /**
      * Totals for the whole filter, not for the loaded page.
+     * Receitas are paid income. Despesas are paid expenses. Reservado is
+     * paid reserve transactions and stays out of the balance: saving money
+     * does not take it away from the user. Balance is income minus expenses.
      *
      * @param  array<string, mixed>  $filters
-     * @return array{count: int, income: string, expense: string, balance: string, average_expense: string}
+     * @return array{count: int, income: string, expense: string, reserved: string, balance: string, average_expense: string}
      */
     public function summary(array $filters): array
     {
-        $row = $this->filtered($filters)
-            ->selectRaw("
-                count(*) as aggregate_count,
-                coalesce(sum(amount) filter (where status = 'paid' and type = 'income'), 0) as income_total,
-                coalesce(sum(amount) filter (where status = 'paid' and type = 'expense'), 0) as expense_total,
-                count(*) filter (where status = 'paid' and type = 'expense') as paid_expense_count
-            ")
-            ->first();
-
-        $income = Money::of($row->income_total ?? '0');
-        $expense = Money::of($row->expense_total ?? '0');
+        $paid = $this->paidBreakdown($this->filtered($filters));
 
         return [
-            'count' => (int) ($row->aggregate_count ?? 0),
-            'income' => $income,
-            'expense' => $expense,
-            'balance' => Money::sub($income, $expense),
-            'average_expense' => Money::divHalfUp($expense, (int) ($row->paid_expense_count ?? 0)),
+            'count' => $paid['count'],
+            'income' => $paid['income'],
+            'expense' => $paid['expense'],
+            'reserved' => $paid['reserved'],
+            'balance' => $paid['balance'],
+            'average_expense' => Money::divHalfUp($paid['expense'], $paid['expense_count']),
         ];
     }
 
     /**
+     * Paid income, spending and reserve for one date window.
+     * Null bounds mean every date. One grouped query.
+     *
+     * @return array{count: int, income: string, expense: string, reserved: string, balance: string, income_count: int, expense_count: int}
+     */
+    public function periodTotals(?string $from, ?string $to): array
+    {
+        $query = Transaction::query();
+
+        if ($from !== null) {
+            $query->where('date', '>=', $from);
+        }
+
+        if ($to !== null) {
+            $query->where('date', '<=', $to);
+        }
+
+        return $this->paidBreakdown($query);
+    }
+
+    /**
      * Net paid total of each date, over the whole filter.
+     * Income minus paid expenses of that day. Reserve does not change it.
      * A date with only pending transactions is omitted.
      *
      * @param  array<string, mixed>  $filters
@@ -205,7 +221,7 @@ class TransactionService
         $rows = $this->filtered($filters)
             ->where('status', 'paid')
             ->whereIn('date', $normalized)
-            ->selectRaw("date, sum(case when type = 'income' then amount else -amount end) as day_total")
+            ->selectRaw("date, sum(case when type = 'income' then amount when type = 'expense' then -amount else 0 end) as day_total")
             ->groupBy('date')
             ->get();
 
@@ -260,6 +276,37 @@ class TransactionService
         }
 
         return $query;
+    }
+
+    /**
+     * @return array{count: int, income: string, expense: string, reserved: string, balance: string, income_count: int, expense_count: int}
+     */
+    private function paidBreakdown(Builder $query): array
+    {
+        $row = (clone $query)
+            ->selectRaw("
+                count(*) as aggregate_count,
+                coalesce(sum(amount) filter (where status = 'paid' and type = 'income'), 0) as income_total,
+                coalesce(sum(amount) filter (where status = 'paid' and type = 'expense'), 0) as spending_total,
+                coalesce(sum(amount) filter (where status = 'paid' and type = 'reserve'), 0) as reserved_total,
+                count(*) filter (where status = 'paid' and type = 'income') as income_count,
+                count(*) filter (where status = 'paid' and type = 'expense') as spending_count
+            ")
+            ->first();
+
+        $income = Money::of($row->income_total ?? '0');
+        $expense = Money::of($row->spending_total ?? '0');
+        $reserved = Money::of($row->reserved_total ?? '0');
+
+        return [
+            'count' => (int) ($row->aggregate_count ?? 0),
+            'income' => $income,
+            'expense' => $expense,
+            'reserved' => $reserved,
+            'balance' => Money::sub($income, $expense),
+            'income_count' => (int) ($row->income_count ?? 0),
+            'expense_count' => (int) ($row->spending_count ?? 0),
+        ];
     }
 
     private function sort(Builder $query, string $sort): void

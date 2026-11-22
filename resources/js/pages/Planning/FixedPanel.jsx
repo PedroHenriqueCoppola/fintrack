@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { CalendarClock, Plus } from 'lucide-react';
+import { CalendarClock } from 'lucide-react';
 import Button from '../../components/Button/Button';
 import Card from '../../components/Card/Card';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
@@ -81,11 +81,10 @@ function RecordGroup({ title, items, kind, onEdit, onArchive, onRestore }) {
     );
 }
 
-export default function FixedPanel({ page }) {
+export default function FixedPanel({ page, editor, setEditor }) {
     const fixed = page.fixed;
     const indicators = fixed.indicators;
     const draft = page.plan.status !== 'confirmed';
-    const [editor, setEditor] = useState(null);
     const [archive, setArchive] = useState(null);
     const [archiving, setArchiving] = useState(false);
     const [percent, setPercent] = useState(String(fixed.high_impact_percent));
@@ -147,21 +146,11 @@ export default function FixedPanel({ page }) {
 
     return (
         <div className="plan-fixed">
-            <div className="plan-fixed__top">
-                <span className="plan-chip">{draft ? 'Rascunho' : 'Confirmado'}</span>
-                <div className="plan-fixed__create">
-                    <Button onClick={() => setEditor({ kind: 'fixed', item: null })}>
-                        <Plus aria-hidden="true" strokeWidth={1.75} />
-                        Novo fixo
-                    </Button>
-                    <Button variant="secondary" onClick={() => setEditor({ kind: 'installment', item: null })}>
-                        <Plus aria-hidden="true" strokeWidth={1.75} />
-                        Novo parcelado
-                    </Button>
-                </div>
-            </div>
-            {draft ? (
+            {page.navigation.is_future && draft ? (
                 <p className="plan-draft-note">Os pendentes deste mês são gerados quando você confirma o planejamento.</p>
+            ) : null}
+            {page.navigation.is_current ? (
+                <p className="plan-draft-note">Os pendentes deste mês já são gerados automaticamente.</p>
             ) : null}
             <div className="plan-stats">
                 <Card className="plan-stat">

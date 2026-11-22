@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Category;
+use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Support\CatalogGuard;
 use Illuminate\Foundation\Http\FormRequest;
@@ -44,7 +45,7 @@ class TransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', 'string', Rule::in(['income', 'expense'])],
+            'type' => ['required', 'string', Rule::in(['income', 'expense', 'reserve'])],
             'status' => ['required', 'string', Rule::in(['paid', 'pending'])],
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'date' => ['bail', 'required', 'date_format:Y-m-d'],
@@ -70,8 +71,8 @@ class TransactionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.required' => 'Escolha Despesa ou Receita.',
-            'type.in' => 'Escolha Despesa ou Receita.',
+            'type.required' => 'Escolha Despesa, Receita ou Reserva.',
+            'type.in' => 'Escolha Despesa, Receita ou Reserva.',
             'status.required' => 'Escolha Paga ou Pendente.',
             'status.in' => 'Escolha Paga ou Pendente.',
             'amount.required' => 'Informe o valor.',
@@ -154,13 +155,12 @@ class TransactionRequest extends FormRequest
 
         if (! $category instanceof Category || ! $this->usable($category, $current?->category_id)) {
             $validator->errors()->add('category_id', 'Escolha uma categoria ativa.');
-        } elseif ($category->applies_to !== $type) {
-            $validator->errors()->add(
-                'category_id',
-                $type === 'income' ? 'Escolha uma categoria de receita.' : 'Escolha uma categoria de despesa.',
-            );
-        } elseif ($type === 'expense' && $category->nature !== 'spending') {
-            $validator->errors()->add('category_id', 'Categorias de Reserva não aceitam gastos.');
+        } else {
+            $categoryError = $this->categoryError((string) $type, $category);
+
+            if ($categoryError !== null) {
+                $validator->errors()->add('category_id', $categoryError);
+            }
         }
 
         CatalogGuard::payment(
@@ -173,8 +173,52 @@ class TransactionRequest extends FormRequest
             $current?->card_id,
         );
 
+        if ($type === 'reserve') {
+            $this->rejectReserveCard($validator);
+        }
+
         if ($this->boolean('apply_amount_forward') && ! ($current instanceof Transaction && $current->fixed_expense_id)) {
             $validator->errors()->add('apply_amount_forward', 'Essa opção vale só para uma despesa gerada por gasto fixo.');
+        }
+    }
+
+    private function categoryError(string $type, Category $category): ?string
+    {
+        if ($type === 'income') {
+            return $category->applies_to === 'income' ? null : 'Escolha uma categoria de receita.';
+        }
+
+        if ($type === 'reserve') {
+            return $category->applies_to === 'expense' && $category->nature === 'reserve'
+                ? null
+                : 'Escolha uma categoria de Reserva.';
+        }
+
+        if ($category->nature === 'reserve') {
+            return 'Categorias de Reserva só aceitam o tipo Reserva.';
+        }
+
+        if ($category->applies_to !== 'expense' || $category->nature !== 'spending') {
+            return 'Escolha uma categoria de despesa.';
+        }
+
+        return null;
+    }
+
+    private function rejectReserveCard(Validator $validator): void
+    {
+        $method = PaymentMethod::query()->find($this->integer('payment_method_id'));
+        $usesCard = ($method instanceof PaymentMethod && $method->requires_card) || $this->filled('card_id');
+
+        if (! $usesCard) {
+            return;
+        }
+
+        $validator->errors()->forget('card_id');
+        $validator->errors()->add('card_id', 'Reserva não pode ser lançada no cartão de crédito.');
+
+        if ($method instanceof PaymentMethod && $method->requires_card) {
+            $validator->errors()->add('payment_method_id', 'Reserva não pode ser lançada no cartão de crédito.');
         }
     }
 

@@ -7,6 +7,7 @@ use App\Models\Card;
 use App\Models\CardInvoicePayment;
 use App\Models\Transaction;
 use App\Support\Money;
+use App\Support\Month;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,82 @@ class CardInvoiceService
             ->orderBy('name')
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * Open invoice of every active card, plus the closed unpaid invoice
+     * immediately before it when that cycle has at least one expense.
+     * Expenses of every card are read in one grouped query.
+     *
+     * @return array{cards: array<int, array<string, mixed>>}
+     */
+    public function dashboardCards(): array
+    {
+        $cards = Card::query()
+            ->whereNull('archived_at')
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get();
+
+        if ($cards->isEmpty()) {
+            return ['cards' => []];
+        }
+
+        $cycles = [];
+
+        foreach ($cards as $card) {
+            $calculator = $this->calculator($card);
+            $open = $calculator->openKey();
+            $openPeriod = $calculator->periodFor($open);
+            $previous = $this->previousKey($open);
+            $previousPeriod = $calculator->periodFor($previous);
+            $cycles[$card->id] = [
+                'open' => $open,
+                'start' => $openPeriod['start'],
+                'closing' => $openPeriod['closing'],
+                'previous' => $previous,
+                'previous_start' => $previousPeriod['start'],
+                'previous_closing' => $previousPeriod['closing'],
+            ];
+        }
+
+        $totals = $this->dashboardTotals($cycles);
+        $paid = $this->paidKeys($cards->pluck('id')->all());
+        $rows = [];
+
+        foreach ($cards as $card) {
+            $cycle = $cycles[$card->id];
+            $bucket = $totals[$card->id] ?? ['posted' => '0.00', 'forecast' => '0.00', 'previous_count' => 0];
+            $posted = $bucket['posted'];
+            $forecast = $bucket['forecast'];
+            $closed = null;
+
+            if ($bucket['previous_count'] > 0 && ! isset($paid[$card->id][$cycle['previous']])) {
+                $closed = [
+                    'month' => $cycle['previous'],
+                    'label' => 'Fatura de '.Month::name($cycle['previous'], true).' fechada e não paga',
+                    'situation' => 'closed',
+                    'situation_label' => 'Fechada',
+                ];
+            }
+
+            $rows[] = [
+                'id' => $card->id,
+                'name' => $card->name,
+                'color' => $card->color,
+                'month' => $cycle['open'],
+                'month_label' => Month::label($cycle['open']),
+                'closes_on' => $this->short($cycle['closing']),
+                'situation' => 'open',
+                'situation_label' => 'Aberta',
+                'posted' => $posted,
+                'forecast' => $forecast,
+                'estimated' => Money::add($posted, $forecast),
+                'closed' => $closed,
+            ];
+        }
+
+        return ['cards' => $rows];
     }
 
     public function selectedCard(Collection $cards, mixed $requested): Card
@@ -243,6 +320,121 @@ class CardInvoiceService
         }
 
         $payment->delete();
+    }
+
+    /**
+     * @param  array<int, array{open: string, start: string, closing: string, previous: string, previous_start: string, previous_closing: string}>  $cycles
+     * @return array<int, array{posted: string, forecast: string, previous_count: int}>
+     */
+    private function dashboardTotals(array $cycles): array
+    {
+        $openStart = $this->cardDateCase($cycles, 'start');
+        $openClosing = $this->cardDateCase($cycles, 'closing');
+        $previousStart = $this->cardDateCase($cycles, 'previous_start');
+        $previousClosing = $this->cardDateCase($cycles, 'previous_closing');
+        $bindings = array_merge(
+            $openStart['bindings'],
+            $openClosing['bindings'],
+            $openStart['bindings'],
+            $openClosing['bindings'],
+            $previousStart['bindings'],
+            $previousClosing['bindings'],
+        );
+
+        $rows = Transaction::query()
+            ->where('transactions.type', 'expense')
+            ->where(function ($outer) use ($cycles) {
+                foreach ($cycles as $cardId => $cycle) {
+                    $outer->orWhere(function ($inner) use ($cardId, $cycle) {
+                        $inner->where('transactions.card_id', $cardId)
+                            ->where('transactions.date', '>=', $cycle['previous_start'])
+                            ->where('transactions.date', '<', $cycle['closing']);
+                    });
+                }
+            })
+            ->groupBy('transactions.card_id')
+            ->selectRaw("
+                transactions.card_id as card_id,
+                coalesce(sum(transactions.amount) filter (
+                    where transactions.status = 'paid'
+                      and transactions.date >= ({$openStart['sql']})
+                      and transactions.date < ({$openClosing['sql']})
+                ), 0) as posted,
+                coalesce(sum(transactions.amount) filter (
+                    where transactions.status <> 'paid'
+                      and transactions.date >= ({$openStart['sql']})
+                      and transactions.date < ({$openClosing['sql']})
+                ), 0) as forecast,
+                count(*) filter (
+                    where transactions.date >= ({$previousStart['sql']})
+                      and transactions.date < ({$previousClosing['sql']})
+                ) as previous_count
+            ", $bindings)
+            ->get();
+
+        $totals = [];
+
+        foreach ($rows as $row) {
+            $totals[(int) $row->card_id] = [
+                'posted' => Money::of($row->posted),
+                'forecast' => Money::of($row->forecast),
+                'previous_count' => (int) $row->previous_count,
+            ];
+        }
+
+        return $totals;
+    }
+
+    /**
+     * @param  array<int, array<string, string>>  $cycles
+     * @return array{sql: string, bindings: array<int, int|string>}
+     */
+    private function cardDateCase(array $cycles, string $field): array
+    {
+        $sql = 'case transactions.card_id';
+        $bindings = [];
+
+        foreach ($cycles as $cardId => $cycle) {
+            $sql .= ' when ? then ?::date';
+            $bindings[] = $cardId;
+            $bindings[] = $cycle[$field];
+        }
+
+        return [
+            'sql' => $sql.' end',
+            'bindings' => $bindings,
+        ];
+    }
+
+    /**
+     * @param  array<int, int>  $cardIds
+     * @return array<int, array<string, true>>
+     */
+    private function paidKeys(array $cardIds): array
+    {
+        $payments = CardInvoicePayment::query()
+            ->whereIn('card_id', $cardIds)
+            ->get(['card_id', 'closing_month']);
+        $paid = [];
+
+        foreach ($payments as $payment) {
+            $paid[(int) $payment->card_id][substr($this->day($payment->closing_month), 0, 7)] = true;
+        }
+
+        return $paid;
+    }
+
+    private function previousKey(string $key): string
+    {
+        $year = (int) substr($key, 0, 4);
+        $month = (int) substr($key, 5, 2) - 1;
+
+        if ($month < 1) {
+            $month = 12;
+            $year--;
+        }
+
+        return sprintf('%04d-%02d', $year, $month);
     }
 
     private function calculator(Card $card): CardInvoiceCalculator
