@@ -42,6 +42,42 @@ class Money
         return bcdiv(self::of($amount), (string) $count, 2);
     }
 
+    /**
+     * Divide and round up to the next cent.
+     * An exact quotient stays as it is. Zero and negative amounts stay 0.00.
+     */
+    public static function divCeil(mixed $amount, int $count): string
+    {
+        $value = self::of($amount);
+
+        if ($count <= 0 || self::compare($value, '0') !== 1) {
+            return '0.00';
+        }
+
+        $quotient = bcdiv($value, (string) $count, 2);
+        $product = bcmul($quotient, (string) $count, 2);
+
+        if (bccomp($product, $value, 2) === 0) {
+            return $quotient;
+        }
+
+        return bcadd($quotient, '0.01', 2);
+    }
+
+    /**
+     * "R$ 1.100,00" or "−R$ 900,00". The minus is the real minus sign.
+     */
+    public static function label(mixed $amount): string
+    {
+        $value = self::of($amount);
+        $negative = self::compare($value, '0') === -1;
+        $absolute = $negative ? self::sub('0', $value) : $value;
+        [$whole, $cents] = array_pad(explode('.', $absolute), 2, '00');
+        $grouped = preg_replace('/\B(?=(\d{3})+(?!\d))/', '.', $whole) ?? $whole;
+
+        return ($negative ? '−' : '').'R$ '.$grouped.','.$cents;
+    }
+
     public static function cents(mixed $amount): string
     {
         return bcmul(self::of($amount), '100', 0);

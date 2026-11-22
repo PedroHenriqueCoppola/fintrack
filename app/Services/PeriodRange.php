@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\Month;
 use Illuminate\Support\Carbon;
 
 class PeriodRange
@@ -65,6 +66,48 @@ class PeriodRange
     }
 
     /**
+     * Months drawn on a chart for this period.
+     * Fewer than three months expands to the six months ending when the
+     * period ends, never after the current month. More than twelve keeps
+     * the last twelve. An open period is the last twelve months.
+     *
+     * @param  array{from: ?string, to: ?string}  $range
+     * @return array<int, string>
+     */
+    public function chartMonths(array $range): array
+    {
+        $current = Month::currentKey();
+
+        if ($range['from'] === null || $range['to'] === null) {
+            return $this->monthWindow(Month::shift($current, -11) ?? $current, $current);
+        }
+
+        $start = substr($range['from'], 0, 7);
+        $end = substr($range['to'], 0, 7);
+        $count = $this->inclusiveMonths($start, $end);
+
+        if ($count < 3) {
+            $end = $end > $current ? $current : $end;
+            $start = Month::shift($end, -5) ?? $end;
+        } elseif ($count > 12) {
+            $start = Month::shift($end, -11) ?? $start;
+        }
+
+        return $this->monthWindow($start, $end);
+    }
+
+    /**
+     * How many months the closed interval contains, counting both ends.
+     */
+    public function inclusiveMonths(string $start, string $end): int
+    {
+        $startIndex = ((int) substr($start, 0, 4) * 12) + (int) substr($start, 5, 2);
+        $endIndex = ((int) substr($end, 0, 4) * 12) + (int) substr($end, 5, 2);
+
+        return $endIndex - $startIndex + 1;
+    }
+
+    /**
      * Phrase shown next to an indicator variation. Null when there is no comparison.
      */
     public function comparisonLabel(string $period): ?string
@@ -122,6 +165,29 @@ class PeriodRange
         $previousTo = $from->copy()->subDay();
 
         return $this->bounds($previousTo->copy()->subDays($span), $previousTo);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function monthWindow(string $start, string $end): array
+    {
+        $months = [];
+        $cursor = $start;
+        $guard = 0;
+
+        while ($cursor !== null && $cursor <= $end && $guard < 18) {
+            $months[] = $cursor;
+
+            if ($cursor === $end) {
+                break;
+            }
+
+            $cursor = Month::shift($cursor, 1);
+            $guard++;
+        }
+
+        return $months === [] ? [$end] : $months;
     }
 
     /**

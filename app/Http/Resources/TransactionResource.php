@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\ReserveBalanceService;
 use App\Support\Month;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -16,6 +17,15 @@ class TransactionResource extends JsonResource
         return [
             'id' => $this->id,
             'type' => $this->type,
+            'reserve_action' => $this->reserve_action,
+            'reserve_support' => $this->type === 'reserve'
+                ? app(ReserveBalanceService::class)->support(
+                    (int) $this->category_id,
+                    $this->reserve_action,
+                    $this->status,
+                    (string) $this->amount,
+                )
+                : null,
             'status' => $this->status,
             'amount' => $this->amount,
             'date' => $this->date?->toDateString(),

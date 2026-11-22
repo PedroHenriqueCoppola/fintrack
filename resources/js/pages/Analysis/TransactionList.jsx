@@ -61,7 +61,11 @@ function Row({ transaction, onEdit, onPay, paying }) {
                 </div>
                 <p className="tx-row__meta">
                     {transaction.category?.name}
-                    {transaction.type === 'reserve' ? <span className="tx-badge tx-badge--neutral">Reserva</span> : null}
+                    {transaction.type === 'reserve' ? (
+                        <span className="tx-badge tx-badge--neutral">
+                            {transaction.reserve_action === 'withdraw' ? 'Resgate' : 'Reserva'}
+                        </span>
+                    ) : null}
                     {metaTail(transaction) ? `${transaction.category?.name || transaction.type === 'reserve' ? ' · ' : ''}${metaTail(transaction)}` : null}
                 </p>
             </div>

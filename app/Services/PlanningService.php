@@ -69,7 +69,7 @@ class PlanningService
             $categorySpent = $movement['spent'][$category->id] ?? '0.00';
             $savedAmount = $movement['saved'][$category->id] ?? '0.00';
             $hasSpent = Money::compare($categorySpent, '0') === 1;
-            $hasSaved = $category->nature === 'reserve' && Money::compare($savedAmount, '0') === 1;
+            $hasSaved = $category->nature === 'reserve' && Money::compare($savedAmount, '0') !== 0;
 
             if ($category->archived_at !== null && ! $known && ! $hasSpent && ! $hasSaved) {
                 continue;
@@ -83,7 +83,6 @@ class PlanningService
             );
 
             if ($category->nature === 'reserve') {
-                // Provisional: paid reserve total beside the month value. Drop this key to remove it.
                 $line['saved'] = $savedAmount;
                 $reserveLines[] = $line;
             } else {
@@ -382,7 +381,11 @@ class PlanningService
             ->selectRaw("
                 transactions.category_id as category_id,
                 coalesce(sum(transactions.amount) filter (where transactions.type = 'expense' and transactions.status = 'paid'), 0) as spent,
-                coalesce(sum(transactions.amount) filter (where transactions.type = 'reserve' and transactions.status = 'paid'), 0) as saved,
+                coalesce(sum(case
+                    when transactions.type = 'reserve' and transactions.status = 'paid' and transactions.reserve_action = 'deposit' then transactions.amount
+                    when transactions.type = 'reserve' and transactions.status = 'paid' and transactions.reserve_action = 'withdraw' then -transactions.amount
+                    else 0
+                end), 0) as saved,
                 coalesce(sum(transactions.amount) filter (
                     where transactions.type = 'expense'
                     and transactions.status = 'pending'

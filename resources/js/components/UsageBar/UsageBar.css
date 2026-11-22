@@ -50,3 +50,13 @@
 .usage--over .usage__percent {
     color: var(--color-negative-text);
 }
+
+.usage--meter {
+    display: block;
+    width: 100%;
+}
+
+.usage--meter .usage__track {
+    display: block;
+    width: 100%;
+}

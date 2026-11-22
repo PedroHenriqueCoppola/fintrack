@@ -7,7 +7,7 @@ import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import FormField from '../../components/FormField/FormField';
 import UsageBar from '../../components/UsageBar/UsageBar';
-import { formatPlainMoney } from '../../lib/format';
+import { formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import { useFieldSetter } from '../../lib/fields';
 import CatalogIcon from '../Manage/icons';
 import { moneyPayload, moneyText } from './fields';
@@ -387,7 +387,7 @@ export default function PlanMonth({ month, plan, navigation }) {
                                                     />
                                                 </td>
                                                 <td className="plan-saved" colSpan={4}>
-                                                    {`Guardado: ${formatPlainMoney(row.saved ?? '0.00')}`}
+                                                    {`Guardado: ${formatNeutralMoney(row.saved ?? '0.00')}`}
                                                 </td>
                                             </tr>
                                         );

@@ -111,7 +111,9 @@ export default function AppLayout({ children }) {
                 <nav className="app-nav" aria-label="Principal">
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon;
-                        const active = item.href === '/' ? path === '/' : path === item.href;
+                        const active = item.href === '/'
+                            ? path === '/'
+                            : path === item.href || path.startsWith(`${item.href}/`);
 
                         return (
                             <Link

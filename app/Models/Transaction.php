@@ -12,6 +12,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'type',
+        'reserve_action',
         'status',
         'amount',
         'date',

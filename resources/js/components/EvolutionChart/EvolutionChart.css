@@ -1,12 +1,19 @@
 .evolution-chart {
     width: 100%;
     min-width: 0;
+}
+
+.evolution-chart__plot,
+.evolution-chart__canvas {
+    width: 100%;
     height: 21rem;
 }
 
-.evolution-chart__plot {
-    width: 100%;
-    height: 100%;
+.evolution-chart__legend {
+    margin: 0.8rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    font-weight: 500;
 }
 
 .evolution-chart .recharts-area-curve {

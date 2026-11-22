@@ -12,6 +12,7 @@ import {
     blurMoneyInput,
     formatDate,
     formatMoneyInput,
+    formatNeutralMoney,
     formatPlainMoney,
     isoFromDate,
     parseBrDate,
@@ -50,10 +51,11 @@ function plusYears(iso, years) {
 }
 
 const EMPTY_OPTIONS = {
-    categories: { expense: [], income: [] },
+    categories: { expense: [], income: [], reserve: [] },
     banks: [],
     cards: [],
     paymentMethods: [],
+    reserve_balances: {},
 };
 
 export function NewTransactionButton({ onClick }) {
@@ -95,14 +97,57 @@ function withCurrent(list, current) {
     return [...list, current];
 }
 
+function reserveSupport(balances, data, transaction) {
+    const categoryId = String(data.category_id || '');
+
+    if (!categoryId) {
+        return null;
+    }
+
+    const editingWithdraw = transaction
+        && transaction.status === 'paid'
+        && transaction.reserve_action === 'withdraw'
+        && data.reserve_action === 'withdraw'
+        && String(transaction.category?.id) === categoryId;
+
+    if (editingWithdraw && transaction.reserve_support != null) {
+        return transaction.reserve_support;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(balances, categoryId)) {
+        return balances[categoryId];
+    }
+
+    return '0.00';
+}
+
 function optionLabel(item) {
     return item.archived ? `${item.name} (arquivado)` : item.name;
 }
 
-function buildInitial(mode, transaction, options, today) {
+function buildInitial(mode, transaction, options, today, preset) {
+    if (preset && (!transaction || mode === 'create')) {
+        return {
+            type: preset.type || 'reserve',
+            reserve_action: preset.reserve_action || 'deposit',
+            status: 'paid',
+            amount: '',
+            date: formatDate(today),
+            description: '',
+            category_id: String(preset.category_id ?? ''),
+            bank_id: '',
+            payment_method_id: '',
+            card_id: '',
+            competence_date: '',
+            notes: '',
+            apply_amount_forward: false,
+        };
+    }
+
     if (!transaction || mode === 'create') {
         return {
             type: 'expense',
+            reserve_action: 'deposit',
             status: 'paid',
             amount: '',
             date: formatDate(today),
@@ -122,6 +167,7 @@ function buildInitial(mode, transaction, options, today) {
 
     return {
         type: transaction.type,
+        reserve_action: transaction.reserve_action || 'deposit',
         status: duplicate ? 'paid' : transaction.status,
         amount: formatMoneyInput(transaction.amount),
         date: formatDate(duplicate ? today : transaction.date),
@@ -207,6 +253,7 @@ function Segment({ label, value, options, onChange }) {
                         type="button"
                         role="radio"
                         aria-checked={selected}
+                        disabled={option.disabled}
                         className={selected ? 'tx-segment__option tx-segment__option--on' : 'tx-segment__option'}
                         onClick={() => onChange(option.value)}
                     >
@@ -218,10 +265,10 @@ function Segment({ label, value, options, onChange }) {
     );
 }
 
-function SelectField({ value, onChange, children }) {
+function SelectField({ value, onChange, children, disabled = false }) {
     return (
         <div className="tx-select">
-            <select value={value} onChange={(event) => onChange(event.target.value)}>
+            <select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
                 {children}
             </select>
             <ChevronDown aria-hidden="true" strokeWidth={1.75} />
@@ -234,6 +281,7 @@ export default function TransactionModal({
     transaction = null,
     options = EMPTY_OPTIONS,
     onClose,
+    preset = null,
 }) {
     const today = useToday();
     const catalog = {
@@ -242,7 +290,9 @@ export default function TransactionModal({
         cards: options.cards ?? [],
         paymentMethods: options.paymentMethods ?? [],
     };
-    const form = useForm(() => buildInitial(mode, transaction, catalog, today));
+    const balances = options.reserve_balances ?? {};
+    const lockCategory = Boolean(preset?.lockCategory);
+    const form = useForm(() => buildInitial(mode, transaction, catalog, today, preset));
     const setField = useFieldSetter(form);
     const [screen, setScreen] = useState(mode === 'edit' ? 'edit' : 'create');
     const [more, setMore] = useState(() => Boolean(
@@ -250,10 +300,11 @@ export default function TransactionModal({
     ));
     const [confirming, setConfirming] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
     const editing = screen === 'edit';
     const categories = withCurrent(
         catalog.categories[form.data.type] ?? [],
-        editing ? transaction?.category : null,
+        editing ? transaction?.category : (lockCategory ? preset?.category : null),
     );
     const banks = withCurrent(catalog.banks, editing ? transaction?.bank : null);
     const methodSource = form.data.type === 'reserve'
@@ -278,7 +329,10 @@ export default function TransactionModal({
     const dateLimit = form.data.status === 'pending' ? plusYears(today, 5) : today;
     const missing = [];
 
-    const noReserveCategory = form.data.type === 'reserve' && (catalog.categories.reserve ?? []).length === 0;
+    const noReserveCategory = form.data.type === 'reserve'
+        && (catalog.categories.reserve ?? []).length === 0
+        && !form.data.category_id;
+    const supportBalance = reserveSupport(balances, form.data, editing ? transaction : null);
 
     if (!noReserveCategory && (catalog.categories[form.data.type] ?? []).length === 0) {
         missing.push('uma categoria');
@@ -314,6 +368,10 @@ export default function TransactionModal({
     }
 
     function changeType(type) {
+        if (lockCategory) {
+            return;
+        }
+
         setField((data) => {
             const current = catalog.paymentMethods.find((item) => String(item.id) === String(data.payment_method_id));
             const dropCard = type === 'reserve' && Boolean(current?.requires_card);
@@ -321,11 +379,12 @@ export default function TransactionModal({
             return {
                 ...data,
                 type,
+                reserve_action: type === 'reserve' ? (data.reserve_action || 'deposit') : '',
                 category_id: '',
                 payment_method_id: dropCard ? '' : data.payment_method_id,
                 card_id: type === 'reserve' ? '' : data.card_id,
             };
-        }, 'type', 'category_id', 'payment_method_id', 'card_id');
+        }, 'type', 'category_id', 'payment_method_id', 'card_id', 'reserve_action');
     }
 
     function changeMethod(id) {
@@ -383,6 +442,10 @@ export default function TransactionModal({
             apply_amount_forward: Boolean(editing && transaction?.fixed_expense && form.data.apply_amount_forward),
         };
 
+        if (form.data.type === 'reserve') {
+            payload.reserve_action = form.data.reserve_action || 'deposit';
+        }
+
         form.transform(() => payload);
         const visit = {
             preserveScroll: true,
@@ -404,9 +467,15 @@ export default function TransactionModal({
         }
 
         setDeleting(true);
+        setDeleteError('');
         router.delete(`/transactions/${transaction.id}`, {
             preserveScroll: true,
+            preserveState: true,
             onSuccess: () => onClose(),
+            onError: (errors) => {
+                const message = errors.delete || errors.amount || Object.values(errors)[0];
+                setDeleteError(Array.isArray(message) ? message[0] : (message || 'Não foi possível excluir.'));
+            },
             onFinish: () => setDeleting(false),
         });
     }
@@ -422,6 +491,7 @@ export default function TransactionModal({
                 onCancel={() => setConfirming(false)}
             >
                 {`${transaction.description}, ${formatPlainMoney(transaction.amount)}, em ${formatDate(transaction.date)}. Essa ação não pode ser desfeita.`}
+                {deleteError ? <span className="confirm-dialog__error" role="alert">{deleteError}</span> : null}
                 {transaction.generated ? (
                     <>
                         {' '}
@@ -474,9 +544,9 @@ export default function TransactionModal({
                         value={form.data.type}
                         onChange={changeType}
                         options={[
-                            { value: 'expense', label: 'Despesa' },
-                            { value: 'income', label: 'Receita' },
-                            { value: 'reserve', label: 'Reserva' },
+                            { value: 'expense', label: 'Despesa', disabled: lockCategory },
+                            { value: 'income', label: 'Receita', disabled: lockCategory },
+                            { value: 'reserve', label: 'Reserva', disabled: lockCategory && form.data.type !== 'reserve' },
                         ]}
                     />
                     <Segment
@@ -489,8 +559,20 @@ export default function TransactionModal({
                         ]}
                     />
                 </div>
+                {form.data.type === 'reserve' ? (
+                    <Segment
+                        label="Ação da reserva"
+                        value={form.data.reserve_action || 'deposit'}
+                        onChange={(value) => setField('reserve_action', value)}
+                        options={[
+                            { value: 'deposit', label: 'Guardar' },
+                            { value: 'withdraw', label: 'Resgatar' },
+                        ]}
+                    />
+                ) : null}
                 {form.errors.type ? <p className="tx-inline-error" role="alert">{form.errors.type}</p> : null}
                 {form.errors.status ? <p className="tx-inline-error" role="alert">{form.errors.status}</p> : null}
+                {form.errors.reserve_action ? <p className="tx-inline-error" role="alert">{form.errors.reserve_action}</p> : null}
                 <div className="tx-grid">
                     <FormField label="Valor" error={form.errors.amount}>
                         <input
@@ -541,9 +623,16 @@ export default function TransactionModal({
                     />
                 </FormField>
                 <div className="tx-grid">
-                    <FormField label="Categoria" error={form.errors.category_id}>
+                    <FormField
+                        label="Categoria"
+                        error={form.errors.category_id}
+                        hint={form.data.type === 'reserve' && supportBalance !== null
+                            ? `Guardado nesta categoria: ${formatNeutralMoney(supportBalance)}`
+                            : null}
+                    >
                         <SelectField
                             value={form.data.category_id}
+                            disabled={lockCategory}
                             onChange={(value) => setField('category_id', value)}
                         >
                             <option value="">Escolha</option>

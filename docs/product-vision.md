@@ -29,12 +29,13 @@ Estes termos têm o mesmo significado em todo o sistema, nos prompts e no códig
 | Banco | Instituição financeira (Nubank, Itaú, PicPay). Agrupa cartões e transações e, no fechamento do patrimônio, recebe o saldo total guardado nele. |
 | Categoria | Classifica transações (Roupas, Viagens, Outros) e concentra o valor do mês e o uso do planejado. Não tem ligação com banco: o dinheiro de uma categoria é só uma conta do sistema, não um valor guardado num lugar. |
 | Natureza da categoria | **Gasto** conta como despesa e só recebe transações do tipo Despesa. **Reserva** (investimentos, guardar para o futuro, reserva de emergência) é dinheiro separado para o futuro: só recebe transações do tipo Reserva e aparece separada das despesas nos totais. |
-| Reserva (transação) | Terceiro tipo de transação, ao lado de Receita e Despesa. É dinheiro que o usuário **guarda**: já é dele, então não é receita; e não foi gasto, então não é despesa. Usa uma categoria de natureza Reserva, não aceita cartão de crédito e é a base do acompanhamento das Metas. Não entra em Receitas nem em Despesas; entra em "Reservado" e **não** desconta do Saldo do período: o dinheiro guardado continua sendo do usuário. |
+| Reserva (transação) | Terceiro tipo de transação, ao lado de Receita e Despesa. É dinheiro que o usuário **guarda**: já é dele, então não é receita; e não foi gasto, então não é despesa. Usa uma categoria de natureza Reserva, não aceita cartão de crédito e é a base do acompanhamento das Metas. Tem duas ações: **Guardar** (padrão) e **Resgatar**. Não entra em Receitas nem em Despesas; entra em "Reservado" (guardado menos resgatado) e **não** desconta do Saldo do período: o dinheiro guardado continua sendo do usuário. |
 | Valor do mês | Quanto o usuário planeja para a categoria no mês, definido no planejamento. Em categoria de Reserva é quanto ele vai guardar no mês. |
 | Uso do planejado | Quanto da categoria de Gasto já foi gasto no mês, em valor e em % do valor do mês. Passou de 100% é estouro. |
 | Cartão e fatura | Cartão de crédito de um banco, com dia de fechamento. A fatura reúne as compras no crédito de um ciclo. Ela é calculada a partir das transações (não é guardada); só o pagamento é registrado. Situação: Aberta, Fechada (passou o fechamento) ou Paga. |
 | Fechamento do patrimônio | Foto mensal do total guardado em cada banco, digitado pelo usuário. O patrimônio é a soma dos bancos. |
-| Meta | Objetivo de valor com prazo, alimentado por um histórico de lançamentos (aportes e ajustes). |
+| Meta | Objetivo de valor (e prazo opcional) ligado a **uma categoria de Reserva**. O progresso não é digitado: é tudo o que foi guardado menos tudo o que foi resgatado nessa categoria. |
+| Resgate | Reserva do tipo "Resgatar": dinheiro que sai da reserva. Reduz o progresso da meta, não entra em Receitas nem em Despesas e não muda o Saldo. Não pode passar do que está guardado na categoria. |
 
 ## Regras de negócio
 
@@ -50,7 +51,7 @@ O coração do sistema é um orçamento por categorias com acúmulo: o que sobra
 8. **Parcelamento.** Lançado uma vez (valor total, número de parcelas, data da primeira). O sistema gera uma transação por mês, Pendente até ser paga; ao ser paga, cada uma desconta da categoria. Na fatura, a parcela Pendente aparece como "Previsto" e, depois de paga, como "Lançado". O parcelamento pode ser criado no formulário da transação ou em Planejamento: é o mesmo cadastro.
 9. **Planejamento.** Define o valor do mês de cada categoria mais os gastos fixos e parcelados. Não altera transações já lançadas; ao ser confirmado, gera as transações Pendentes dos fixos e das parcelas do mês. Nasce como cópia do mês anterior. Renda variável não entra aqui: é lançada como receita comum.
 10. **Gastos fixos.** Cada fixo tem um valor padrão, mês de início e, opcionalmente, mês de fim; cancelar um fixo é definir o mês de fim. Ao confirmar o planejamento do mês, o sistema gera uma transação Pendente para cada fixo ativo, e o usuário marca como Paga com um clique, podendo ajustar o valor só daquele mês ou daqui em diante (altera o valor padrão). Os fixos contam dentro do valor do mês da categoria, não somados a ele. Um fixo ou parcela cujo valor mensal passa de uma porcentagem configurável do planejado (30% no protótipo) recebe a marca "Alto impacto".
-11. **Metas.** O valor atual é sempre a soma de um histórico de lançamentos. O usuário lança um aporte (valor e data) ou digita "agora tenho X", e o sistema registra a diferença como ajuste.
+11. **Metas.** O progresso de uma meta é sempre calculado: tudo que foi guardado (Reserva, ação Guardar, Paga) menos tudo que foi resgatado (ação Resgatar, Paga) na categoria de Reserva ligada à meta, em todo o histórico. Nada é digitado na meta. Uma meta **ativa** (não arquivada) por categoria. Resgate nunca pode deixar o saldo da categoria negativo, em nenhuma data.
 12. **Patrimônio.** O total é a soma dos bancos, e o valor de cada banco é digitado no fechamento, porque o valor oficial é o que está no banco (o dinheiro rende, com impostos, e o sistema não tenta calcular isso). No fechamento do mês o sistema lista os bancos ativos, cada um com o campo de saldo já preenchido com o valor do fechamento anterior; o usuário ajusta o que mudou. O total é a soma dos campos e o fechamento salva o mês, o saldo de cada banco e as observações. O patrimônio não depende de categorias nem de transações.
 
 ### Regras de cálculo
@@ -79,7 +80,7 @@ São oito páginas mais a tela de acesso; cada uma mantém o que o autor valoriz
 - No topo da área de conteúdo ficam o botão de modo claro/escuro e o ícone de perfil, que abre um menu pequeno com o nome do usuário e a opção Sair. A edição de perfil (nome e senha) fica para depois.
 - Cada página tem título e subtítulo explicando o que acontece nela. No Dashboard o título é a saudação "Bom dia", "Boa tarde" ou "Boa noite" seguida do primeiro nome.
 - Criar e editar acontecem em modais. O botão "Nova transação" fica no topo do Dashboard e da Análise, à direita do título (a ideia de colocá-lo em todas as páginas foi testada e abandonada).
-- Filtro de período padrão em todo o sistema (Dashboard, Análise, Metas, Patrimônio e Relatórios): atalhos prontos (mês atual, mês anterior, trimestre, semestre, ano e todo o período) e "Personalizado", com calendário e campos De e Até. O Planejamento trabalha sempre com um mês fechado e usa o seletor de mês.
+- Filtro de período padrão em todo o sistema (Dashboard, Análise, Metas e Relatórios; o Patrimônio não usa filtro de período): atalhos prontos (mês atual, mês anterior, trimestre, semestre, ano e todo o período) e "Personalizado", com calendário e campos De e Até. O Planejamento trabalha sempre com um mês fechado e usa o seletor de mês.
 - Filtros avançados e salvos: a Análise tem "Mais filtros" (tipo, status, valor mínimo e máximo, cartão e ordenação), chips removíveis dos filtros ativos e filtros salvos com nome, que o usuário aplica com um clique.
 
 ### Login e cadastro
@@ -92,12 +93,12 @@ Mantém o mínimo do protótipo (saldo, receitas, despesas, distribuição de ga
 
 - Estados vazios: os blocos que dependem de Planejamento, Patrimônio ou Metas mostram uma mensagem curta com atalho para a página.
 - Filtro de período padrão no topo (padrão: Mês atual). Os indicadores comparam com o período anterior de mesmo tamanho (mês anterior, trimestre anterior etc.; em "Todo o período" não há comparação).
-- Destaque: **Saldo do período** = receitas − despesas (o que sobrou do que entrou). O card mostra a legenda "R$ X deste saldo foi guardado" quando há Reservado no período. Abaixo, três indicadores: Receitas, Despesas (transações do tipo Despesa) e Reservado (transações do tipo Reserva), cada um com a comparação.
+- Destaque: **Saldo do período** = receitas − despesas (o que sobrou do que entrou). O card mostra a legenda "R$ X deste saldo foi guardado" quando há Reservado no período. Abaixo, três indicadores: Receitas, Despesas (transações do tipo Despesa) e Reservado (transações do tipo Reserva: guardado menos resgatado), cada um com a comparação.
 - Uso do planejado por categoria de Gasto: planejado, gasto e % usado, com barra e alerta, mais o total. Mostra o planejamento do **mês em que o período termina** (limitado ao mês atual) e o título diz qual é ("Uso do planejado · novembro de 2026").
 - Fatura aberta de cada cartão ativo, com o dia de fechamento, Lançado e Previsto. Não depende do período.
 - Receitas × despesas por mês (barras): os meses do período; quando o período tem menos de 3 meses, os 6 meses até o fim do período.
 - Gastos (rosca): por categoria, com alternativa por banco ou cartão. Mostra as 5 maiores e agrupa o resto em "Outras". Substitui "Por tipo de pagamento" e "Método mais usado".
-- Últimas transações (6 do período), evolução do patrimônio (linha curta com os últimos 6 fechamentos, não depende do período) e metas em andamento (estado vazio com atalho até o módulo 9).
+- Últimas transações (6 do período), evolução do patrimônio (linha curta com os últimos 6 fechamentos, não depende do período) e metas em andamento (até 4 metas ativas, com barra, valor e %; não depende do período; estado vazio com atalho para criar).
 
 ### Análise
 
@@ -133,13 +134,14 @@ Duas seções e um painel de visão final que se atualiza enquanto o usuário pr
 
 ### Metas
 
-- Criar e editar meta: nome, valor alvo, início, prazo e categoria opcional.
-- Histórico de lançamentos da meta (aportes e ajustes) com data e observação, editável.
-- Estados: ativa, pausada, concluída, cancelada e arquivada.
-- Cada meta mostra o progresso, quanto falta, quanto precisa guardar por mês e a previsão no ritmo atual.
-- Painel com total guardado, metas ativas e concluídas.
-- Gráfico de evolução geral: o total guardado ao longo dos meses, com uma linha por meta e alternância entre Geral e Por meta.
-- Cada meta tem uma miniatura da evolução no card e uma tela de detalhe com a linha real contra a linha ideal, o quanto falta, quanto guardar por mês, a previsão e a lista de lançamentos. Esses gráficos substituem os do protótipo.
+- Criar e editar meta: nome, valor alvo, categoria de Reserva (obrigatória) e prazo (mês, opcional) e observação. Não há data de início.
+- O progresso vem das transações de Reserva da categoria (Guardar menos Resgatar, só Pagas). Não existe histórico de lançamentos próprio da meta: guardar e resgatar são feitos pelos botões "Guardar" e "Resgatar" da meta, que abrem o modal de transação já em Reserva e com a categoria preenchida.
+- Estados (calculados, não guardados): **Ativa** (progresso abaixo do alvo), **Concluída** (progresso ≥ alvo; volta a Ativa se um resgate baixar o saldo) e **Arquivada** (a pessoa arquivou; pode restaurar). Não há pausada, cancelada nem exclusão.
+- Cada meta mostra o progresso (valor e %), quanto falta e, se tiver prazo, quanto guardar por mês (o que falta dividido pelos meses restantes, contando o mês atual e o do prazo, arredondado para cima ao centavo). Prazo vencido e não concluída mostra "Prazo vencido". Sem previsão de data de conclusão.
+- Filtro de período padrão no topo (padrão: Mês atual), só na URL. O progresso, o percentual, o restante, o estado e o valor mensal **não** dependem do período (são sempre o total da categoria até hoje). O período muda apenas: o indicador "Guardado no período", a linha "Guardado no período" de cada meta, o gráfico e as movimentações do detalhe.
+- Painel com total guardado hoje (soma do progresso das metas não arquivadas), metas ativas, metas concluídas e **guardado no período** (guardar menos resgatar nas categorias das metas não arquivadas).
+- Gráfico geral: o total guardado nas metas não arquivadas ao fim de cada mês do período (mesmas regras de meses das barras do Dashboard: menos de 3 meses mostra 6 meses até o fim do período, mais de 12 mostra os últimos 12; linha).
+- Detalhe da meta (página própria): progresso, quanto falta, valor mensal sugerido, gráfico da evolução da meta nos meses do período (com a linha do valor alvo) e as últimas 10 movimentações da categoria dentro do período, com link "Ver na Análise".
 
 ### Patrimônio
 
@@ -180,8 +182,7 @@ Cada entidade abaixo tem um dono (o usuário), datas de criação e atualizaçã
 | Planejamento do mês | mês, renda esperada, valor do mês por categoria de Despesa (Gasto e Reserva), estado (Rascunho ou Confirmado) | observação |
 | Gasto fixo | nome, categoria, valor padrão, mês de início | mês de fim, forma de pagamento, observação |
 | Gasto parcelado | nome, categoria, valor total, número de parcelas, início | forma de pagamento, observação |
-| Meta | nome, valor alvo, prazo | início, categoria, observação |
-| Lançamento de meta | meta, tipo (Aporte ou Ajuste), valor, data | observação |
+| Meta | nome, valor alvo, categoria de Reserva | prazo (mês), observação |
 | Fechamento do patrimônio | mês de referência, saldo de cada banco | observações |
 | Relatório salvo | nome, período, dados incluídos | filtros, agrupamento |
 
@@ -262,9 +263,9 @@ São onze módulos em sequência, mais o 3.5 de visual, cada um dependendo do an
 6. **Cartões e faturas:** página Faturas, com a fatura calculada por ciclo (Lançado e Previsto), histórico e marcação de pago. Inclui a geração automática dos Pendentes do mês atual. Pronto quando uma compra feita no dia do fechamento ou depois dele cai na fatura seguinte. O código é revisado pelo próprio agente contra este documento antes da entrega.
 7. **Patrimônio:** saldo por banco, fechamento mensal e evolução. Pronto quando o fechamento pré-preenche com o mês anterior.
 8. **Dashboard:** lê tudo dos módulos 4 a 7, por isso vem depois deles.
-9. **Metas:** lançamentos, estados, ritmo e gráficos.
+9. **Metas:** metas ligadas a categorias de Reserva, Resgate, valor mensal sugerido e gráficos. Pronto quando guardar e resgatar na categoria move o progresso da meta e o resgate acima do guardado é recusado.
 10. **Relatórios:** construtor, relatórios gerados, PDF e Excel.
-11. **Acabamento:** responsividade de todo o sistema (reduzir a janela do navegador sem quebrar elementos; isso substitui a regra "só desktop"), favicon e logo de verdade (hoje é um F branco sobre roxo), modo demo (usuário demo com 12 meses de dados fictícios coerentes com as regras), backup, README profissional escrito pelo agente (apresentação, funcionalidades, stack, como subir com Docker, regras de negócio, diagrama do banco e usuário demo; os prints são tirados pelo autor), mapa de rotas e revisão final.
+11. **Acabamento:** (perguntar ao autor sobre a exclusão de metas e de outros cadastros, hoje só arquivados); responsividade de todo o sistema (reduzir a janela do navegador sem quebrar elementos; isso substitui a regra "só desktop"), favicon e logo de verdade (hoje é um F branco sobre roxo), modo demo (usuário demo com 12 meses de dados fictícios coerentes com as regras), backup, README profissional escrito pelo agente (apresentação, funcionalidades, stack, como subir com Docker, regras de negócio, diagrama do banco e usuário demo; os prints são tirados pelo autor), mapa de rotas e revisão final.
 
 ## Decisões da revisão
 
@@ -344,3 +345,13 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Resgate de Reserva:** removido no módulo 5, junto com o remanejamento.
 - **Sem modo simples:** todas as funcionalidades para todos, nenhuma obrigatória.
 - **Ritmo diário:** removido no módulo 5 (fora do escopo por enquanto).
+
+### Módulo 9
+
+- **Progresso pela categoria de Reserva:** cada meta liga a uma categoria de Reserva; o progresso é guardado menos resgatado, em todo o histórico da categoria (também o que foi guardado antes de a meta existir). Não há aporte nem ajuste digitado na meta.
+- **Prazo opcional e valor mensal sugerido:** com prazo, a meta mostra quanto guardar por mês. Sem previsão de data de conclusão (decisão de simplicidade).
+- **Resgate dentro de Reserva:** o tipo Reserva ganha a escolha Guardar ou Resgatar (continuam três tipos de transação). O resgate não muda o Saldo. O sistema bloqueia qualquer criação, edição, exclusão, troca de data, categoria ou status que deixe o saldo da categoria negativo em alguma data.
+- **Estados:** Ativa, Concluída (calculada) e Arquivada. Sem pausada, cancelada nem exclusão.
+- **Uma meta ativa por categoria:** evita contar o mesmo dinheiro duas vezes. Para guardar para dois objetivos, crie duas categorias de Reserva.
+- **Visualizações:** cards com barra de progresso, gráfico geral do total guardado e, no detalhe, o gráfico da meta. Metas usa o filtro de período padrão (decisão do autor), que não altera o progresso, só o que foi guardado no período e os gráficos.
+- **Exclusão de meta:** adiada. O autor quer decidir sobre exclusão (de metas e dos demais cadastros) no fim, na etapa de correções e estética: perguntar a ele nessa etapa.

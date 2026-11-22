@@ -76,6 +76,14 @@ export function blurMoneyInput(value) {
     return formatMoneyInput(parsed);
 }
 
+export function formatNeutralMoney(value) {
+    const raw = String(value ?? '').trim();
+    const negative = raw.startsWith('-');
+    const formatted = formatPlainMoney(raw);
+
+    return negative ? `−${formatted}` : formatted;
+}
+
 export function formatPlainMoney(value) {
     const amount = Number(value);
     const safe = Number.isFinite(amount) ? Math.abs(amount) : 0;

@@ -65,6 +65,11 @@
     color: var(--color-accent-text);
 }
 
+.tx-segment__option:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
 .tx-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
