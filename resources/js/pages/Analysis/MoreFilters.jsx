@@ -96,6 +96,7 @@ export default function MoreFilters({ open, filters, cards, onClose, onApply, on
                             { value: '', label: 'Todos' },
                             { value: 'income', label: 'Receita' },
                             { value: 'expense', label: 'Despesa' },
+                            { value: 'reserve', label: 'Reserva' },
                         ].map((option) => (
                             <button
                                 key={option.label}

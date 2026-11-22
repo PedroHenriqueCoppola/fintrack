@@ -35,11 +35,10 @@ class PlanningService
     {
         $start = Month::start($monthKey);
         $end = Month::end($monthKey);
-        $plan = $this->planFor($start);
-        $source = $plan ?? $this->previousPlan($start);
-        $amounts = $this->amountMap($source);
-        $income = Money::of($source?->expected_income ?? '0');
-        $spent = $this->spending->totals($start, $end);
+        [$plan, $previous] = $this->plansForPage($start);
+        $amounts = $this->amountMap($plan);
+        $income = Money::of($plan?->expected_income ?? '0');
+        $movement = $this->monthMovement($start, $end);
         $categories = Category::query()
             ->where('applies_to', 'expense')
             ->orderByRaw("case when nature = 'reserve' then 1 else 0 end")
@@ -48,9 +47,16 @@ class PlanningService
 
         $catalog = $this->loadCatalog();
         $committedByCategory = $this->committedByCategory($catalog['expenses'], $catalog['installments'], $start, $monthKey);
-        $committed = '0.00';
+        $templateCommitted = '0.00';
 
         foreach ($committedByCategory as $amount) {
+            $templateCommitted = Money::add($templateCommitted, $amount);
+        }
+
+        $committed = $templateCommitted;
+
+        foreach ($movement['pending'] as $categoryId => $amount) {
+            $committedByCategory[$categoryId] = Money::add($committedByCategory[$categoryId] ?? '0.00', $amount);
             $committed = Money::add($committed, $amount);
         }
 
@@ -60,10 +66,12 @@ class PlanningService
         foreach ($categories as $category) {
             $known = array_key_exists($category->id, $amounts);
             $planned = $amounts[$category->id] ?? '0.00';
-            $categorySpent = $spent[$category->id] ?? '0.00';
+            $categorySpent = $movement['spent'][$category->id] ?? '0.00';
+            $savedAmount = $movement['saved'][$category->id] ?? '0.00';
             $hasSpent = Money::compare($categorySpent, '0') === 1;
+            $hasSaved = $category->nature === 'reserve' && Money::compare($savedAmount, '0') === 1;
 
-            if ($category->archived_at !== null && ! $known && ! $hasSpent) {
+            if ($category->archived_at !== null && ! $known && ! $hasSpent && ! $hasSaved) {
                 continue;
             }
 
@@ -75,13 +83,15 @@ class PlanningService
             );
 
             if ($category->nature === 'reserve') {
+                // Provisional: paid reserve total beside the month value. Drop this key to remove it.
+                $line['saved'] = $savedAmount;
                 $reserveLines[] = $line;
             } else {
                 $spendingLines[] = $line;
             }
         }
         $summary = $this->summary($income, $spendingLines, $reserveLines, $committed);
-        $fixed = $this->fixedPayload($user, $monthKey, $start, $summary['spending_planned'], $filters, $catalog, $committed);
+        $fixed = $this->fixedPayload($user, $monthKey, $start, $summary['spending_planned'], $filters, $catalog, $templateCommitted);
 
         return [
             'month' => $monthKey,
@@ -92,10 +102,15 @@ class PlanningService
                 'next' => Month::shift($monthKey, 1),
                 'current' => Month::currentKey(),
                 'is_current' => $monthKey === Month::currentKey(),
+                'is_future' => $monthKey > Month::currentKey(),
+                'is_past' => $monthKey < Month::currentKey(),
             ],
             'plan' => [
                 'exists' => $plan !== null,
                 'status' => $plan?->status ?? 'draft',
+                'previous_plan_label' => $previous instanceof MonthlyPlan
+                    ? Month::phrase($previous->month->format('Y-m'))
+                    : null,
                 'expected_income' => $income,
                 'has_values' => $this->hasValues($income, $spendingLines, $reserveLines),
                 'spending' => $spendingLines,
@@ -172,6 +187,100 @@ class PlanningService
         $plan->save();
     }
 
+    /**
+     * Spending categories for the Dashboard: the same line the planning page
+     * builds (competence date, percent, remaining, near the limit, over).
+     * Only a saved plan counts. At most six lines, highest percent first,
+     * plus the month total of every spending category that has a value or a spend.
+     *
+     * @return array<string, mixed>
+     */
+    public function usage(string $monthKey): array
+    {
+        $start = Month::start($monthKey);
+        $plan = $this->planFor($start);
+        $payload = [
+            'month' => $monthKey,
+            'phrase' => Month::phrase($monthKey),
+            'exists' => $plan !== null,
+            'lines' => [],
+            'total' => null,
+        ];
+
+        if ($plan === null) {
+            return $payload;
+        }
+
+        $amounts = $this->amountMap($plan);
+        $spent = $this->spending->totals($start, Month::end($monthKey));
+        $categories = Category::query()
+            ->where('applies_to', 'expense')
+            ->where('nature', 'spending')
+            ->orderByRaw('unaccent(name)')
+            ->get();
+
+        $lines = [];
+
+        foreach ($categories as $index => $category) {
+            $known = array_key_exists($category->id, $amounts);
+            $planned = $amounts[$category->id] ?? '0.00';
+            $categorySpent = $spent[$category->id] ?? '0.00';
+            $hasSpent = Money::compare($categorySpent, '0') === 1;
+            $hasPlanned = Money::compare($planned, '0') === 1;
+
+            if ($category->archived_at !== null && ! $known && ! $hasSpent) {
+                continue;
+            }
+
+            if (! $hasPlanned && ! $hasSpent) {
+                continue;
+            }
+
+            $line = $this->line($category, $planned, $categorySpent, '0.00');
+            $line['sort'] = $index;
+            $lines[] = $line;
+        }
+
+        $totalPlanned = '0.00';
+        $totalSpent = '0.00';
+
+        foreach ($lines as $line) {
+            $totalPlanned = Money::add($totalPlanned, $line['planned']);
+            $totalSpent = Money::add($totalSpent, $line['spent'] ?? '0');
+        }
+
+        usort($lines, function (array $left, array $right): int {
+            $leftRank = $left['used_percent'] ?? ($left['over'] ? 100000 : -1);
+            $rightRank = $right['used_percent'] ?? ($right['over'] ? 100000 : -1);
+
+            if ($leftRank !== $rightRank) {
+                return $rightRank <=> $leftRank;
+            }
+
+            return $left['sort'] <=> $right['sort'];
+        });
+
+        $visible = array_map(function (array $line): array {
+            unset($line['sort'], $line['committed'], $line['committed_over']);
+
+            return $line;
+        }, array_slice($lines, 0, 6));
+
+        $percent = Money::usedPercent($totalSpent, $totalPlanned);
+
+        $payload['lines'] = $visible;
+        $payload['total'] = [
+            'planned' => $totalPlanned,
+            'spent' => $totalSpent,
+            'remaining' => Money::sub($totalPlanned, $totalSpent),
+            'used_percent' => $percent,
+            'over' => Money::compare($totalSpent, $totalPlanned) === 1 && Money::compare($totalPlanned, '0') === 1,
+            'near_limit' => $percent !== null && $percent >= 90 && $percent <= 100,
+        ];
+
+        return $payload;
+    }
+
     public function updateHighImpact(User $user, int $percent): void
     {
         $user->high_impact_percent = $percent;
@@ -179,19 +288,28 @@ class PlanningService
     }
 
     /**
-     * Archived categories the screen is allowed to keep: already on this plan,
-     * on the plan being copied, or with a paid expense in the month.
+     * Archived categories this month may keep: already on the saved plan,
+     * with a paid expense, or with money saved in a reserve category.
+     * The previous plan does not grant them until Copy writes them here.
      *
      * @return array<int, int>
      */
     public function archivedCategoryIds(string $monthStart): array
     {
         $plan = $this->planFor($monthStart);
-        $source = $plan ?? $this->previousPlan($monthStart);
-        $ids = collect($source?->items ?? [])->pluck('category_id');
-        $spent = array_keys($this->spending->totals($monthStart, Month::end(Month::key($monthStart))));
+        $ids = collect($plan?->items ?? [])->pluck('category_id');
+        $movement = $this->monthMovement($monthStart, Month::end(Month::key($monthStart)));
+        $active = [];
 
-        return $ids->merge($spent)->map(fn ($id) => (int) $id)->unique()->all();
+        foreach (['spent', 'saved'] as $bucket) {
+            foreach ($movement[$bucket] as $id => $amount) {
+                if (Money::compare($amount, '0') === 1) {
+                    $active[] = (int) $id;
+                }
+            }
+        }
+
+        return $ids->merge($active)->map(fn ($id) => (int) $id)->unique()->values()->all();
     }
 
     private function planFor(string $monthStart): ?MonthlyPlan
@@ -199,6 +317,10 @@ class PlanningService
         return MonthlyPlan::query()->with('items')->whereDate('month', $monthStart)->first();
     }
 
+    /**
+     * Latest plan before this month. Used only by copy(), which replaces the
+     * month on purpose. page() and materialize() do not inherit its values.
+     */
     private function previousPlan(string $monthStart): ?MonthlyPlan
     {
         return MonthlyPlan::query()
@@ -208,16 +330,90 @@ class PlanningService
             ->first();
     }
 
-    private function materialize(string $monthStart): MonthlyPlan
+    /**
+     * The saved plan for the month, plus the latest earlier plan (month only)
+     * so the copy button can name its source. One query for both rows.
+     *
+     * @return array{0: ?MonthlyPlan, 1: ?MonthlyPlan}
+     */
+    private function plansForPage(string $monthStart): array
     {
-        $previous = $this->previousPlan($monthStart);
-        $plan = $this->newPlan($monthStart, Money::of($previous?->expected_income ?? '0'));
+        $rows = MonthlyPlan::query()
+            ->where('month', '<=', $monthStart)
+            ->orderByDesc('month')
+            ->limit(2)
+            ->get();
 
-        foreach ($previous?->items ?? [] as $item) {
-            $this->putItem($plan, (int) $item->category_id, Money::of($item->amount));
+        $current = $rows->first(fn (MonthlyPlan $plan) => $plan->month->toDateString() === $monthStart);
+
+        if ($current instanceof MonthlyPlan) {
+            $current->load('items');
         }
 
-        return $plan;
+        $previous = $rows->first(fn (MonthlyPlan $plan) => $plan->month->toDateString() < $monthStart);
+
+        return [$current, $previous];
+    }
+
+    /**
+     * Paid expense, paid reserve and hand-entered pending expense of the month,
+     * grouped by category. One query.
+     *
+     * @return array{spent: array<int, string>, saved: array<int, string>, pending: array<int, string>}
+     */
+    private function monthMovement(string $start, string $end): array
+    {
+        $rows = Transaction::query()
+            ->join('categories', 'categories.id', '=', 'transactions.category_id')
+            ->where(function ($query) use ($start, $end) {
+                $query->where(function ($paid) use ($start, $end) {
+                    $paid->where('transactions.status', 'paid')
+                        ->whereRaw('coalesce(transactions.competence_date, transactions.date) between ? and ?', [$start, $end]);
+                })->orWhere(function ($pending) use ($start, $end) {
+                    $pending->where('transactions.type', 'expense')
+                        ->where('transactions.status', 'pending')
+                        ->whereNull('transactions.fixed_expense_id')
+                        ->whereNull('transactions.installment_id')
+                        ->where('categories.nature', 'spending')
+                        ->whereBetween('transactions.date', [$start, $end]);
+                });
+            })
+            ->groupBy('transactions.category_id')
+            ->selectRaw("
+                transactions.category_id as category_id,
+                coalesce(sum(transactions.amount) filter (where transactions.type = 'expense' and transactions.status = 'paid'), 0) as spent,
+                coalesce(sum(transactions.amount) filter (where transactions.type = 'reserve' and transactions.status = 'paid'), 0) as saved,
+                coalesce(sum(transactions.amount) filter (
+                    where transactions.type = 'expense'
+                    and transactions.status = 'pending'
+                    and transactions.fixed_expense_id is null
+                    and transactions.installment_id is null
+                    and categories.nature = 'spending'
+                ), 0) as manual_pending
+            ")
+            ->get();
+
+        $spent = [];
+        $saved = [];
+        $pending = [];
+
+        foreach ($rows as $row) {
+            $id = (int) $row->category_id;
+            $spent[$id] = Money::of($row->spent);
+            $saved[$id] = Money::of($row->saved);
+            $manual = Money::of($row->manual_pending);
+
+            if (Money::compare($manual, '0') === 1) {
+                $pending[$id] = $manual;
+            }
+        }
+
+        return ['spent' => $spent, 'saved' => $saved, 'pending' => $pending];
+    }
+
+    private function materialize(string $monthStart): MonthlyPlan
+    {
+        return $this->newPlan($monthStart, '0.00');
     }
 
     private function newPlan(string $monthStart, string $income): MonthlyPlan

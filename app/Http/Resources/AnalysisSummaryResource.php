@@ -16,6 +16,7 @@ class AnalysisSummaryResource extends JsonResource
             'count' => (int) $this->resource['count'],
             'income' => $this->resource['income'],
             'expense' => $this->resource['expense'],
+            'reserved' => $this->resource['reserved'],
             'balance' => $this->resource['balance'],
             'average_expense' => $this->resource['average_expense'],
         ];

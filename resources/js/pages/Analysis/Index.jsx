@@ -49,7 +49,8 @@ function buildChips(filters, options) {
     if (filters.bank_id) chips.push({ key: 'bank_id', label: `Banco: ${nameOf(options.banks ?? [], filters.bank_id)}` });
     if (filters.payment_method_id) chips.push({ key: 'payment_method_id', label: `Pagamento: ${nameOf(options.paymentMethods ?? [], filters.payment_method_id)}` });
     if (filters.card_id) chips.push({ key: 'card_id', label: `Cartão: ${nameOf(options.cards ?? [], filters.card_id)}` });
-    if (filters.type) chips.push({ key: 'type', label: `Tipo: ${filters.type === 'income' ? 'Receita' : 'Despesa'}` });
+    const typeLabels = { income: 'Receita', expense: 'Despesa', reserve: 'Reserva' };
+    if (filters.type) chips.push({ key: 'type', label: `Tipo: ${typeLabels[filters.type] ?? filters.type}` });
     if (filters.status) chips.push({ key: 'status', label: `Status: ${filters.status === 'paid' ? 'Pagas' : 'Pendentes'}` });
     if (filters.min_amount) chips.push({ key: 'min_amount', label: `Mínimo: ${formatPlainMoney(filters.min_amount)}` });
     if (filters.max_amount) chips.push({ key: 'max_amount', label: `Máximo: ${formatPlainMoney(filters.max_amount)}` });
@@ -392,6 +393,10 @@ export default function Index({
                     <Card className="summary-card">
                         <p className="summary-card__label">Despesas</p>
                         <p className="summary-card__value"><Money value={signedExpense(summary.expense)} /></p>
+                    </Card>
+                    <Card className="summary-card">
+                        <p className="summary-card__label">Reservado</p>
+                        <p className="summary-card__value summary-card__value--plain">{formatPlainMoney(summary.reserved)}</p>
                     </Card>
                     <Card className="summary-card">
                         <p className="summary-card__label">Saldo</p>

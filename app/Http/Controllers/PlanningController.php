@@ -59,6 +59,11 @@ class PlanningController extends Controller
     public function confirm(Request $request, string $month, PlanningService $planning): RedirectResponse
     {
         $this->assertMonth($month);
+
+        if ($denied = $this->denyCurrentOrPast($month)) {
+            return $denied;
+        }
+
         $planning->confirm($month);
 
         return $this->redirectToPlanning($month);
@@ -67,6 +72,11 @@ class PlanningController extends Controller
     public function reopen(Request $request, string $month, PlanningService $planning): RedirectResponse
     {
         $this->assertMonth($month);
+
+        if ($denied = $this->denyCurrentOrPast($month)) {
+            return $denied;
+        }
+
         $planning->reopen($month);
 
         return $this->redirectToPlanning($month);
@@ -96,6 +106,17 @@ class PlanningController extends Controller
     private function assertMonth(string $month): void
     {
         Month::start($month);
+    }
+
+    private function denyCurrentOrPast(string $month): ?RedirectResponse
+    {
+        if ($month > Month::currentKey()) {
+            return null;
+        }
+
+        return back()->withErrors([
+            'month' => 'Só meses futuros precisam ser confirmados.',
+        ]);
     }
 
     /**

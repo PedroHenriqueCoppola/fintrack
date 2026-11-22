@@ -1,15 +1,16 @@
-import { formatLongDate } from '../../lib/format';
+import { formatLongDate, formatPlainMoney } from '../../lib/format';
 import Money from '../../components/Money/Money';
 import ReferenceSeal from '../../components/ReferenceSeal/ReferenceSeal';
 import CatalogIcon from '../Manage/icons';
 
-function meta(transaction) {
-    const payment = transaction.card
+function paymentLabel(transaction) {
+    return transaction.card
         ? `${transaction.payment_method?.name ?? ''} ${transaction.card.name}`.trim()
         : transaction.payment_method?.name;
-    const parts = [transaction.category?.name, transaction.bank?.name, payment, transaction.notes];
+}
 
-    return parts.filter(Boolean).join(' · ');
+function metaTail(transaction) {
+    return [transaction.bank?.name, paymentLabel(transaction), transaction.notes].filter(Boolean).join(' · ');
 }
 
 function signedAmount(transaction) {
@@ -58,7 +59,11 @@ function Row({ transaction, onEdit, onPay, paying }) {
                         </span>
                     ) : null}
                 </div>
-                <p className="tx-row__meta">{meta(transaction)}</p>
+                <p className="tx-row__meta">
+                    {transaction.category?.name}
+                    {transaction.type === 'reserve' ? <span className="tx-badge tx-badge--neutral">Reserva</span> : null}
+                    {metaTail(transaction) ? `${transaction.category?.name || transaction.type === 'reserve' ? ' · ' : ''}${metaTail(transaction)}` : null}
+                </p>
             </div>
             {transaction.status === 'pending' ? (
                 <button
@@ -74,7 +79,11 @@ function Row({ transaction, onEdit, onPay, paying }) {
                 </button>
             ) : null}
             <span className="tx-row__amount">
-                <Money value={signedAmount(transaction)} />
+                {transaction.type === 'reserve' ? (
+                    <span className="tx-row__plain">{formatPlainMoney(transaction.amount)}</span>
+                ) : (
+                    <Money value={signedAmount(transaction)} />
+                )}
             </span>
         </div>
     );

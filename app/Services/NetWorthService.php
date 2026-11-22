@@ -66,6 +66,54 @@ class NetWorthService
     }
 
     /**
+     * Latest closing and the six most recent ones, oldest first.
+     * The variation uses the closing immediately before the latest,
+     * which is included in those six whenever more than one exists.
+     *
+     * @return array<string, mixed>
+     */
+    public function dashboardSnapshot(): array
+    {
+        $closings = NetWorthClosing::query()
+            ->with('items')
+            ->orderByDesc('month')
+            ->limit(6)
+            ->get()
+            ->sortBy(fn (NetWorthClosing $closing) => $closing->month->toDateString())
+            ->values();
+
+        if ($closings->isEmpty()) {
+            return [
+                'empty' => true,
+                'total' => null,
+                'month' => null,
+                'variation' => null,
+                'variation_tone' => null,
+                'previous_name' => null,
+                'chart' => ['aria_label' => null, 'points' => []],
+            ];
+        }
+
+        $rows = $closings->map(fn (NetWorthClosing $closing) => [
+            'month' => Month::key($closing->month->toDateString()),
+            'total' => $this->sum($closing),
+        ])->all();
+        $latest = $rows[array_key_last($rows)];
+        $previous = count($rows) > 1 ? $rows[count($rows) - 2] : null;
+        $variation = $previous === null ? null : Money::sub($latest['total'], $previous['total']);
+
+        return [
+            'empty' => false,
+            'total' => $latest['total'],
+            'month' => $latest['month'],
+            'variation' => $variation,
+            'variation_tone' => $this->variationTone($variation),
+            'previous_name' => $previous === null ? null : Month::name($previous['month'], true),
+            'chart' => $this->chart($rows),
+        ];
+    }
+
+    /**
      * One already-summed total per closing, oldest first.
      * Null bounds mean the whole history. The Dashboard reuses this.
      *
@@ -553,6 +601,15 @@ class NetWorthService
         $notes = trim($notes);
 
         return $notes === '' ? null : $notes;
+    }
+
+    private function variationTone(?string $variation): ?string
+    {
+        if ($variation === null || Money::compare($variation, '0') === 0) {
+            return $variation === null ? null : 'neutral';
+        }
+
+        return Money::compare($variation, '0') === 1 ? 'positive' : 'negative';
     }
 
     private function reais(string $amount): string

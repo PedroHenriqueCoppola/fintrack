@@ -91,7 +91,7 @@ function buildForm(plan) {
     };
 }
 
-export default function PlanMonth({ month, plan }) {
+export default function PlanMonth({ month, plan, navigation }) {
     const rows = [...plan.spending, ...plan.reserves];
     const signature = `${plan.expected_income}|${rows.map((row) => `${row.category_id}:${row.planned}`).join('|')}`;
     const seen = useRef(signature);
@@ -265,15 +265,23 @@ export default function PlanMonth({ month, plan }) {
                                     />
                                 </FormField>
                             </div>
-                            <span className="plan-chip">{confirmed ? 'Confirmado' : 'Rascunho'}</span>
+                            {navigation.is_future ? (
+                                <span className="plan-chip">{confirmed ? 'Confirmado' : 'Rascunho'}</span>
+                            ) : null}
                         </div>
                         <div className="plan-toolbar__actions">
                             <p className="plan-save" role="status">
                                 {form.processing ? 'Salvando…' : notice}
                             </p>
-                            <Button variant="secondary" onClick={askCopy} disabled={copying}>
-                                Copiar do mês anterior
-                            </Button>
+                            {plan.previous_plan_label ? (
+                                <Button
+                                    variant={plan.has_values ? 'secondary' : 'primary'}
+                                    onClick={askCopy}
+                                    disabled={copying}
+                                >
+                                    {`Copiar de ${plan.previous_plan_label}`}
+                                </Button>
+                            ) : null}
                         </div>
                     </div>
                     <div className="plan-table-wrap">
@@ -283,7 +291,7 @@ export default function PlanMonth({ month, plan }) {
                                     <th>Categoria</th>
                                     <th>Valor do mês</th>
                                     <th className="is-right">Gasto no mês</th>
-                                    <th className="is-right">Fixos e parcelas</th>
+                                    <th className="is-right" title="Fixos, parcelas e pendentes lançados à mão">Comprometido</th>
                                     <th className="is-right">Usado</th>
                                     <th className="is-right">Resta</th>
                                 </tr>
@@ -378,14 +386,8 @@ export default function PlanMonth({ month, plan }) {
                                                         onBlur={() => blurAmount(row.category_id)}
                                                     />
                                                 </td>
-                                                <td className="is-right">
-                                                    <StackValue><span className="plan-muted">—</span></StackValue>
-                                                </td>
-                                                <td className="is-right">
-                                                    <StackValue><span className="plan-muted">—</span></StackValue>
-                                                </td>
-                                                <td className="is-right plan-muted" colSpan={2}>
-                                                    <StackValue>Guardado em Metas</StackValue>
+                                                <td className="plan-saved" colSpan={4}>
+                                                    {`Guardado: ${formatPlainMoney(row.saved ?? '0.00')}`}
                                                 </td>
                                             </tr>
                                         );
@@ -432,46 +434,52 @@ export default function PlanMonth({ month, plan }) {
                         Gastos {plain(summary.spending_planned)} · Reservas {plain(summary.reserve_planned)}
                     </p>
                     <p className="plan-note">
-                        Fixos e parcelas: {plain(summary.committed)}, dentro do planejado
+                        {`Comprometido: ${plain(summary.committed)}, dentro do planejado`}
                     </p>
-                    {confirmed ? (
-                        <div className="plan-confirmed">
-                            <p>Planejamento confirmado</p>
+                    {navigation.is_future ? (
+                        confirmed ? (
+                            <div className="plan-confirmed">
+                                <p>Planejamento confirmado</p>
+                                <Button
+                                    variant="quiet"
+                                    disabled={reopening}
+                                    onClick={() => {
+                                        setReopening(true);
+                                        router.post(`/planning/${month}/reopen`, {}, {
+                                            preserveScroll: true,
+                                            onFinish: () => setReopening(false),
+                                        });
+                                    }}
+                                >
+                                    {reopening ? 'Voltando…' : 'Voltar para rascunho'}
+                                </Button>
+                            </div>
+                        ) : (
                             <Button
-                                variant="quiet"
-                                disabled={reopening}
+                                className="plan-confirm"
+                                disabled={confirming}
                                 onClick={() => {
-                                    setReopening(true);
-                                    router.post(`/planning/${month}/reopen`, {}, {
+                                    setConfirming(true);
+                                    router.post(`/planning/${month}/confirm`, {}, {
                                         preserveScroll: true,
-                                        onFinish: () => setReopening(false),
+                                        onFinish: () => setConfirming(false),
                                     });
                                 }}
                             >
-                                {reopening ? 'Voltando…' : 'Voltar para rascunho'}
+                                {confirming ? 'Confirmando…' : 'Confirmar planejamento'}
                             </Button>
-                        </div>
-                    ) : (
-                        <Button
-                            className="plan-confirm"
-                            disabled={confirming}
-                            onClick={() => {
-                                setConfirming(true);
-                                router.post(`/planning/${month}/confirm`, {}, {
-                                    preserveScroll: true,
-                                    onFinish: () => setConfirming(false),
-                                });
-                            }}
-                        >
-                            {confirming ? 'Confirmando…' : 'Confirmar planejamento'}
-                        </Button>
-                    )}
+                        )
+                    ) : navigation.is_current ? (
+                        <p className="plan-auto">Os pendentes deste mês já são gerados automaticamente.</p>
+                    ) : null}
                 </Card>
             </div>
             <ConfirmDialog
                 open={confirmCopy}
-                title="Copiar do mês anterior?"
-                message="A renda esperada e os valores deste mês serão substituídos pelos do mês anterior."
+                title={plan.previous_plan_label ? `Copiar de ${plan.previous_plan_label}?` : 'Copiar do mês anterior?'}
+                message={plan.previous_plan_label
+                    ? `A renda esperada e os valores deste mês serão substituídos pelos de ${plan.previous_plan_label}.`
+                    : 'A renda esperada e os valores deste mês serão substituídos pelos do mês anterior.'}
                 confirmLabel="Copiar"
                 busyLabel="Copiando…"
                 busy={copying}

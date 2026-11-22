@@ -68,6 +68,21 @@ class Money
     }
 
     /**
+     * Integer percent, rounded half up once.
+     * A total of zero has no percent.
+     */
+    public static function wholePercent(mixed $part, mixed $total): ?int
+    {
+        if (self::compare($total, '0') !== 1) {
+            return null;
+        }
+
+        $scaled = bcmul(bcdiv(self::of($part), self::of($total), 8), '100', 8);
+
+        return (int) self::roundHalfUp($scaled, 0);
+    }
+
+    /**
      * Integer percent of planned that was spent.
      * The division is rounded half up to one decimal, then that result
      * is rounded half up to the integer shown on the screen.

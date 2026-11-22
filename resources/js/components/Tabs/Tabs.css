@@ -6,6 +6,10 @@
     gap: 1.2rem;
 }
 
+.tabs__aside {
+    margin-left: auto;
+}
+
 .tabs__list {
     display: inline-flex;
     flex-wrap: wrap;

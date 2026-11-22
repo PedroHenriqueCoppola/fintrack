@@ -20,22 +20,21 @@ class TransactionOptionsService
      */
     public function catalog(): array
     {
+        $categories = Category::query()
+            ->whereNull('archived_at')
+            ->orderBy('name')
+            ->get();
+
         return [
             'categories' => [
                 'expense' => CategoryResource::collection(
-                    Category::query()
-                        ->where('applies_to', 'expense')
-                        ->where('nature', 'spending')
-                        ->whereNull('archived_at')
-                        ->orderBy('name')
-                        ->get()
+                    $categories->where('applies_to', 'expense')->where('nature', 'spending')->values()
                 )->resolve(),
                 'income' => CategoryResource::collection(
-                    Category::query()
-                        ->where('applies_to', 'income')
-                        ->whereNull('archived_at')
-                        ->orderBy('name')
-                        ->get()
+                    $categories->where('applies_to', 'income')->values()
+                )->resolve(),
+                'reserve' => CategoryResource::collection(
+                    $categories->where('applies_to', 'expense')->where('nature', 'reserve')->values()
                 )->resolve(),
             ],
             'banks' => BankResource::collection(

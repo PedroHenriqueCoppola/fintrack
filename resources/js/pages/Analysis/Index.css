@@ -258,7 +258,7 @@
 
 .summary {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 1.6rem;
     margin-bottom: 1.6rem;
 }
@@ -279,6 +279,10 @@
     font-size: 2rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+}
+
+.summary-card__value--plain {
+    color: var(--color-text);
 }
 
 .summary-card .money {
@@ -404,9 +408,18 @@
     font-size: 1.4rem;
 }
 
-.tx-row__amount .money {
+.tx-row__amount .money,
+.tx-row__plain {
     font-size: 1.4rem;
     font-weight: 600;
+}
+
+.tx-row__plain {
+    color: var(--color-text);
+}
+
+.tx-row__meta .tx-badge {
+    margin: 0 0.4rem;
 }
 
 .tx-more-wrap {

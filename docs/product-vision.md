@@ -28,7 +28,8 @@ Estes termos têm o mesmo significado em todo o sistema, nos prompts e no códig
 | --- | --- |
 | Banco | Instituição financeira (Nubank, Itaú, PicPay). Agrupa cartões e transações e, no fechamento do patrimônio, recebe o saldo total guardado nele. |
 | Categoria | Classifica transações (Roupas, Viagens, Outros) e concentra o valor do mês e o uso do planejado. Não tem ligação com banco: o dinheiro de uma categoria é só uma conta do sistema, não um valor guardado num lugar. |
-| Natureza da categoria | **Gasto** conta como despesa. **Reserva** (investimentos, guardar para o futuro, reserva de emergência) é dinheiro separado para o futuro: não é despesa e aparece separada das despesas nos totais. |
+| Natureza da categoria | **Gasto** conta como despesa e só recebe transações do tipo Despesa. **Reserva** (investimentos, guardar para o futuro, reserva de emergência) é dinheiro separado para o futuro: só recebe transações do tipo Reserva e aparece separada das despesas nos totais. |
+| Reserva (transação) | Terceiro tipo de transação, ao lado de Receita e Despesa. É dinheiro que o usuário **guarda**: já é dele, então não é receita; e não foi gasto, então não é despesa. Usa uma categoria de natureza Reserva, não aceita cartão de crédito e é a base do acompanhamento das Metas. Não entra em Receitas nem em Despesas; entra em "Reservado" e **não** desconta do Saldo do período: o dinheiro guardado continua sendo do usuário. |
 | Valor do mês | Quanto o usuário planeja para a categoria no mês, definido no planejamento. Em categoria de Reserva é quanto ele vai guardar no mês. |
 | Uso do planejado | Quanto da categoria de Gasto já foi gasto no mês, em valor e em % do valor do mês. Passou de 100% é estouro. |
 | Cartão e fatura | Cartão de crédito de um banco, com dia de fechamento. A fatura reúne as compras no crédito de um ciclo. Ela é calculada a partir das transações (não é guardada); só o pagamento é registrado. Situação: Aberta, Fechada (passou o fechamento) ou Paga. |
@@ -39,12 +40,12 @@ Estes termos têm o mesmo significado em todo o sistema, nos prompts e no códig
 
 O coração do sistema é um orçamento por categorias com acúmulo: o que sobra de um mês continua disponível no seguinte. Estas regras estão confirmadas pelo autor.
 
-1. **Valor sempre positivo.** Toda transação guarda o valor positivo; o tipo (Receita ou Despesa) define o sinal. Isso corrige a inconsistência do protótipo.
+1. **Valor sempre positivo.** Toda transação guarda o valor positivo; o tipo (Receita, Despesa ou Reserva) define o sinal. Isso corrige a inconsistência do protótipo.
 2. **Uso do planejado da categoria.** Cada categoria de Gasto tem, em cada mês, o valor do mês (planejado), o gasto (despesas Pagas do mês) e o que resta (valor do mês − gasto). Exemplo: Mercado com R$ 800 planejados e R$ 612,40 gastos mostra 77% usado e R$ 187,60 de resto. Não há acúmulo no sistema: a sobra de um mês não vira saldo do seguinte, porque o dinheiro que sobra fica guardado no banco e fora do sistema.
 3. **Gasto desconta na data da transação**, seja Pix, débito ou crédito, da categoria da transação.
 4. **Estouro de categoria.** Gastar mais que o valor do mês deixa a categoria acima de 100%, com alerta. Não existe remanejamento no sistema: quando o autor cobre um estouro tirando dinheiro de outra caixinha, isso acontece no banco e não é registrado aqui.
 5. **Mês de uma despesa.** Só despesas Pagas contam no gasto. Despesa Pendente não conta até virar Paga.
-6. **Categorias de Reserva** entram no planejamento com o valor que o autor vai guardar no mês, para a renda esperada fechar com as despesas e as reservas. Não têm gastos nem barra de uso. O acompanhamento do que foi guardado fica em Metas (módulo 9).
+6. **Categorias de Reserva** entram no planejamento com o valor que o autor vai guardar no mês, para a renda esperada fechar com as despesas e as reservas. Não têm gastos nem barra de uso. O que foi guardado é lançado como transação do tipo Reserva e aparece como "Guardado" na área de Reserva do Planejamento; o acompanhamento por objetivo fica em Metas (módulo 9).
 7. **Crédito e fatura.** A compra no crédito é uma despesa comum, descontada da categoria na data da compra. Ela entra na fatura do cartão conforme o dia de fechamento: a compra feita no dia do fechamento ou depois dele cai na fatura seguinte. Marcar a fatura como paga só registra a data do pagamento: não cria despesa nova (a despesa já foi contada na compra) e não altera as transações.
 8. **Parcelamento.** Lançado uma vez (valor total, número de parcelas, data da primeira). O sistema gera uma transação por mês, Pendente até ser paga; ao ser paga, cada uma desconta da categoria. Na fatura, a parcela Pendente aparece como "Previsto" e, depois de paga, como "Lançado". O parcelamento pode ser criado no formulário da transação ou em Planejamento: é o mesmo cadastro.
 9. **Planejamento.** Define o valor do mês de cada categoria mais os gastos fixos e parcelados. Não altera transações já lançadas; ao ser confirmado, gera as transações Pendentes dos fixos e das parcelas do mês. Nasce como cópia do mês anterior. Renda variável não entra aqui: é lançada como receita comum.
@@ -90,12 +91,13 @@ Tela única com as opções Entrar e Criar conta, na mesma identidade visual, co
 Mantém o mínimo do protótipo (saldo, receitas, despesas, distribuição de gastos, receitas × despesas) e acrescenta o que ajuda a decidir.
 
 - Estados vazios: os blocos que dependem de Planejamento, Patrimônio ou Metas mostram uma mensagem curta com atalho para a página.
-- Indicadores de saldo, receitas, despesas, cada um comparado ao período anterior.
-- Uso do planejado por categoria de Gasto: planejado, gasto e % usado, com barra de progresso e alerta perto do limite ou acima dele, mais o total do mês.
-- Fatura aberta de cada cartão, com o dia de fechamento.
-- Receitas × despesas por mês (barras).
-- Gastos por categoria (rosca), com alternativa por banco ou cartão. Substitui "Por tipo de pagamento" e "Método mais usado".
-- Evolução do patrimônio (linha curta), últimas transações e metas em andamento.
+- Filtro de período padrão no topo (padrão: Mês atual). Os indicadores comparam com o período anterior de mesmo tamanho (mês anterior, trimestre anterior etc.; em "Todo o período" não há comparação).
+- Destaque: **Saldo do período** = receitas − despesas (o que sobrou do que entrou). O card mostra a legenda "R$ X deste saldo foi guardado" quando há Reservado no período. Abaixo, três indicadores: Receitas, Despesas (transações do tipo Despesa) e Reservado (transações do tipo Reserva), cada um com a comparação.
+- Uso do planejado por categoria de Gasto: planejado, gasto e % usado, com barra e alerta, mais o total. Mostra o planejamento do **mês em que o período termina** (limitado ao mês atual) e o título diz qual é ("Uso do planejado · novembro de 2026").
+- Fatura aberta de cada cartão ativo, com o dia de fechamento, Lançado e Previsto. Não depende do período.
+- Receitas × despesas por mês (barras): os meses do período; quando o período tem menos de 3 meses, os 6 meses até o fim do período.
+- Gastos (rosca): por categoria, com alternativa por banco ou cartão. Mostra as 5 maiores e agrupa o resto em "Outras". Substitui "Por tipo de pagamento" e "Método mais usado".
+- Últimas transações (6 do período), evolução do patrimônio (linha curta com os últimos 6 fechamentos, não depende do período) e metas em andamento (estado vazio com atalho até o módulo 9).
 
 ### Análise
 
@@ -104,7 +106,7 @@ Lista de transações agrupada por dia, com todos os dados visíveis em cada lin
 - Cabeçalho do dia com a data e o total do dia.
 - Cada linha mostra categoria (ícone e cor), descrição, banco, cartão ou forma de pagamento, observação e valor colorido.
 - Filtros: busca, tipo, período, banco, categoria, cartão e forma de pagamento; ordenação por data ou valor.
-- Barra de resumo que muda com o filtro: quantidade, receitas, despesas, saldo e média.
+- Barra de resumo que muda com o filtro: quantidade, receitas, despesas (tipo Despesa), reservado (tipo Reserva), saldo (receitas − despesas, sem descontar o reservado) e média das despesas.
 - Opção de alternar para tabela densa (fica para o módulo de Acabamento).
 - Clicar numa linha abre a edição. No rodapé do modal ficam Duplicar (abre uma cópia com a data de hoje) e Excluir (definitivo, com confirmação). A transação Pendente tem um botão para marcar como paga com um clique.
 - A lista mostra 50 transações por vez, com o botão "Carregar mais". Os totais do resumo contam todas as transações do filtro, não só as carregadas.
@@ -125,7 +127,7 @@ Página própria, entre Análise e Planejamento.
 
 Duas seções e um painel de visão final que se atualiza enquanto o usuário preenche.
 
-- **Planejar o mês:** seletor de mês (qualquer mês, passado, atual ou futuro), renda esperada, e uma linha por categoria com o valor do mês, o gasto, a % usada e o que resta. As categorias de Reserva aparecem numa área própria, só com o valor que vai guardar. Botão "Copiar do mês anterior". "Sobra a alocar" = renda esperada − soma dos valores do mês (Gasto e Reserva); pode ficar negativa, com alerta. O mês tem estado Rascunho ou Confirmado e continua editável depois de confirmado; há um botão para voltar a Rascunho.
+- **Planejar o mês:** seletor de mês (qualquer mês, passado, atual ou futuro), renda esperada, e uma linha por categoria com o valor do mês, o gasto, a % usada e o que resta. As categorias de Reserva aparecem numa área própria, só com o valor que vai guardar. Botão "Copiar do mês anterior" (o mês sem plano salvo abre vazio; não herda valores sozinho). "Sobra a alocar" = renda esperada − soma dos valores do mês (Gasto e Reserva); pode ficar negativa, com alerta. Só meses **futuros** têm estado Rascunho ou Confirmado (a confirmação gera os Pendentes de fixos e parcelas), continuam editáveis depois de confirmados e há um botão para voltar a Rascunho. No mês atual e nos passados não há confirmação: os Pendentes do mês atual são gerados automaticamente.
 - **Fixos e parcelados** (tudo do protótipo é mantido): cadastro de fixo (nome, categoria, valor padrão, mês de início e de fim, pagamento, observação) e de parcelado (nome, categoria, valor total, número de parcelas, início, pagamento, observação); indicadores de total mensal comprometido, fixos, parcelados ativos, parcelas pagas/totais, já quitado no mês e % do orçamento comprometido; filtros por categoria, valor mínimo e máximo, ordenação; alerta % configurável (campo na própria página, padrão 30%) com a marca "Alto impacto"; barra de progresso de parcelas. Ao confirmar o planejamento, cada fixo e cada parcela do mês viram transações Pendentes, com valor editável só naquele mês ou daqui em diante. O sistema pode criar Pendentes com data futura; a tela de lançamento manual continua recusando.
 - **Visão final:** painel ao lado com renda, total planejado, sobra a alocar, rosca da distribuição (gastos e reservas) e quanto está comprometido com fixos e parcelados.
 
@@ -154,7 +156,7 @@ Mantém o que o autor mais gostou, com o fechamento feito por banco.
 Todos os cadastros que servem para separar e organizar o sistema, em cards com ícone e cor, busca e contagem de uso. Criar e editar em modal. Item em uso é arquivado, não apagado.
 
 - Bancos, categorias (com natureza Gasto ou Reserva), cartões (ligados a um banco, com dia de fechamento) e formas de pagamento (Pix, Débito e Crédito de partida).
-- O tipo da transação é fixo (Receita ou Despesa) e não tem cadastro.
+- O tipo da transação é fixo (Receita, Despesa ou Reserva) e não tem cadastro.
 
 ### Relatórios
 
@@ -169,7 +171,7 @@ Cada entidade abaixo tem um dono (o usuário), datas de criação e atualizaçã
 
 | Entidade | Campos obrigatórios | Campos opcionais |
 | --- | --- | --- |
-| Transação | tipo (Receita ou Despesa), data, valor, descrição, categoria, banco, forma de pagamento | cartão (obrigatório se for crédito; define o banco), observação, status (Paga ou Pendente), data de competência, parcela x/y (gerada pelo sistema, a partir do módulo 5) |
+| Transação | tipo (Receita, Despesa ou Reserva), data, valor, descrição, categoria, banco, forma de pagamento | cartão (obrigatório se for crédito; define o banco), observação, status (Paga ou Pendente), data de competência, parcela x/y (gerada pelo sistema, a partir do módulo 5) |
 | Banco | nome | cor |
 | Categoria | nome, aplicável a (Despesa ou Receita), natureza (Gasto ou Reserva, só para Despesa) | ícone, cor |
 | Cartão | nome, banco, dia de fechamento | dia de vencimento, cor |
@@ -300,9 +302,9 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Tamanho:** módulo único, com revisão pelo próprio agente.
 - **Fixos e parcelas:** o sistema pode criar Pendentes com data futura (o lançamento manual não pode).
 - **Alto impacto:** porcentagem configurável num campo da própria página, padrão 30%.
-- **Fixos e parcelas por categoria:** a tabela do planejamento tem a coluna "Fixos e parcelas", logo depois de "Gasto no mês": quanto, entre os fixos e parcelas ativos naquele mês, pertence à categoria. Conta mesmo sem confirmar o mês. É informativa (o "Resta" continua sendo valor do mês − gasto pago) e avisa "Passa do valor do mês" quando o comprometido é maior que o planejado.
+- **Fixos e parcelas por categoria:** a tabela do planejamento tem a coluna "Comprometido" (antes "Fixos e parcelas"), logo depois de "Gasto no mês": quanto, entre os fixos e parcelas ativos naquele mês **mais os Pendentes lançados à mão** (sem fixo nem parcela de origem), pertence à categoria. Conta mesmo sem confirmar o mês. É informativa (o "Resta" continua sendo valor do mês − gasto pago) e avisa "Passa do valor do mês" quando o comprometido é maior que o planejado.
 - **Aba Fixos e parcelados:** mostra por padrão o que está ativo no mês selecionado; o que ainda não começou ou já terminou fica num grupo recolhido "Fora deste mês", com o motivo. O Pendente de cada mês só nasce quando aquele mês é confirmado.
-- **Mês de trabalho compartilhado:** o mês escolhido no Planejamento vale também para o Dashboard (quando ele existir, no módulo 8) e é lembrado enquanto o usuário estiver logado. Há o atalho "Voltar ao mês atual". A Análise lembra os próprios filtros à parte, com "Limpar filtros".
+- **Mês de trabalho compartilhado:** o mês escolhido no Planejamento vale também para as Faturas e é lembrado enquanto o usuário estiver logado. O Dashboard não usa o mês de trabalho: tem filtro de período próprio (decisão do módulo 8). Há o atalho "Voltar ao mês atual". A Análise lembra os próprios filtros à parte, com "Limpar filtros".
 - Esta decisão substitui as regras de saldo com acúmulo e de remanejamento das seções anteriores deste documento (inclusive "Saldo inicial da categoria" e "Caixinha" em Decisões da revisão e "Ritmo diário" na Segunda revisão).
 
 ### Módulo 6
@@ -324,6 +326,16 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Gráfico:** a linha de evolução entra já no módulo 7, com a biblioteca Recharts, que o Dashboard (módulo 8) reaproveita.
 - **Período padrão:** Ano. O Patrimônio não usa o mês de trabalho do Planejamento.
 - **Princípio daqui em diante:** priorizar o que simplifica o dia a dia e dá boas visualizações; antes de cada módulo, cortar o que só complica.
+
+### Módulo 8
+
+- **Período:** o Dashboard usa o filtro de período padrão (padrão Mês atual), não o mês de trabalho.
+- **Destaque:** Saldo do período (receitas − despesas), com a legenda de quanto dele foi guardado. O "Disponível para gastar" e o gasto por dia do protótipo ficam de fora.
+- **Reserva:** é um terceiro tipo de transação (Receita, Despesa e Reserva), decisão do autor depois dos testes. Despesas = tipo Despesa; Reservado = tipo Reserva; Saldo = receitas − despesas, sem descontar o Reservado (ajuste do autor: guardar não tira o dinheiro do usuário). No Planejamento, "Sobra a alocar" continua descontando a Reserva planejada, porque lá a conta é dividir a renda entre gastar e guardar. Guardar dinheiro não é receita nem despesa. O Planejamento mostra "Guardado no mês" na área de Reserva (texto, sem barra).
+- **Tamanho:** Dashboard completo na primeira versão, com barras e rosca.
+- **Planejado por categoria:** segue o mês em que o período termina (limitado ao mês atual) e o título informa o mês.
+- **Planejamento (revisão do módulo 8):** mês sem plano salvo abre vazio, com o botão "Copiar do mês anterior" (o Dashboard só usa planos salvos); a confirmação existe só para meses futuros; a coluna "Comprometido" inclui os Pendentes lançados à mão; a área de Reserva mostra "Guardado: R$ X" (texto, sem barra); categoria de Reserva arquivada continua aparecendo no mês em que tem valor guardado.
+- **Priorização:** simplicidade do dia a dia e boas visualizações.
 
 ### Segunda revisão
 
