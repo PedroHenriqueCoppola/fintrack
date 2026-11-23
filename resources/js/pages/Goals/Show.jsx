@@ -86,7 +86,7 @@ export default function Show({
     return (
         <>
             <Head title="Metas" />
-            <div className="page goals-page">
+            <div className="page goals-page goals-show">
                 <p className="goals-back">
                     <Link href={listHref}>Voltar para metas</Link>
                 </p>

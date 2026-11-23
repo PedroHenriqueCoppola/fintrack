@@ -40,6 +40,10 @@
     flex-wrap: wrap;
 }
 
+.tx-form > .tx-segment {
+    align-self: flex-start;
+}
+
 .tx-segment {
     display: inline-flex;
     gap: 0.4rem;

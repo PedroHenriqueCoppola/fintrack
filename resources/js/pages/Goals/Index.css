@@ -342,6 +342,10 @@
     color: var(--color-chip-ok-text);
 }
 
+.goals-show .page-header {
+    align-items: flex-start;
+}
+
 .goal-detail {
     display: grid;
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
