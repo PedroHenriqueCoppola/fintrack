@@ -68,18 +68,37 @@ class PeriodRange
     /**
      * Months drawn on a chart for this period.
      * Fewer than three months expands to the six months ending when the
-     * period ends, never after the current month. More than twelve keeps
-     * the last twelve. An open period is the last twelve months.
+     * period ends, never after the current month. More than $maxMonths keeps
+     * the last $maxMonths. An open period is the last twelve months, unless
+     * $openFromFirst names an earlier month: then it starts there, with at
+     * least six months, and still stops at $maxMonths.
      *
      * @param  array{from: ?string, to: ?string}  $range
      * @return array<int, string>
      */
-    public function chartMonths(array $range): array
+    public function chartMonths(array $range, int $maxMonths = 12, ?string $openFromFirst = null): array
     {
         $current = Month::currentKey();
+        $limit = max($maxMonths, 18);
 
         if ($range['from'] === null || $range['to'] === null) {
-            return $this->monthWindow(Month::shift($current, -11) ?? $current, $current);
+            if ($openFromFirst === null || $openFromFirst === '') {
+                return $this->monthWindow(Month::shift($current, -11) ?? $current, $current, $limit);
+            }
+
+            $end = $current;
+            $start = $openFromFirst > $end ? $end : $openFromFirst;
+            $minimum = Month::shift($end, -5) ?? $end;
+
+            if ($start > $minimum) {
+                $start = $minimum;
+            }
+
+            if ($this->inclusiveMonths($start, $end) > $maxMonths) {
+                $start = Month::shift($end, -($maxMonths - 1)) ?? $start;
+            }
+
+            return $this->monthWindow($start, $end, $limit);
         }
 
         $start = substr($range['from'], 0, 7);
@@ -89,11 +108,11 @@ class PeriodRange
         if ($count < 3) {
             $end = $end > $current ? $current : $end;
             $start = Month::shift($end, -5) ?? $end;
-        } elseif ($count > 12) {
-            $start = Month::shift($end, -11) ?? $start;
+        } elseif ($count > $maxMonths) {
+            $start = Month::shift($end, -($maxMonths - 1)) ?? $start;
         }
 
-        return $this->monthWindow($start, $end);
+        return $this->monthWindow($start, $end, $limit);
     }
 
     /**
@@ -170,13 +189,13 @@ class PeriodRange
     /**
      * @return array<int, string>
      */
-    private function monthWindow(string $start, string $end): array
+    private function monthWindow(string $start, string $end, int $limit = 18): array
     {
         $months = [];
         $cursor = $start;
         $guard = 0;
 
-        while ($cursor !== null && $cursor <= $end && $guard < 18) {
+        while ($cursor !== null && $cursor <= $end && $guard < $limit) {
             $months[] = $cursor;
 
             if ($cursor === $end) {

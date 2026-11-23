@@ -15,13 +15,13 @@ function categoryNote(category) {
     if (category.open_goal?.state === 'completed') {
         const name = category.open_goal.name;
 
-        return `A meta '${name}' está concluída. Ao criar esta, '${name}' será arquivada com o valor de hoje e esta começa do zero.`;
+        return `A meta '${name}' está concluída e continuará assim, com o valor de hoje. Esta começa do zero.`;
     }
 
     if (category.open_goal?.state === 'active') {
         const name = category.open_goal.name;
 
-        return `Já existe a meta '${name}' em andamento nessa categoria. Arquive-a antes.`;
+        return `Já existe a meta '${name}' em andamento nessa categoria. Conclua ou arquive-a antes.`;
     }
 
     if (category.restarts) {
@@ -41,6 +41,8 @@ export default function GoalModal({ goal = null, categories, onClose }) {
     const today = useToday();
     const min = `${today.slice(5, 7)}/${today.slice(0, 4)}`;
     const editing = Boolean(goal);
+    const frozen = Boolean(goal?.frozen);
+    const lockedHint = 'Meta concluída: só o nome e a observação podem mudar.';
     const form = useForm({
         name: goal?.name ?? '',
         target_amount: goal ? formatMoneyInput(goal.target_amount) : '',
@@ -50,9 +52,9 @@ export default function GoalModal({ goal = null, categories, onClose }) {
     });
     const setField = useFieldSetter(form);
     const selected = categories.find((category) => String(category.id) === String(form.data.category_id));
-    const categoryHint = editing
-        ? 'Para trocar a categoria, crie outra meta.'
-        : categoryNote(selected);
+    const categoryHint = frozen
+        ? null
+        : (editing ? 'Para trocar a categoria, crie outra meta.' : categoryNote(selected));
 
     function submit(event) {
         event.preventDefault();
@@ -89,6 +91,7 @@ export default function GoalModal({ goal = null, categories, onClose }) {
         >
             <form id="goal-form" className="goal-form" noValidate onSubmit={submit}>
                 <p className="goal-lead">O progresso vem do que foi guardado e resgatado na categoria.</p>
+                {frozen ? <p className="goals-note">{lockedHint}</p> : null}
                 <FormField label="Nome" error={form.errors.name}>
                     <input
                         type="text"
@@ -103,6 +106,7 @@ export default function GoalModal({ goal = null, categories, onClose }) {
                         className="goal-money"
                         inputMode="decimal"
                         autoComplete="off"
+                        disabled={frozen}
                         value={form.data.target_amount}
                         onChange={(event) => setField('target_amount', event.target.value)}
                         onBlur={() => {
@@ -116,7 +120,7 @@ export default function GoalModal({ goal = null, categories, onClose }) {
                 <FormField label="Categoria de Reserva" error={form.errors.category_id} hint={categoryHint}>
                     <select
                         value={form.data.category_id}
-                        disabled={editing}
+                        disabled={editing || frozen}
                         onChange={(event) => setField('category_id', event.target.value)}
                     >
                         <option value="">Escolha</option>
@@ -132,6 +136,7 @@ export default function GoalModal({ goal = null, categories, onClose }) {
                     value={form.data.deadline}
                     min={min}
                     clearable
+                    disabled={frozen}
                     error={form.errors.deadline}
                     onChange={(value) => setField('deadline', value)}
                 />

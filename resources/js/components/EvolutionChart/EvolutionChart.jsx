@@ -103,6 +103,7 @@ export default function EvolutionChart({
     const reduced = useReducedMotion();
     const gradientId = `evolution-${useId().replace(/:/g, '')}`;
     const lastIndex = points.length - 1;
+    const tickInterval = points.length > 12 ? Math.ceil(points.length / 12) - 1 : undefined;
     const referenceCents = typeof referenceValue === 'number' ? referenceValue : null;
 
     if (!points.length) {
@@ -131,6 +132,7 @@ export default function EvolutionChart({
                             axisLine={false}
                             tickLine={false}
                             minTickGap={16}
+                            interval={tickInterval}
                             tick={(props) => <AxisTick {...props} axis="x" />}
                         />
                         <YAxis

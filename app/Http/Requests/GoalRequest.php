@@ -127,6 +127,7 @@ class GoalRequest extends FormRequest
         $open = Goal::query()
             ->where('category_id', $category->id)
             ->whereNull('archived_at')
+            ->whereNull('frozen_amount')
             ->when($goal, fn ($query) => $query->whereKeyNot($goal->id))
             ->first();
 

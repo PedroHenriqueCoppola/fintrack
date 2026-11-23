@@ -98,7 +98,7 @@ export default function Show({
                     badge={<GoalChip goal={goal} />}
                     actions={(
                         <>
-                            {!archived ? (
+                            {!archived && !goal.frozen ? (
                                 <Button
                                     onClick={() => openTransaction('deposit')}
                                     disabled={!canMove}
@@ -107,7 +107,7 @@ export default function Show({
                                     Guardar
                                 </Button>
                             ) : null}
-                            {!archived ? (
+                            {!archived && !goal.frozen ? (
                                 <Button
                                     variant="secondary"
                                     onClick={() => openTransaction('withdraw')}
@@ -137,7 +137,7 @@ export default function Show({
                             <UsageBar
                                 variant="meter"
                                 percent={goal.percent}
-                                complete={goal.percent >= 100}
+                                complete={goal.reached}
                                 label={`Progresso de ${goal.name}`}
                             />
                         </div>

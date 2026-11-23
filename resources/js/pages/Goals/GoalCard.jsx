@@ -75,7 +75,7 @@ export default function GoalCard({ goal, showState = false }) {
             <UsageBar
                 variant="meter"
                 percent={goal.percent}
-                complete={goal.percent >= 100}
+                    complete={goal.reached}
                 label={`Progresso de ${goal.name}`}
             />
             <span className="goal-card__figures">
