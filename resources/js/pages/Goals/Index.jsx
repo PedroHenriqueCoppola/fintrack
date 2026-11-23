@@ -15,6 +15,7 @@ import '../../components/DatePicker/DatePicker.css';
 import './Index.css';
 
 const STATUSES = [
+    { key: 'all', label: 'Todas', empty: 'Nenhuma meta ainda.' },
     { key: 'active', label: 'Ativas', empty: 'Nenhuma meta ativa.' },
     { key: 'completed', label: 'Concluídas', empty: 'Nenhuma meta concluída.' },
     { key: 'archived', label: 'Arquivadas', empty: 'Nenhuma meta arquivada.' },
@@ -28,6 +29,23 @@ function firstError(errors) {
     }
 
     return Array.isArray(value) ? value[0] : value;
+}
+
+function StatusBar({ status, onChoose }) {
+    return (
+        <div className="period-seg goal-status" role="group" aria-label="Situação das metas">
+            {STATUSES.map((item) => (
+                <button
+                    key={item.key}
+                    type="button"
+                    aria-pressed={status === item.key}
+                    onClick={() => onChoose(item.key)}
+                >
+                    {item.label}
+                </button>
+            ))}
+        </div>
+    );
 }
 
 function Stat({ label, value }) {
@@ -83,14 +101,17 @@ export default function Index({
                 ) : null}
                 <PeriodBar path="/goals" filters={filters} period={period} keepStatus />
                 {!hasGoals ? (
-                    <Card>
-                        <EmptyState
-                            icon={Target}
-                            message="Você ainda não tem metas."
-                            shortcutLabel={hasActiveReserve ? 'Criar meta' : null}
-                            onShortcut={hasActiveReserve ? () => setCreating(true) : undefined}
-                        />
-                    </Card>
+                    <>
+                        <StatusBar status={status} onChoose={chooseStatus} />
+                        <Card>
+                            <EmptyState
+                                icon={Target}
+                                message={status === 'active' ? 'Você ainda não tem metas.' : emptyStatus.empty}
+                                shortcutLabel={(status === 'all' || status === 'active') && hasActiveReserve ? 'Criar meta' : null}
+                                onShortcut={(status === 'all' || status === 'active') && hasActiveReserve ? () => setCreating(true) : undefined}
+                            />
+                        </Card>
+                    </>
                 ) : (
                     <>
                         <div className="goal-stats">
@@ -109,18 +130,7 @@ export default function Index({
                                 <EvolutionChart points={chart.points} ariaLabel={chart.aria_label} />
                             )}
                         </Card>
-                        <div className="period-seg goal-status" role="group" aria-label="Situação das metas">
-                            {STATUSES.map((item) => (
-                                <button
-                                    key={item.key}
-                                    type="button"
-                                    aria-pressed={status === item.key}
-                                    onClick={() => chooseStatus(item.key)}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                        </div>
+                        <StatusBar status={status} onChoose={chooseStatus} />
                         {goals.length === 0 ? (
                             <Card>
                                 <EmptyState icon={Target} message={emptyStatus.empty} />
@@ -128,7 +138,7 @@ export default function Index({
                         ) : (
                             <div className="goal-grid">
                                 {goals.map((goal) => (
-                                    <GoalCard key={goal.id} goal={goal} />
+                                    <GoalCard key={goal.id} goal={goal} showState={status === 'all'} />
                                 ))}
                             </div>
                         )}

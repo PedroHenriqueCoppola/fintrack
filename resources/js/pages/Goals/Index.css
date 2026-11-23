@@ -279,11 +279,17 @@
 
 .goal-card__category,
 .goal-card__muted,
-.goal-card__line,
-.goal-card__over {
+.goal-card__line {
     color: var(--color-text-muted);
     font-size: 1.3rem;
     font-weight: 500;
+}
+
+.goal-card__chips {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
 }
 
 .goal-card__figures {
@@ -293,10 +299,6 @@
     font-size: 1.4rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-}
-
-.goal-card__over {
-    color: var(--color-negative-text);
 }
 
 .goal-tile {
@@ -344,6 +346,10 @@
 
 .goals-show .page-header {
     align-items: flex-start;
+}
+
+.goal-meter {
+    margin-bottom: 1.6rem;
 }
 
 .goal-detail {

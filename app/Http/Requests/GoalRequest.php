@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Models\Category;
 use App\Models\Goal;
+use App\Services\GoalService;
+use App\Support\Money;
 use App\Support\Month;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -84,6 +86,14 @@ class GoalRequest extends FormRequest
                 return;
             }
 
+            $goal = $this->currentGoal();
+
+            if ($goal instanceof Goal && $goal->archived_at !== null) {
+                $validator->errors()->add('name', 'Restaure a meta para editá-la.');
+
+                return;
+            }
+
             $this->validateCategory($validator);
             $this->validateDeadline($validator);
         });
@@ -102,19 +112,31 @@ class GoalRequest extends FormRequest
 
         $keeping = $goal instanceof Goal && (int) $goal->category_id === (int) $category->id;
 
+        if ($goal instanceof Goal && ! $keeping) {
+            $validator->errors()->add('category_id', 'Para trocar a categoria, crie outra meta.');
+
+            return;
+        }
+
         if ($category->archived_at !== null && ! $keeping) {
             $validator->errors()->add('category_id', 'Escolha uma categoria de Reserva ativa.');
 
             return;
         }
 
-        $taken = Goal::query()
+        $open = Goal::query()
             ->where('category_id', $category->id)
             ->whereNull('archived_at')
             ->when($goal, fn ($query) => $query->whereKeyNot($goal->id))
-            ->exists();
+            ->first();
 
-        if ($taken) {
+        if (! $open instanceof Goal) {
+            return;
+        }
+
+        $progress = app(GoalService::class)->progress($open);
+
+        if (Money::compare($progress, $open->target_amount) < 0) {
             $validator->errors()->add(
                 'category_id',
                 'Já existe uma meta para essa categoria. Arquive a outra para criar esta.',

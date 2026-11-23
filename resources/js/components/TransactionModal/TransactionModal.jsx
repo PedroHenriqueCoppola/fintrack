@@ -626,9 +626,11 @@ export default function TransactionModal({
                     <FormField
                         label="Categoria"
                         error={form.errors.category_id}
-                        hint={form.data.type === 'reserve' && supportBalance !== null
-                            ? `Guardado nesta categoria: ${formatNeutralMoney(supportBalance)}`
-                            : null}
+                        hint={form.data.type === 'reserve' && preset?.goalProgress != null
+                            ? `Guardado nesta meta: ${formatNeutralMoney(preset.goalProgress)}`
+                            : (form.data.type === 'reserve' && supportBalance !== null
+                                ? `Guardado nesta categoria: ${formatNeutralMoney(supportBalance)}`
+                                : null)}
                     >
                         <SelectField
                             value={form.data.category_id}

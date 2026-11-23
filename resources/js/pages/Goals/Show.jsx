@@ -6,6 +6,7 @@ import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import EvolutionChart from '../../components/EvolutionChart/EvolutionChart';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import TransactionModal from '../../components/TransactionModal/TransactionModal';
+import UsageBar from '../../components/UsageBar/UsageBar';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
 import { formatDate, formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import { GoalChip } from './GoalCard';
@@ -56,7 +57,7 @@ export default function Show({
     const canWithdraw = canMove && goal.progress !== '0.00' && !String(goal.progress).startsWith('-');
     const withdrawTitle = categoryArchived
         ? 'A categoria está arquivada. Desarquive em Gerenciar para lançar.'
-        : (canWithdraw ? 'Resgatar da reserva' : 'Não há valor guardado nesta categoria para resgatar.');
+        : (canWithdraw ? 'Resgatar da reserva' : 'Não há valor guardado nesta meta para resgatar.');
 
     function openTransaction(action) {
         setPreset({
@@ -65,6 +66,7 @@ export default function Show({
             category_id: goal.category_id,
             category: goal.category,
             lockCategory: true,
+            goalProgress: goal.progress,
         });
     }
 
@@ -115,7 +117,9 @@ export default function Show({
                                     Resgatar
                                 </Button>
                             ) : null}
-                            <Button variant="secondary" onClick={() => setEditing(true)}>Editar</Button>
+                            {archived ? null : (
+                                <Button variant="secondary" onClick={() => setEditing(true)}>Editar</Button>
+                            )}
                             {archived ? (
                                 <Button variant="secondary" onClick={restore}>Restaurar</Button>
                             ) : (
@@ -129,10 +133,23 @@ export default function Show({
                 <PeriodBar path={`/goals/${goal.id}`} filters={filters} period={period} />
                 <div className="goal-detail">
                     <Card className="card--highlight">
+                        <div className="goal-meter">
+                            <UsageBar
+                                variant="meter"
+                                percent={goal.percent}
+                                complete={goal.percent >= 100}
+                                label={`Progresso de ${goal.name}`}
+                            />
+                        </div>
                         <div className="goal-progress">
                             <Figure label="Guardado" value={formatPlainMoney(goal.progress)} />
                             <Figure label="Percentual" value={`${goal.percent}%`} />
-                            <Figure label="Falta" value={formatPlainMoney(goal.remaining)} />
+                            <Figure
+                                label={goal.reached ? 'Meta atingida' : 'Falta'}
+                                value={goal.reached
+                                    ? (goal.surplus !== '0.00' ? `${formatPlainMoney(goal.surplus)} acima do alvo` : '—')
+                                    : formatPlainMoney(goal.remaining)}
+                            />
                             <Figure
                                 label="Prazo"
                                 value={goal.deadline_phrase ?? 'Sem prazo'}

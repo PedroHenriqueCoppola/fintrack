@@ -1,14 +1,14 @@
 import './UsageBar.css';
 
-export default function UsageBar({ percent, over = false, nearLimit = false, variant = 'usage', label = 'Progresso' }) {
+export default function UsageBar({ percent, over = false, nearLimit = false, variant = 'usage', label = 'Progresso', complete = false }) {
     const value = typeof percent === 'number' ? percent : 0;
     const capped = value > 100 ? 100 : (value < 0 ? 0 : value);
-    const overflow = over || value > 100;
+    const overflow = variant === 'meter' ? false : (over || value > 100);
 
     if (variant === 'meter') {
         return (
             <span
-                className={overflow ? 'usage usage--meter usage--over' : 'usage usage--meter'}
+                className={complete ? 'usage usage--meter usage--complete' : 'usage usage--meter'}
                 role="progressbar"
                 aria-valuenow={Math.round(value)}
                 aria-valuemin={0}
@@ -16,7 +16,7 @@ export default function UsageBar({ percent, over = false, nearLimit = false, var
                 aria-label={label}
             >
                 <span className="usage__track" aria-hidden="true">
-                    <span className="usage__fill" style={{ width: `${capped}%` }} />
+                    <span className="usage__fill" style={{ width: complete ? '100%' : `${capped}%` }} />
                 </span>
             </span>
         );

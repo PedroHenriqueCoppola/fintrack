@@ -11,6 +11,7 @@ use App\Support\Money;
 use App\Support\Month;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class GoalService
@@ -26,8 +27,32 @@ class GoalService
     public function create(array $data): Goal
     {
         $goal = new Goal;
-        $this->fill($goal, $data);
-        $this->save($goal);
+
+        DB::transaction(function () use ($goal, $data): void {
+            $categoryId = (int) $data['category_id'];
+            $open = Goal::query()
+                ->where('category_id', $categoryId)
+                ->whereNull('archived_at')
+                ->lockForUpdate()
+                ->first();
+
+            if ($open instanceof Goal) {
+                if (Money::compare($this->progress($open), $open->target_amount) < 0) {
+                    throw ValidationException::withMessages([
+                        'category_id' => 'Já existe uma meta para essa categoria. Arquive a outra para criar esta.',
+                    ]);
+                }
+
+                $this->freeze($open);
+            }
+
+            $hadGoal = Goal::query()->where('category_id', $categoryId)->exists();
+            $balance = $this->reserves->balances()[$categoryId] ?? '0.00';
+            $this->fill($goal, $data, true);
+            $goal->baseline_amount = $hadGoal ? $this->nonNegative($balance) : '0.00';
+            $goal->frozen_amount = null;
+            $this->save($goal);
+        });
 
         return $goal;
     }
@@ -37,7 +62,14 @@ class GoalService
      */
     public function update(Goal $goal, array $data): Goal
     {
-        $this->fill($goal, $data);
+        if ($goal->archived_at !== null) {
+            throw ValidationException::withMessages([
+                'name' => 'Restaure a meta para editá-la.',
+            ]);
+        }
+
+        $data['category_id'] = $goal->category_id;
+        $this->fill($goal, $data, false);
         $this->save($goal);
 
         return $goal;
@@ -45,12 +77,7 @@ class GoalService
 
     public function archive(Goal $goal): void
     {
-        if ($goal->archived_at !== null) {
-            return;
-        }
-
-        $goal->archived_at = now();
-        $goal->save();
+        $this->freeze($goal);
     }
 
     public function restore(Goal $goal): void
@@ -71,8 +98,44 @@ class GoalService
             ]);
         }
 
+        $newer = Goal::query()
+            ->where('category_id', $goal->category_id)
+            ->whereKeyNot($goal->id)
+            ->where(function ($query) use ($goal) {
+                $query->where('created_at', '>', $goal->created_at)
+                    ->orWhere(function ($query) use ($goal) {
+                        $query->where('created_at', $goal->created_at)
+                            ->where('id', '>', $goal->id);
+                    });
+            })
+            ->exists();
+
+        if ($newer) {
+            throw ValidationException::withMessages([
+                'category_id' => 'Já existe uma meta mais nova nessa categoria. Não é possível restaurar esta.',
+            ]);
+        }
+
         $goal->archived_at = null;
+        $goal->frozen_amount = null;
         $this->save($goal, 'Já existe uma meta para essa categoria. Arquive a outra para restaurar esta.');
+    }
+
+    /**
+     * Progress of one goal. Archived goals keep the frozen amount.
+     * The others are the paid category balance minus the baseline, never below zero.
+     */
+    public function progress(Goal $goal, ?string $balance = null): string
+    {
+        if ($goal->archived_at !== null) {
+            return $this->nonNegative($goal->frozen_amount);
+        }
+
+        if ($balance === null) {
+            $balance = $this->reserves->balances()[(int) $goal->category_id] ?? '0.00';
+        }
+
+        return $this->nonNegative(Money::sub($balance, $goal->baseline_amount));
     }
 
     /**
@@ -87,10 +150,12 @@ class GoalService
             ->get();
         $built = $this->build($goals, $range, $filters, false, null);
         $status = $filters['status'];
-        $segment = array_values(array_filter(
-            $built['goals'],
-            fn (array $goal): bool => $goal['state'] === $status,
-        ));
+        $segment = $status === 'all'
+            ? $built['goals']
+            : array_values(array_filter(
+                $built['goals'],
+                fn (array $goal): bool => $goal['state'] === $status,
+            ));
         $this->sortSegment($segment, $status);
 
         return [
@@ -140,7 +205,7 @@ class GoalService
     {
         $goals = Goal::query()
             ->whereNull('archived_at')
-            ->get(['id', 'name', 'target_amount', 'deadline', 'category_id', 'archived_at']);
+            ->get(['id', 'name', 'target_amount', 'baseline_amount', 'deadline', 'category_id', 'archived_at']);
 
         if ($goals->isEmpty()) {
             return $this->dashboardEmpty('Você ainda não tem metas.', 'Criar meta');
@@ -151,7 +216,7 @@ class GoalService
 
         foreach ($goals as $goal) {
             $target = Money::of($goal->target_amount);
-            $progress = $balances[(int) $goal->category_id] ?? '0.00';
+            $progress = $this->progress($goal, $balances[(int) $goal->category_id] ?? '0.00');
             $rows[] = [
                 'id' => $goal->id,
                 'name' => $goal->name,
@@ -208,13 +273,35 @@ class GoalService
     /**
      * @param  array<string, mixed>  $data
      */
-    private function fill(Goal $goal, array $data): void
+    private function fill(Goal $goal, array $data, bool $creating): void
     {
         $goal->name = $data['name'];
         $goal->target_amount = Money::of($data['target_amount']);
-        $goal->category_id = $data['category_id'];
+
+        if ($creating) {
+            $goal->category_id = $data['category_id'];
+        }
+
         $goal->notes = $data['notes'] ?? null;
         $goal->deadline = empty($data['deadline']) ? null : Month::start($data['deadline']);
+    }
+
+    private function freeze(Goal $goal): void
+    {
+        if ($goal->archived_at !== null) {
+            return;
+        }
+
+        $goal->frozen_amount = $this->progress($goal);
+        $goal->archived_at = now();
+        $goal->save();
+    }
+
+    private function nonNegative(mixed $amount): string
+    {
+        $value = Money::of($amount);
+
+        return Money::compare($value, '0') === -1 ? '0.00' : $value;
     }
 
     private function save(
@@ -239,18 +326,13 @@ class GoalService
     private function build(Collection $goals, array $range, array $filters, bool $chartIncludesArchived, ?Goal $formGoal): array
     {
         $balances = $goals->isEmpty() ? [] : $this->reserves->balances();
-        $categoryIds = $goals
-            ->map(fn (Goal $goal): int => (int) $goal->category_id)
-            ->unique()
-            ->values()
-            ->all();
         $chartIds = $goals
             ->filter(fn (Goal $goal): bool => $chartIncludesArchived || $goal->archived_at === null)
             ->map(fn (Goal $goal): int => (int) $goal->category_id)
             ->unique()
             ->values()
             ->all();
-        $saved = $this->periodSaved($categoryIds, $range['from'], $range['to']);
+        $saved = $this->periodSaved($goals, $range['from'], $range['to']);
         $months = $this->periods->chartMonths($range);
         $series = $this->series($chartIds, $months);
         $presented = [];
@@ -260,7 +342,7 @@ class GoalService
 
         foreach ($goals as $goal) {
             $balance = $balances[(int) $goal->category_id] ?? '0.00';
-            $periodSaved = $saved[(int) $goal->category_id] ?? '0.00';
+            $periodSaved = $saved[$goal->id] ?? '0.00';
             $row = $this->present($goal, $balance, $periodSaved, $this->goalHref($goal, $filters));
             $presented[] = $row;
             $counts[$row['state']]++;
@@ -271,7 +353,7 @@ class GoalService
             }
         }
 
-        $categories = $this->reserveCategories($formGoal);
+        $categories = $this->reserveCategories($formGoal, $presented);
 
         return [
             'goals' => $presented,
@@ -281,7 +363,7 @@ class GoalService
                 'completed_count' => $counts['completed'],
                 'period_saved' => $panelPeriod,
             ],
-            'chart' => $this->chart($goals, $chartIds, $series, $months, $chartIncludesArchived),
+            'chart' => $this->chart($goals, $series, $months, $chartIncludesArchived),
             'counts' => $counts,
             'reserve_categories' => $categories['items'],
             'has_active_reserve' => $categories['has_active'],
@@ -294,9 +376,11 @@ class GoalService
     private function present(Goal $goal, string $balance, string $periodSaved, string $href): array
     {
         $target = Money::of($goal->target_amount);
-        $progress = $balance;
+        $progress = $this->progress($goal, $balance);
         $state = $this->state($goal, $progress, $target);
-        $remaining = Money::compare($progress, $target) === 1 ? '0.00' : Money::sub($target, $progress);
+        $reached = Money::compare($progress, $target) >= 0;
+        $remaining = $reached ? '0.00' : Money::sub($target, $progress);
+        $surplus = $reached ? Money::sub($progress, $target) : '0.00';
         $percent = Money::wholePercent($progress, $target) ?? 0;
         $suggestion = $this->suggestion($goal, $remaining, $state);
 
@@ -304,6 +388,8 @@ class GoalService
         $view->progress = $progress;
         $view->percent = $percent;
         $view->remaining = $remaining;
+        $view->reached = $reached;
+        $view->surplus = $surplus;
         $view->state = $state;
         $view->monthly_amount = $suggestion['monthly'];
         $view->overdue = $suggestion['overdue'];
@@ -351,44 +437,131 @@ class GoalService
     }
 
     /**
-     * @param  array<int, int>  $categoryIds
+     * Paid deposit minus withdraw inside each goal's own window.
+     * One grouped query, then the windows are applied in memory.
+     *
+     * @param  Collection<int, Goal>  $goals
      * @return array<int, string>
      */
-    private function periodSaved(array $categoryIds, ?string $from, ?string $to): array
+    private function periodSaved(Collection $goals, ?string $from, ?string $to): array
     {
-        if ($categoryIds === []) {
-            return [];
+        $saved = [];
+
+        foreach ($goals as $goal) {
+            $saved[$goal->id] = '0.00';
         }
 
+        if ($goals->isEmpty()) {
+            return $saved;
+        }
+
+        $windows = [];
+        $queryFrom = $from;
+        $queryTo = $to;
+        $openStart = false;
+        $openEnd = false;
+
+        foreach ($goals as $goal) {
+            [$start, $end] = $this->savedWindow($goal, $from, $to);
+            $windows[$goal->id] = [$start, $end];
+
+            if ($start === null) {
+                $openStart = true;
+            } elseif ($queryFrom === null || $start < $queryFrom) {
+                $queryFrom = $start;
+            }
+
+            if ($end === null) {
+                $openEnd = true;
+            } elseif ($queryTo === null || $end > $queryTo) {
+                $queryTo = $end;
+            }
+        }
+
+        if ($openStart) {
+            $queryFrom = null;
+        }
+
+        if ($openEnd) {
+            $queryTo = null;
+        }
+
+        $categoryIds = $goals
+            ->map(fn (Goal $goal): int => (int) $goal->category_id)
+            ->unique()
+            ->values()
+            ->all();
         $query = Transaction::query()
             ->where('type', 'reserve')
             ->where('status', 'paid')
             ->whereIn('category_id', $categoryIds);
 
-        if ($from !== null) {
-            $query->where('date', '>=', $from);
+        if ($queryFrom !== null) {
+            $query->where('date', '>=', $queryFrom);
         }
 
-        if ($to !== null) {
-            $query->where('date', '<=', $to);
+        if ($queryTo !== null) {
+            $query->where('date', '<=', $queryTo);
         }
 
-        $rows = $query
-            ->groupBy('category_id')
-            ->selectRaw("
-                category_id,
-                coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
-                - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as saved
-            ")
-            ->get();
+        $nets = [];
 
-        $saved = [];
+        foreach ($query->groupBy('category_id')->groupBy('date')->selectRaw("
+            category_id,
+            date,
+            coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
+            - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as net
+        ")->get() as $row) {
+            $nets[(int) $row->category_id][substr((string) $row->date, 0, 10)] = Money::of($row->net);
+        }
 
-        foreach ($rows as $row) {
-            $saved[(int) $row->category_id] = Money::of($row->saved);
+        foreach ($goals as $goal) {
+            [$start, $end] = $windows[$goal->id];
+
+            if ($start !== null && $end !== null && $start > $end) {
+                continue;
+            }
+
+            $total = '0.00';
+
+            foreach ($nets[(int) $goal->category_id] ?? [] as $date => $net) {
+                if (($start === null || $date >= $start) && ($end === null || $date <= $end)) {
+                    $total = Money::add($total, $net);
+                }
+            }
+
+            $saved[$goal->id] = $total;
         }
 
         return $saved;
+    }
+
+    /**
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function savedWindow(Goal $goal, ?string $from, ?string $to): array
+    {
+        $start = $from;
+
+        if (Money::compare($goal->baseline_amount, '0') === 1) {
+            $created = $goal->created_at?->timezone('America/Sao_Paulo')->toDateString();
+
+            if ($created !== null && ($start === null || $created > $start)) {
+                $start = $created;
+            }
+        }
+
+        $end = $to;
+
+        if ($goal->archived_at !== null) {
+            $archived = $goal->archived_at->timezone('America/Sao_Paulo')->toDateString();
+
+            if ($end === null || $archived < $end) {
+                $end = $archived;
+            }
+        }
+
+        return [$start, $end];
     }
 
     /**
@@ -457,14 +630,17 @@ class GoalService
 
     /**
      * @param  Collection<int, Goal>  $goals
-     * @param  array<int, int>  $categoryIds
      * @param  array<int, array<string, string>>  $series
      * @param  array<int, string>  $months
      * @return array<string, mixed>
      */
-    private function chart(Collection $goals, array $categoryIds, array $series, array $months, bool $single): array
+    private function chart(Collection $goals, array $series, array $months, bool $single): array
     {
-        if ($categoryIds === [] || $months === []) {
+        $included = $goals
+            ->filter(fn (Goal $goal): bool => $single || $goal->archived_at === null)
+            ->values();
+
+        if ($included->isEmpty() || $months === []) {
             return [
                 'aria_label' => 'Sem metas para o gráfico.',
                 'points' => [],
@@ -480,8 +656,9 @@ class GoalService
         foreach ($months as $month) {
             $total = '0.00';
 
-            foreach ($categoryIds as $categoryId) {
-                $total = Money::add($total, $series[$categoryId][$month] ?? '0.00');
+            foreach ($included as $goal) {
+                $cumulative = $series[(int) $goal->category_id][$month] ?? '0.00';
+                $total = Money::add($total, $this->chartValue($goal, $cumulative, $month));
             }
 
             $short = Month::short($month);
@@ -500,8 +677,8 @@ class GoalService
         $referenceLabel = null;
         $label = 'Total guardado de '.$span.'.';
 
-        if ($single && $goals->count() === 1) {
-            $goal = $goals->first();
+        if ($single && $included->count() === 1) {
+            $goal = $included->first();
             $referenceCents = (int) Money::cents($goal->target_amount);
             $referenceLabel = 'Valor alvo: '.Money::label($goal->target_amount);
             $label = 'Evolução de '.$goal->name.' de '.$span.'. '.$referenceLabel.'.';
@@ -516,12 +693,31 @@ class GoalService
         ];
     }
 
+    private function chartValue(Goal $goal, string $cumulative, string $month): string
+    {
+        if ($goal->archived_at !== null) {
+            $archivedMonth = $goal->archived_at->timezone('America/Sao_Paulo')->format('Y-m');
+
+            if ($month > $archivedMonth) {
+                return $this->nonNegative($goal->frozen_amount);
+            }
+        }
+
+        return $this->nonNegative(Money::sub($cumulative, $goal->baseline_amount));
+    }
+
     /**
      * @param  array{from: ?string, to: ?string}  $range
      * @return array<int, mixed>
      */
     private function movements(Goal $goal, array $range): array
     {
+        [$start, $end] = $this->savedWindow($goal, $range['from'], $range['to']);
+
+        if ($start !== null && $end !== null && $start > $end) {
+            return [];
+        }
+
         $query = Transaction::query()
             ->where('type', 'reserve')
             ->where('category_id', $goal->category_id)
@@ -537,21 +733,22 @@ class GoalService
             ->orderByDesc('id')
             ->limit(10);
 
-        if ($range['from'] !== null) {
-            $query->where('date', '>=', $range['from']);
+        if ($start !== null) {
+            $query->where('date', '>=', $start);
         }
 
-        if ($range['to'] !== null) {
-            $query->where('date', '<=', $range['to']);
+        if ($end !== null) {
+            $query->where('date', '<=', $end);
         }
 
         return TransactionResource::collection($query->get())->resolve();
     }
 
     /**
+     * @param  array<int, array<string, mixed>>  $presented
      * @return array{items: array<int, array<string, mixed>>, has_active: bool}
      */
-    private function reserveCategories(?Goal $current): array
+    private function reserveCategories(?Goal $current, array $presented): array
     {
         $categories = Category::query()
             ->where('applies_to', 'expense')
@@ -565,6 +762,22 @@ class GoalService
             $categories->push($current->category);
         }
 
+        $open = [];
+        $restart = [];
+
+        foreach ($presented as $row) {
+            $categoryId = (int) $row['category_id'];
+
+            if ($row['state'] === 'archived') {
+                $restart[$categoryId] = true;
+            } else {
+                $open[$categoryId] = [
+                    'name' => $row['name'],
+                    'state' => $row['state'],
+                ];
+            }
+        }
+
         return [
             'has_active' => $hasActive,
             'items' => $categories->map(fn (Category $category): array => [
@@ -573,6 +786,8 @@ class GoalService
                 'icon' => $category->icon,
                 'color' => $category->color,
                 'archived' => $category->archived_at !== null,
+                'open_goal' => $open[$category->id] ?? null,
+                'restarts' => isset($restart[$category->id]),
             ])->values()->all(),
         ];
     }
@@ -582,26 +797,47 @@ class GoalService
      */
     private function sortSegment(array &$goals, string $status): void
     {
-        usort($goals, function (array $left, array $right) use ($status): int {
-            if ($status === 'active') {
-                $leftDeadline = $left['deadline'] ?? null;
-                $rightDeadline = $right['deadline'] ?? null;
+        $rank = ['active' => 0, 'completed' => 1, 'archived' => 2];
 
-                if ($leftDeadline === null && $rightDeadline !== null) {
-                    return 1;
-                }
+        usort($goals, function (array $left, array $right) use ($status, $rank): int {
+            if ($status === 'all' && $left['state'] !== $right['state']) {
+                return ($rank[$left['state']] ?? 9) <=> ($rank[$right['state']] ?? 9);
+            }
 
-                if ($rightDeadline === null && $leftDeadline !== null) {
-                    return -1;
-                }
+            if (($status === 'active' || $status === 'all') && $left['state'] === 'active') {
+                $byDeadline = $this->byDeadline($left, $right);
 
-                if ($leftDeadline !== $rightDeadline) {
-                    return $leftDeadline <=> $rightDeadline;
+                if ($byDeadline !== 0) {
+                    return $byDeadline;
                 }
             }
 
             return strcasecmp($left['name'], $right['name']);
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $left
+     * @param  array<string, mixed>  $right
+     */
+    private function byDeadline(array $left, array $right): int
+    {
+        $leftDeadline = $left['deadline'] ?? null;
+        $rightDeadline = $right['deadline'] ?? null;
+
+        if ($leftDeadline === null && $rightDeadline === null) {
+            return 0;
+        }
+
+        if ($leftDeadline === null) {
+            return 1;
+        }
+
+        if ($rightDeadline === null) {
+            return -1;
+        }
+
+        return $leftDeadline <=> $rightDeadline;
     }
 
     /**

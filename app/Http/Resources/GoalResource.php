@@ -34,6 +34,8 @@ class GoalResource extends JsonResource
             'progress' => $this->progress,
             'percent' => $this->percent,
             'remaining' => $this->remaining,
+            'reached' => (bool) $this->reached,
+            'surplus' => $this->surplus,
             'state' => $this->state,
             'monthly_amount' => $this->monthly_amount,
             'overdue' => (bool) $this->overdue,

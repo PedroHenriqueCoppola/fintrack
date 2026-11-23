@@ -21,7 +21,7 @@ class GoalsRequest extends FormRequest
         $status = $this->query('status');
         $merge = [
             'period' => $this->query('period') ?: 'current_month',
-            'status' => in_array($status, ['active', 'completed', 'archived'], true) ? $status : 'active',
+            'status' => in_array($status, ['all', 'active', 'completed', 'archived'], true) ? $status : 'active',
         ];
 
         foreach (['from', 'to'] as $key) {
@@ -42,7 +42,7 @@ class GoalsRequest extends FormRequest
             'period' => ['required', 'string', Rule::in(AnalysisFilters::PERIODS)],
             'from' => ['required_if:period,custom', 'nullable', 'date_format:Y-m-d'],
             'to' => ['required_if:period,custom', 'nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
-            'status' => ['required', 'string', Rule::in(['active', 'completed', 'archived'])],
+            'status' => ['required', 'string', Rule::in(['all', 'active', 'completed', 'archived'])],
         ];
     }
 
@@ -58,7 +58,7 @@ class GoalsRequest extends FormRequest
             'to.required_if' => 'Informe a data final.',
             'to.date_format' => 'Informe uma data final válida.',
             'to.after_or_equal' => 'A data inicial não pode ser maior que a final.',
-            'status.in' => 'Escolha Ativas, Concluídas ou Arquivadas.',
+            'status.in' => 'Escolha Todas, Ativas, Concluídas ou Arquivadas.',
         ];
     }
 

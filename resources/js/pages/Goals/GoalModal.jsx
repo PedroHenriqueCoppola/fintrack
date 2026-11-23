@@ -7,6 +7,30 @@ import { useFieldSetter } from '../../lib/fields';
 import { blurMoneyInput, formatMoneyInput, useToday } from '../../lib/format';
 import { moneyPayload } from '../Planning/fields';
 
+function categoryNote(category) {
+    if (!category) {
+        return null;
+    }
+
+    if (category.open_goal?.state === 'completed') {
+        const name = category.open_goal.name;
+
+        return `A meta '${name}' está concluída. Ao criar esta, '${name}' será arquivada com o valor de hoje e esta começa do zero.`;
+    }
+
+    if (category.open_goal?.state === 'active') {
+        const name = category.open_goal.name;
+
+        return `Já existe a meta '${name}' em andamento nessa categoria. Arquive-a antes.`;
+    }
+
+    if (category.restarts) {
+        return 'Esta meta começa do zero, a partir do saldo de hoje.';
+    }
+
+    return null;
+}
+
 function monthText(value) {
     const match = /^(\d{4})-(\d{2})/.exec(String(value ?? ''));
 
@@ -25,6 +49,10 @@ export default function GoalModal({ goal = null, categories, onClose }) {
         notes: goal?.notes ?? '',
     });
     const setField = useFieldSetter(form);
+    const selected = categories.find((category) => String(category.id) === String(form.data.category_id));
+    const categoryHint = editing
+        ? 'Para trocar a categoria, crie outra meta.'
+        : categoryNote(selected);
 
     function submit(event) {
         event.preventDefault();
@@ -85,9 +113,10 @@ export default function GoalModal({ goal = null, categories, onClose }) {
                         }}
                     />
                 </FormField>
-                <FormField label="Categoria de Reserva" error={form.errors.category_id}>
+                <FormField label="Categoria de Reserva" error={form.errors.category_id} hint={categoryHint}>
                     <select
                         value={form.data.category_id}
+                        disabled={editing}
                         onChange={(event) => setField('category_id', event.target.value)}
                     >
                         <option value="">Escolha</option>

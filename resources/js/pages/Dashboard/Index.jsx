@@ -544,7 +544,7 @@ export default function Index({
                                         <UsageBar
                                             variant="meter"
                                             percent={goal.percent}
-                                            over={goal.percent > 100}
+                                            complete={goal.percent >= 100}
                                             label={`Progresso de ${goal.name}`}
                                         />
                                         <span className="dashboard-goal__percent">{`${goal.percent}%`}</span>

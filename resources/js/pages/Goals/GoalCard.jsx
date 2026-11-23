@@ -3,25 +3,58 @@ import UsageBar from '../../components/UsageBar/UsageBar';
 import { formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import CatalogIcon from '../Manage/icons';
 
-export function GoalChip({ goal }) {
+function stateChip(goal) {
     if (goal.state === 'completed') {
-        return <span className="goal-chip goal-chip--ok">Concluída</span>;
+        return { label: 'Concluída', ok: true };
     }
 
     if (goal.state === 'archived') {
-        return <span className="goal-chip goal-chip--neutral">Arquivada</span>;
+        return { label: 'Arquivada', ok: false };
+    }
+
+    return { label: 'Ativa', ok: false };
+}
+
+export function GoalChip({ goal, showState = false }) {
+    const chips = [];
+
+    if (showState || goal.state === 'completed' || goal.state === 'archived') {
+        chips.push(stateChip(goal));
     }
 
     if (goal.overdue) {
-        return <span className="goal-chip goal-chip--neutral">Prazo vencido</span>;
+        chips.push({ label: 'Prazo vencido', ok: false });
     }
 
-    return null;
+    if (chips.length === 0) {
+        return null;
+    }
+
+    return (
+        <span className="goal-card__chips">
+            {chips.map((chip) => (
+                <span key={chip.label} className={chip.ok ? 'goal-chip goal-chip--ok' : 'goal-chip goal-chip--neutral'}>
+                    {chip.label}
+                </span>
+            ))}
+        </span>
+    );
 }
 
-export default function GoalCard({ goal }) {
+export function goalResult(goal) {
+    if (!goal.reached) {
+        return `Falta ${formatPlainMoney(goal.remaining)}`;
+    }
+
+    if (goal.surplus && goal.surplus !== '0.00') {
+        return `Meta atingida · ${formatPlainMoney(goal.surplus)} acima do alvo`;
+    }
+
+    return 'Meta atingida';
+}
+
+export default function GoalCard({ goal, showState = false }) {
     const category = goal.category;
-    const overflow = goal.percent > 100;
 
     return (
         <Link href={goal.href} className="card card--interactive goal-card">
@@ -37,20 +70,19 @@ export default function GoalCard({ goal }) {
                     <span className="goal-card__name">{goal.name}</span>
                     <span className="goal-card__category">{category?.name}</span>
                 </span>
-                <GoalChip goal={goal} />
+                <GoalChip goal={goal} showState={showState} />
             </span>
             <UsageBar
                 variant="meter"
                 percent={goal.percent}
-                over={overflow}
+                complete={goal.percent >= 100}
                 label={`Progresso de ${goal.name}`}
             />
-            {overflow ? <span className="goal-card__over">Passou do valor</span> : null}
             <span className="goal-card__figures">
                 <span>{`${formatPlainMoney(goal.progress)} de ${formatPlainMoney(goal.target_amount)}`}</span>
                 <span>{`${goal.percent}%`}</span>
             </span>
-            <span className="goal-card__line">{`Falta ${formatPlainMoney(goal.remaining)}`}</span>
+            <span className="goal-card__line">{goalResult(goal)}</span>
             <span className="goal-card__muted">
                 {`Guardado no período: ${formatNeutralMoney(goal.period_saved)}`}
             </span>

@@ -60,3 +60,7 @@
     display: block;
     width: 100%;
 }
+
+.usage--complete .usage__fill {
+    background: var(--color-chip-ok-text);
+}
