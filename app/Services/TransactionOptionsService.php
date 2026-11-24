@@ -10,20 +10,51 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Transaction;
+use App\Support\Money;
 
 class TransactionOptionsService
 {
+    public function __construct(private ReserveBalanceService $reserves) {}
+
     /**
      * Active catalog lists for the transaction modal and the analysis filters.
+     * reserve_balances is the paid balance of each reserve category, one query.
      *
      * @return array<string, mixed>
      */
     public function catalog(): array
     {
+        $balances = Transaction::query()
+            ->where('type', 'reserve')
+            ->where('status', 'paid')
+            ->groupBy('category_id')
+            ->selectRaw("
+                category_id,
+                coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
+                - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as balance
+            ");
         $categories = Category::query()
-            ->whereNull('archived_at')
-            ->orderBy('name')
+            ->leftJoinSub($balances, 'reserve_balance_rows', function ($join): void {
+                $join->on('reserve_balance_rows.category_id', '=', 'categories.id');
+            })
+            ->where(function ($query): void {
+                $query->whereNull('categories.archived_at')
+                    ->orWhere('categories.nature', 'reserve');
+            })
+            ->orderBy('categories.name')
+            ->select('categories.*')
+            ->selectRaw('reserve_balance_rows.balance as reserve_balance')
             ->get();
+        $this->reserves->remember($categories
+            ->filter(fn (Category $category): bool => $category->nature === 'reserve' && $category->reserve_balance !== null)
+            ->mapWithKeys(fn (Category $category): array => [
+                (int) $category->id => Money::of($category->reserve_balance),
+            ])
+            ->all());
+        $categories = $categories
+            ->filter(fn (Category $category): bool => $category->archived_at === null)
+            ->values();
 
         return [
             'categories' => [
@@ -50,6 +81,7 @@ class TransactionOptionsService
             'paymentMethods' => PaymentMethodResource::collection(
                 PaymentMethod::query()->whereNull('archived_at')->orderBy('name')->get()
             )->resolve(),
+            'reserve_balances' => $this->reserves->balances(),
         ];
     }
 }

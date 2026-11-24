@@ -9,7 +9,7 @@ import Money from '../../components/Money/Money';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import TransactionModal, { NewTransactionButton } from '../../components/TransactionModal/TransactionModal';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
-import { formatDate, formatPlainMoney } from '../../lib/format';
+import { formatDate, formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import MoreFilters from './MoreFilters';
 import PeriodPopover from './PeriodPopover';
 import SaveFilterModal from './SaveFilterModal';
@@ -396,7 +396,7 @@ export default function Index({
                     </Card>
                     <Card className="summary-card">
                         <p className="summary-card__label">Reservado</p>
-                        <p className="summary-card__value summary-card__value--plain">{formatPlainMoney(summary.reserved)}</p>
+                        <p className="summary-card__value summary-card__value--plain">{formatNeutralMoney(summary.reserved)}</p>
                     </Card>
                     <Card className="summary-card">
                         <p className="summary-card__label">Saldo</p>

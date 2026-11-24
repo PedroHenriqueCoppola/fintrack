@@ -16,6 +16,7 @@ class DashboardService
         private PlanningService $planning,
         private CardInvoiceService $invoices,
         private NetWorthService $netWorth,
+        private GoalService $goals,
     ) {}
 
     /**
@@ -76,11 +77,7 @@ class DashboardService
         }
 
         if ($this->wants($only, 'goals')) {
-            $payload['goals'] = [
-                'message' => 'Você ainda não tem metas.',
-                'shortcut_label' => 'Ir para Metas',
-                'shortcut_href' => '/goals',
-            ];
+            $payload['goals'] = $this->goals->forDashboard();
         }
 
         return $payload;
@@ -260,7 +257,7 @@ class DashboardService
      */
     private function bars(array $range): array
     {
-        $months = $this->chartMonths($range);
+        $months = $this->periods->chartMonths($range);
         $start = Month::start($months[0]);
         $end = Month::end($months[array_key_last($months)]);
         $found = [];
@@ -317,67 +314,6 @@ class DashboardService
             'axis_max_cents' => $peak === 0 ? 100 : null,
             'points' => $points,
         ];
-    }
-
-    /**
-     * Months drawn on the bars. Fewer than three months in the period
-     * expands to the six months ending when the period ends, never after
-     * the current month. More than twelve keeps the last twelve.
-     *
-     * @param  array{from: ?string, to: ?string}  $range
-     * @return array<int, string>
-     */
-    private function chartMonths(array $range): array
-    {
-        $current = Month::currentKey();
-
-        if ($range['from'] === null || $range['to'] === null) {
-            return $this->monthWindow(Month::shift($current, -11) ?? $current, $current);
-        }
-
-        $start = substr($range['from'], 0, 7);
-        $end = substr($range['to'], 0, 7);
-        $count = $this->monthCount($start, $end);
-
-        if ($count < 3) {
-            $end = $end > $current ? $current : $end;
-            $start = Month::shift($end, -5) ?? $end;
-        } elseif ($count > 12) {
-            $start = Month::shift($end, -11) ?? $start;
-        }
-
-        return $this->monthWindow($start, $end);
-    }
-
-    private function monthCount(string $start, string $end): int
-    {
-        $startIndex = ((int) substr($start, 0, 4) * 12) + (int) substr($start, 5, 2);
-        $endIndex = ((int) substr($end, 0, 4) * 12) + (int) substr($end, 5, 2);
-
-        return $endIndex - $startIndex + 1;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function monthWindow(string $start, string $end): array
-    {
-        $months = [];
-        $cursor = $start;
-        $guard = 0;
-
-        while ($cursor !== null && $cursor <= $end && $guard < 18) {
-            $months[] = $cursor;
-
-            if ($cursor === $end) {
-                break;
-            }
-
-            $cursor = Month::shift($cursor, 1);
-            $guard++;
-        }
-
-        return $months === [] ? [$end] : $months;
     }
 
     /**

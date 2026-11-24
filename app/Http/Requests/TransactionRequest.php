@@ -21,7 +21,7 @@ class TransactionRequest extends FormRequest
     {
         $merge = [];
 
-        foreach (['competence_date', 'notes', 'card_id', 'bank_id'] as $key) {
+        foreach (['competence_date', 'notes', 'card_id', 'bank_id', 'reserve_action'] as $key) {
             if ($this->input($key) === '') {
                 $merge[$key] = null;
             }
@@ -46,6 +46,12 @@ class TransactionRequest extends FormRequest
     {
         return [
             'type' => ['required', 'string', Rule::in(['income', 'expense', 'reserve'])],
+            'reserve_action' => [
+                Rule::requiredIf(fn () => $this->input('type') === 'reserve'),
+                'nullable',
+                'string',
+                Rule::in(['deposit', 'withdraw']),
+            ],
             'status' => ['required', 'string', Rule::in(['paid', 'pending'])],
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'date' => ['bail', 'required', 'date_format:Y-m-d'],
@@ -73,6 +79,8 @@ class TransactionRequest extends FormRequest
         return [
             'type.required' => 'Escolha Despesa, Receita ou Reserva.',
             'type.in' => 'Escolha Despesa, Receita ou Reserva.',
+            'reserve_action.required' => 'Escolha Guardar ou Resgatar.',
+            'reserve_action.in' => 'Escolha Guardar ou Resgatar.',
             'status.required' => 'Escolha Paga ou Pendente.',
             'status.in' => 'Escolha Paga ou Pendente.',
             'amount.required' => 'Informe o valor.',
@@ -175,6 +183,8 @@ class TransactionRequest extends FormRequest
 
         if ($type === 'reserve') {
             $this->rejectReserveCard($validator);
+        } elseif ($this->filled('reserve_action')) {
+            $validator->errors()->add('reserve_action', 'Guardar ou Resgatar só vale para o tipo Reserva.');
         }
 
         if ($this->boolean('apply_amount_forward') && ! ($current instanceof Transaction && $current->fixed_expense_id)) {

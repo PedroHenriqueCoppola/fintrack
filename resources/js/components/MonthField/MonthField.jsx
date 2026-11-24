@@ -99,7 +99,7 @@ function yearHasMonth(year, min, max) {
     return false;
 }
 
-export default function MonthField({ label, value, onChange, error, hint, min, max, clearable = false }) {
+export default function MonthField({ label, value, onChange, error, hint, min, max, clearable = false, disabled = false }) {
     const id = useId();
     const labelId = `${id}-label`;
     const valueId = `${id}-value`;
@@ -191,6 +191,10 @@ export default function MonthField({ label, value, onChange, error, hint, min, m
     }
 
     function toggle() {
+        if (disabled) {
+            return;
+        }
+
         if (open) {
             close(true);
             return;
@@ -221,7 +225,7 @@ export default function MonthField({ label, value, onChange, error, hint, min, m
                         type="button"
                         aria-label={previousLabel}
                         title={previousLabel}
-                        disabled={previous === null || !allowed(previous, min, max)}
+                        disabled={disabled || previous === null || !allowed(previous, min, max)}
                         onClick={() => {
                             if (previous) {
                                 commit(previous);
@@ -239,6 +243,7 @@ export default function MonthField({ label, value, onChange, error, hint, min, m
                         aria-expanded={open}
                         aria-invalid={error ? 'true' : undefined}
                         aria-describedby={describedBy}
+                        disabled={disabled}
                         onClick={toggle}
                     >
                         <span id={valueId}>{labelText || 'Escolher mês'}</span>
@@ -247,7 +252,7 @@ export default function MonthField({ label, value, onChange, error, hint, min, m
                         type="button"
                         aria-label={nextLabel}
                         title={nextLabel}
-                        disabled={next === null || !allowed(next, min, max)}
+                        disabled={disabled || next === null || !allowed(next, min, max)}
                         onClick={() => {
                             if (next) {
                                 commit(next);

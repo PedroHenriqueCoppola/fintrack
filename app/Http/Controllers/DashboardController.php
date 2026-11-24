@@ -17,10 +17,16 @@ class DashboardController extends Controller
         TransactionOptionsService $options,
     ): Response {
         $only = $this->partial($request);
-        $page = $dashboard->page($request->filters(), $only);
+        $catalog = null;
 
         if ($only === null || in_array('options', $only, true)) {
-            $page['options'] = $options->catalog();
+            $catalog = $options->catalog();
+        }
+
+        $page = $dashboard->page($request->filters(), $only);
+
+        if ($catalog !== null) {
+            $page['options'] = $catalog;
         }
 
         return Inertia::render('Dashboard/Index', $page);

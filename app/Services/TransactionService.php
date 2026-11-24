@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Card;
+use App\Models\Category;
 use App\Models\FixedExpense;
 use App\Models\GeneratedSkip;
 use App\Models\Transaction;
@@ -11,12 +12,14 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TransactionService
 {
     public function __construct(
         private PeriodRange $periods,
         private PlanGenerator $generator,
+        private ReserveBalanceService $reserves,
     ) {}
 
     /**
@@ -24,11 +27,14 @@ class TransactionService
      */
     public function create(array $data): Transaction
     {
-        $transaction = new Transaction;
-        $this->fill($transaction, $data);
-        $transaction->save();
+        return DB::transaction(function () use ($data) {
+            $transaction = new Transaction;
+            $this->fill($transaction, $data);
+            $transaction->save();
+            $this->guardReserve(null, $transaction);
 
-        return $transaction;
+            return $transaction;
+        });
     }
 
     /**
@@ -45,27 +51,34 @@ class TransactionService
             $previous = $fixed instanceof FixedExpense ? Money::of($fixed->amount) : null;
         }
 
-        $this->fill($transaction, $data);
-        $transaction->save();
+        return DB::transaction(function () use ($transaction, $data, $apply, $fixed, $previous) {
+            $before = $this->reserveSnapshot($transaction);
+            $this->fill($transaction, $data);
+            $transaction->save();
+            $this->guardReserve($before, $transaction);
 
-        if ($fixed instanceof FixedExpense && $previous !== null) {
-            $fixed->amount = Money::of($transaction->amount);
-            $fixed->save();
-            $from = $transaction->generated_for?->toDateString() ?? $transaction->date->toDateString();
-            $this->generator->applyAmountForward($fixed, $previous, $from);
-        }
+            if ($fixed instanceof FixedExpense && $previous !== null && $apply) {
+                $fixed->amount = Money::of($transaction->amount);
+                $fixed->save();
+                $from = $transaction->generated_for?->toDateString() ?? $transaction->date->toDateString();
+                $this->generator->applyAmountForward($fixed, $previous, $from);
+            }
 
-        return $transaction;
+            return $transaction;
+        });
     }
 
     public function delete(Transaction $transaction): void
     {
         DB::transaction(function () use ($transaction) {
+            $before = $this->reserveSnapshot($transaction);
+
             if ($transaction->isGenerated()) {
                 $this->rememberSkip($transaction);
             }
 
             $transaction->delete();
+            $this->guardReserve($before, null);
         });
     }
 
@@ -97,18 +110,23 @@ class TransactionService
         $date = $transaction->date->toDateString();
         $movesToToday = $date > $today || ($date < $today && $transaction->card_id === null);
 
-        if ($movesToToday) {
-            if ($transaction->competence_date === null) {
-                $transaction->competence_date = $date;
+        return DB::transaction(function () use ($transaction, $movesToToday, $date, $today) {
+            $before = $this->reserveSnapshot($transaction);
+
+            if ($movesToToday) {
+                if ($transaction->competence_date === null) {
+                    $transaction->competence_date = $date;
+                }
+
+                $transaction->date = $today;
             }
 
-            $transaction->date = $today;
-        }
+            $transaction->status = 'paid';
+            $transaction->save();
+            $this->guardReserve($before, $transaction);
 
-        $transaction->status = 'paid';
-        $transaction->save();
-
-        return $transaction;
+            return $transaction;
+        });
     }
 
     /**
@@ -154,8 +172,8 @@ class TransactionService
     /**
      * Totals for the whole filter, not for the loaded page.
      * Receitas are paid income. Despesas are paid expenses. Reservado is
-     * paid reserve transactions and stays out of the balance: saving money
-     * does not take it away from the user. Balance is income minus expenses.
+     * paid deposits minus paid withdrawals and stays out of the balance.
+     * Balance is income minus expenses.
      *
      * @param  array<string, mixed>  $filters
      * @return array{count: int, income: string, expense: string, reserved: string, balance: string, average_expense: string}
@@ -288,7 +306,8 @@ class TransactionService
                 count(*) as aggregate_count,
                 coalesce(sum(amount) filter (where status = 'paid' and type = 'income'), 0) as income_total,
                 coalesce(sum(amount) filter (where status = 'paid' and type = 'expense'), 0) as spending_total,
-                coalesce(sum(amount) filter (where status = 'paid' and type = 'reserve'), 0) as reserved_total,
+                coalesce(sum(amount) filter (where status = 'paid' and type = 'reserve' and reserve_action = 'deposit'), 0)
+                - coalesce(sum(amount) filter (where status = 'paid' and type = 'reserve' and reserve_action = 'withdraw'), 0) as reserved_total,
                 count(*) filter (where status = 'paid' and type = 'income') as income_count,
                 count(*) filter (where status = 'paid' and type = 'expense') as spending_count
             ")
@@ -332,6 +351,7 @@ class TransactionService
         }
 
         $transaction->type = $data['type'];
+        $transaction->reserve_action = $data['type'] === 'reserve' ? $data['reserve_action'] : null;
         $transaction->status = $data['status'];
         $transaction->amount = Money::of($data['amount']);
         $transaction->date = $data['date'];
@@ -342,5 +362,147 @@ class TransactionService
         $transaction->bank_id = $bankId;
         $transaction->payment_method_id = $data['payment_method_id'];
         $transaction->card_id = $cardId;
+    }
+
+    /**
+     * @return array{type: string, status: string, reserve_action: ?string, category_id: ?int, amount: string, date: ?string}
+     */
+    private function reserveSnapshot(Transaction $transaction): array
+    {
+        return [
+            'type' => (string) $transaction->type,
+            'status' => (string) $transaction->status,
+            'reserve_action' => $transaction->reserve_action,
+            'category_id' => $transaction->category_id === null ? null : (int) $transaction->category_id,
+            'amount' => Money::of($transaction->amount),
+            'date' => $transaction->date?->toDateString(),
+        ];
+    }
+
+    /**
+     * After the row is written, both the previous and the new category must
+     * stay non-negative on every date. A failure rolls the transaction back.
+     *
+     * @param  array{type: string, status: string, reserve_action: ?string, category_id: ?int, amount: string, date: ?string}|null  $before
+     */
+    private function guardReserve(?array $before, ?Transaction $after): void
+    {
+        $categories = [];
+
+        foreach ([$before, $after] as $state) {
+            $categoryId = $this->paidReserveCategory($state);
+
+            if ($categoryId !== null) {
+                $categories[] = $categoryId;
+            }
+        }
+
+        $afterId = $after === null ? null : $this->paidReserveCategory($after);
+
+        usort($categories, function (int $left, int $right) use ($afterId): int {
+            return ($left === $afterId ? 0 : 1) <=> ($right === $afterId ? 0 : 1);
+        });
+
+        foreach (array_values(array_unique($categories)) as $categoryId) {
+            $shortfall = $this->reserves->firstShortfall($categoryId);
+
+            if ($shortfall === null) {
+                continue;
+            }
+
+            $withdraw = $this->paidReserveCategory($after) === $categoryId
+                && $after instanceof Transaction
+                && $after->reserve_action === 'withdraw';
+
+            throw ValidationException::withMessages([
+                $this->reserveField($before, $after, $categoryId) => $this->reserveMessage(
+                    $categoryId,
+                    $shortfall,
+                    $withdraw,
+                ),
+            ]);
+        }
+    }
+
+    /**
+     * @param  array{type: string, status: string, reserve_action: ?string, category_id: ?int, amount: string, date: ?string}|Transaction|null  $state
+     */
+    private function paidReserveCategory(array|Transaction|null $state): ?int
+    {
+        if ($state === null) {
+            return null;
+        }
+
+        $type = $state instanceof Transaction ? $state->type : $state['type'];
+        $status = $state instanceof Transaction ? $state->status : $state['status'];
+        $categoryId = $state instanceof Transaction ? $state->category_id : $state['category_id'];
+
+        if ($type !== 'reserve' || $status !== 'paid' || $categoryId === null) {
+            return null;
+        }
+
+        return (int) $categoryId;
+    }
+
+    /**
+     * @param  array{type: string, status: string, reserve_action: ?string, category_id: ?int, amount: string, date: ?string}|null  $before
+     */
+    private function reserveField(?array $before, ?Transaction $after, int $categoryId): string
+    {
+        if ($after === null) {
+            return 'delete';
+        }
+
+        if ($before === null) {
+            return 'amount';
+        }
+
+        if ((int) $before['category_id'] !== (int) $after->category_id && (int) $before['category_id'] === $categoryId) {
+            return 'category_id';
+        }
+
+        if ((int) $before['category_id'] !== (int) $after->category_id) {
+            return 'category_id';
+        }
+
+        if ($before['type'] !== $after->type) {
+            return 'type';
+        }
+
+        if ($before['reserve_action'] !== $after->reserve_action) {
+            return 'reserve_action';
+        }
+
+        if ($before['status'] !== $after->status) {
+            return 'status';
+        }
+
+        $afterDate = $after->date instanceof \DateTimeInterface
+            ? $after->date->format('Y-m-d')
+            : substr((string) $after->date, 0, 10);
+
+        if ($before['date'] !== $afterDate) {
+            return 'date';
+        }
+
+        return 'amount';
+    }
+
+    /**
+     * @param  array{date: string, missing: string}  $shortfall
+     */
+    private function reserveMessage(int $categoryId, array $shortfall, bool $withdraw): string
+    {
+        $when = substr($shortfall['date'], 8, 2).'/'.substr($shortfall['date'], 5, 2).'/'.substr($shortfall['date'], 0, 4);
+        $missing = Money::label($shortfall['missing']);
+
+        if ($withdraw) {
+            $category = Category::query()->find($categoryId);
+            $name = $category instanceof Category ? $category->name : 'Reserva';
+
+            return "Esse resgate passa do que está guardado em {$name} até {$when}: faltam {$missing}.";
+        }
+
+        return "Não é possível: resgates feitos depois dependem desse valor (faltariam {$missing} em {$when}).";
     }
 }

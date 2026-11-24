@@ -11,7 +11,7 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import TransactionModal, { NewTransactionButton } from '../../components/TransactionModal/TransactionModal';
 import UsageBar from '../../components/UsageBar/UsageBar';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
-import { formatDate, formatMoney, formatPlainMoney } from '../../lib/format';
+import { formatDate, formatMoney, formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import CatalogIcon from '../Manage/icons';
 import PeriodPopover from '../Analysis/PeriodPopover';
 import ReferenceSeal from '../../components/ReferenceSeal/ReferenceSeal';
@@ -120,7 +120,7 @@ function Indicator({ label, amount, plain = false, variation, comparison, suppor
         <>
             <p className="dashboard-label">{label}</p>
             <p className={plain ? 'dashboard-figure dashboard-figure--plain' : 'dashboard-figure'}>
-                {plain ? formatPlainMoney(amount) : <Money value={amount} />}
+                {plain ? formatNeutralMoney(amount) : <Money value={amount} />}
             </p>
             {legend ? <p className="dashboard-legend">{legend}</p> : null}
             <Variation variation={variation} comparison={comparison} />
@@ -479,7 +479,11 @@ export default function Index({
                                             </span>
                                             <span className="dashboard-cat__meta">
                                                 {transaction.category?.name}
-                                                {transaction.type === 'reserve' ? <span className="invoice-chip invoice-chip--neutral">Reserva</span> : null}
+                                                {transaction.type === 'reserve' ? (
+                                                    <span className="invoice-chip invoice-chip--neutral">
+                                                        {transaction.reserve_action === 'withdraw' ? 'Resgate' : 'Reserva'}
+                                                    </span>
+                                                ) : null}
                                                 {transactionMeta(transaction) ? ` · ${transactionMeta(transaction)}` : ''}
                                             </span>
                                         </span>
@@ -526,15 +530,35 @@ export default function Index({
                 <div className="dashboard-grid">
                     <Card className="dashboard-span-12">
                         <div className="dashboard-head">
-                            <h2>Metas em andamento</h2>
+                            <h2>Metas</h2>
                             <Link href={goals.shortcut_href}>Ver metas</Link>
                         </div>
-                        <EmptyState
-                            icon={Target}
-                            message={goals.message}
-                            shortcutLabel={goals.shortcut_label}
-                            shortcutHref={goals.shortcut_href}
-                        />
+                        {goals.items?.length ? (
+                            <div className="dashboard-goals">
+                                {goals.items.map((goal) => (
+                                    <Link key={goal.id} href={goal.href} className="dashboard-goal">
+                                        <span className="dashboard-goal__name">{goal.name}</span>
+                                        <span className="dashboard-goal__meta">
+                                            {`${formatPlainMoney(goal.progress)} de ${formatPlainMoney(goal.target_amount)}`}
+                                        </span>
+                                        <UsageBar
+                                            variant="meter"
+                                            percent={goal.percent}
+                                                complete={goal.reached}
+                                            label={`Progresso de ${goal.name}`}
+                                        />
+                                        <span className="dashboard-goal__percent">{`${goal.percent}%`}</span>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <EmptyState
+                                icon={Target}
+                                message={goals.message}
+                                shortcutLabel={goals.shortcut_label}
+                                shortcutHref={goals.shortcut_href}
+                            />
+                        )}
                     </Card>
                 </div>
             </div>

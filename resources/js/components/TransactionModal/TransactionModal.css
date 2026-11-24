@@ -40,6 +40,10 @@
     flex-wrap: wrap;
 }
 
+.tx-form > .tx-segment {
+    align-self: flex-start;
+}
+
 .tx-segment {
     display: inline-flex;
     gap: 0.4rem;
@@ -63,6 +67,11 @@
 .tx-segment__option--on {
     background: var(--color-accent);
     color: var(--color-accent-text);
+}
+
+.tx-segment__option:disabled {
+    opacity: 0.4;
+    cursor: default;
 }
 
 .tx-grid {

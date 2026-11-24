@@ -4,6 +4,7 @@ import {
     AreaChart,
     CartesianGrid,
     ResponsiveContainer,
+    ReferenceLine,
     Tooltip,
     XAxis,
     YAxis,
@@ -93,18 +94,26 @@ function AxisTick({ x, y, payload, axis }) {
     );
 }
 
-export default function EvolutionChart({ points, ariaLabel }) {
+export default function EvolutionChart({
+    points,
+    ariaLabel,
+    referenceValue = null,
+    referenceLabel = null,
+}) {
     const reduced = useReducedMotion();
     const gradientId = `evolution-${useId().replace(/:/g, '')}`;
     const lastIndex = points.length - 1;
+    const tickInterval = points.length > 12 ? Math.ceil(points.length / 12) - 1 : undefined;
+    const referenceCents = typeof referenceValue === 'number' ? referenceValue : null;
 
     if (!points.length) {
         return null;
     }
 
     return (
-        <div className="evolution-chart" role="img" aria-label={ariaLabel}>
-            <div className="evolution-chart__plot" aria-hidden="true">
+        <div className="evolution-chart">
+            <div className="evolution-chart__plot" role="img" aria-label={ariaLabel}>
+            <div className="evolution-chart__canvas" aria-hidden="true">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                         data={points}
@@ -123,6 +132,7 @@ export default function EvolutionChart({ points, ariaLabel }) {
                             axisLine={false}
                             tickLine={false}
                             minTickGap={16}
+                            interval={tickInterval}
                             tick={(props) => <AxisTick {...props} axis="x" />}
                         />
                         <YAxis
@@ -131,12 +141,23 @@ export default function EvolutionChart({ points, ariaLabel }) {
                             tickLine={false}
                             width={84}
                             domain={([min, max]) => {
-                                const low = Math.round(min);
-                                const high = Math.round(max);
-                                const span = high - low;
-                                const pad = span === 0 ? Math.max(Math.round(high / 10), 1) : Math.round(span / 5);
+                                let low = Math.round(min);
+                                let high = Math.round(max);
 
-                                return [low - pad, high + pad];
+                                if (referenceCents !== null) {
+                                    low = Math.min(low, referenceCents);
+                                    high = Math.max(high, referenceCents);
+                                }
+
+                                const span = high - low;
+                                const pad = span === 0 ? Math.max(Math.round(Math.abs(high) / 10), 1) : Math.round(span / 5);
+                                let floor = low - pad;
+
+                                if (low >= 0 && (referenceCents === null || referenceCents >= 0)) {
+                                    floor = Math.max(0, floor);
+                                }
+
+                                return [floor, high + pad];
                             }}
                             tick={(props) => <AxisTick {...props} axis="y" />}
                         />
@@ -145,6 +166,14 @@ export default function EvolutionChart({ points, ariaLabel }) {
                             cursor={{ stroke: 'var(--color-border)' }}
                             isAnimationActive={!reduced}
                         />
+                        {referenceCents !== null ? (
+                            <ReferenceLine
+                                y={referenceCents}
+                                stroke="var(--color-text-subtle)"
+                                strokeDasharray="4 4"
+                                ifOverflow="extendDomain"
+                            />
+                        ) : null}
                         <Area
                             type="monotone"
                             dataKey="cents"
@@ -179,6 +208,14 @@ export default function EvolutionChart({ points, ariaLabel }) {
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
+            </div>
+            {referenceLabel ? <p className="evolution-chart__legend">{referenceLabel}</p> : null}
+            <ul className="visually-hidden">
+                {points.map((point) => (
+                    <li key={`${point.label}-${point.caption}`}>{`${point.caption}: ${formatPlainMoney(point.value)}`}</li>
+                ))}
+                {referenceLabel ? <li>{referenceLabel}</li> : null}
+            </ul>
         </div>
     );
 }
