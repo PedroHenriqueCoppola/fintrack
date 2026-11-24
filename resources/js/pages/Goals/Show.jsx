@@ -229,7 +229,7 @@ export default function Show({
                     onConfirm={archive}
                     onCancel={() => setConfirming(false)}
                 >
-                    {`${goal.name} sai das listas e dos totais. Você pode restaurar depois.`}
+                    {`${goal.name} sai das listas. O total guardado e o gráfico geral continuam contando a categoria. Você pode restaurar depois.`}
                 </ConfirmDialog>
             ) : null}
         </>

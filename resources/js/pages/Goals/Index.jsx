@@ -122,7 +122,7 @@ export default function Index({
                         </div>
                         <Card>
                             <div className="goals-head">
-                                <h2>Evolução geral do guardado</h2>
+                                <h2>Total guardado nas categorias das metas</h2>
                             </div>
                             {chart.points.length === 0 ? (
                                 <p className="goals-note">{chart.empty_message}</p>

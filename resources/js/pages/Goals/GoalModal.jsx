@@ -25,7 +25,7 @@ function categoryNote(category) {
     }
 
     if (category.restarts) {
-        return 'Esta meta começa do zero, a partir do saldo de hoje.';
+        return 'Esta meta começa do zero e conta só o que for guardado a partir de hoje.';
     }
 
     return null;

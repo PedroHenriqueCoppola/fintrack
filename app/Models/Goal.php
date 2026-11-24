@@ -13,7 +13,7 @@ class Goal extends Model
     protected $fillable = [
         'name',
         'target_amount',
-        'baseline_amount',
+        'starts_on',
         'frozen_amount',
         'frozen_at',
         'deadline',
@@ -26,7 +26,7 @@ class Goal extends Model
     {
         return [
             'target_amount' => 'decimal:2',
-            'baseline_amount' => 'decimal:2',
+            'starts_on' => 'date',
             'frozen_amount' => 'decimal:2',
             'frozen_at' => 'datetime',
             'deadline' => 'date',
