@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\ValidatesPaymentTemplate;
 use App\Models\FixedExpense;
+use App\Rules\PlainText;
 use App\Support\Month;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -28,7 +29,7 @@ class FixedExpenseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PlainText],
             'category_id' => ['required', 'integer'],
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'due_day' => ['required', 'integer', 'between:1,31'],
@@ -37,7 +38,7 @@ class FixedExpenseRequest extends FormRequest
             'bank_id' => ['nullable', 'integer'],
             'payment_method_id' => ['required', 'integer'],
             'card_id' => ['nullable', 'integer'],
-            'notes' => ['nullable', 'string', 'max:500'],
+            'notes' => ['nullable', 'string', 'max:500', new PlainText],
             'user_id' => ['missing'],
         ];
     }

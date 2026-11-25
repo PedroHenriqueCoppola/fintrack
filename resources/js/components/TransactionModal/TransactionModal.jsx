@@ -9,6 +9,7 @@ import Modal from '../Modal/Modal';
 import MoneyInput from '../MoneyInput/MoneyInput';
 import ReferenceSeal from '../ReferenceSeal/ReferenceSeal';
 import Select from '../Select/Select';
+import TextInput from '../TextInput/TextInput';
 import { bankOption, cardOption, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
 import {
@@ -586,13 +587,11 @@ export default function TransactionModal({
                     </label>
                 ) : null}
                 <FormField label="Descrição" error={form.errors.description}>
-                    <input
-                        type="text"
-                        autoComplete="off"
+                    <TextInput
                         maxLength={120}
                         placeholder={form.data.type === 'reserve' ? 'Ex.: Aporte reserva de emergência' : undefined}
                         value={form.data.description}
-                        onChange={(event) => setField('description', event.target.value)}
+                        onChange={(value) => setField('description', value)}
                     />
                 </FormField>
                 <div className="tx-grid">
@@ -673,12 +672,10 @@ export default function TransactionModal({
                             <ReferenceSeal label={editing ? transaction?.competence_label : null} />
                         </div>
                         <FormField label="Observação (opcional)" error={form.errors.notes}>
-                            <input
-                                type="text"
-                                autoComplete="off"
+                            <TextInput
                                 maxLength={500}
                                 value={form.data.notes}
-                                onChange={(event) => setField('notes', event.target.value)}
+                                onChange={(value) => setField('notes', value)}
                             />
                         </FormField>
                     </div>

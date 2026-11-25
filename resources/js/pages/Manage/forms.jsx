@@ -4,6 +4,7 @@ import FormField from '../../components/FormField/FormField';
 import IntegerInput from '../../components/IntegerInput/IntegerInput';
 import Modal from '../../components/Modal/Modal';
 import Select from '../../components/Select/Select';
+import TextInput from '../../components/TextInput/TextInput';
 import { bankOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
 import ChoiceGroup from './ChoiceGroup';
@@ -85,12 +86,11 @@ export function BankForm({ item, colors, onClose }) {
         >
             <form id="bank-form" className="manage-form" noValidate onSubmit={submit}>
                 <FormField label="Nome" error={form.errors.name}>
-                    <input
-                        type="text"
+                    <TextInput
                         name="name"
-                        autoComplete="off"
+                        maxLength={255}
                         value={form.data.name}
-                        onChange={(event) => setField('name', event.target.value)}
+                        onChange={(value) => setField('name', value)}
                     />
                 </FormField>
                 <ChoiceGroup
@@ -146,12 +146,11 @@ export function CategoryForm({ item, colors, icons, categoryTypes, natures, onCl
             <form id="category-form" className="manage-form" noValidate onSubmit={submit}>
                 <p className="manage-lead">Organize o orçamento do jeito que faz sentido para você.</p>
                 <FormField label="Nome" error={form.errors.name}>
-                    <input
-                        type="text"
+                    <TextInput
                         name="name"
-                        autoComplete="off"
+                        maxLength={255}
                         value={form.data.name}
-                        onChange={(event) => setField('name', event.target.value)}
+                        onChange={(value) => setField('name', value)}
                     />
                 </FormField>
                 {item ? (
@@ -259,12 +258,11 @@ export function CardForm({ item, banks, colors, onClose }) {
         >
             <form id="card-form" className="manage-form" noValidate onSubmit={submit}>
                 <FormField label="Nome" error={form.errors.name}>
-                    <input
-                        type="text"
+                    <TextInput
                         name="name"
-                        autoComplete="off"
+                        maxLength={255}
                         value={form.data.name}
-                        onChange={(event) => setField('name', event.target.value)}
+                        onChange={(value) => setField('name', value)}
                     />
                 </FormField>
                 <FormField
@@ -338,12 +336,11 @@ export function PaymentMethodForm({ item, onClose }) {
         >
             <form id="payment-method-form" className="manage-form" noValidate onSubmit={submit}>
                 <FormField label="Nome" error={form.errors.name}>
-                    <input
-                        type="text"
+                    <TextInput
                         name="name"
-                        autoComplete="off"
+                        maxLength={255}
                         value={form.data.name}
-                        onChange={(event) => setField('name', event.target.value)}
+                        onChange={(value) => setField('name', value)}
                     />
                 </FormField>
                 <FormField label="Exige cartão" error={form.errors.requires_card}>

@@ -7,6 +7,7 @@ use App\Models\Bank;
 use App\Models\NetWorthClosing;
 use App\Services\NetWorthService;
 use App\Support\Month;
+use App\Rules\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 
 class NetWorthClosingRequest extends FormRequest
@@ -18,6 +19,16 @@ class NetWorthClosingRequest extends FormRequest
         return $this->user() !== null;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! is_string($this->input('notes'))) {
+            return;
+        }
+
+        $notes = PlainText::collapse($this->input('notes'));
+        $this->merge(['notes' => $notes === '' ? null : $notes]);
+    }
+
     /**
      * @return array<string, array<int, mixed>>
      */
@@ -25,7 +36,7 @@ class NetWorthClosingRequest extends FormRequest
     {
         return [
             'month' => ['required', 'string', 'regex:/^\d{4}-\d{2}$/'],
-            'notes' => ['nullable', 'string', 'max:500'],
+            'notes' => ['nullable', 'string', 'max:500', new PlainText],
             'items' => ['required', 'array'],
             'items.*.bank_id' => ['required', 'integer', 'min:1'],
             'items.*.balance' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999999.99'],

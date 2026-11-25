@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Support\CatalogGuard;
+use App\Rules\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -28,11 +29,11 @@ class TransactionRequest extends FormRequest
         }
 
         if (is_string($this->input('description'))) {
-            $merge['description'] = trim($this->input('description'));
+            $merge['description'] = PlainText::collapse($this->input('description'));
         }
 
         if (is_string($this->input('notes'))) {
-            $notes = trim($this->input('notes'));
+            $notes = PlainText::collapse($this->input('notes'));
             $merge['notes'] = $notes === '' ? null : $notes;
         }
 
@@ -56,8 +57,8 @@ class TransactionRequest extends FormRequest
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'date' => ['bail', 'required', 'date_format:Y-m-d'],
             'competence_date' => ['bail', 'nullable', 'date_format:Y-m-d'],
-            'description' => ['required', 'string', 'max:120'],
-            'notes' => ['nullable', 'string', 'max:500'],
+            'description' => ['required', 'string', 'max:120', new PlainText],
+            'notes' => ['nullable', 'string', 'max:500', new PlainText],
             'category_id' => ['required', 'integer'],
             'bank_id' => ['nullable', 'integer'],
             'payment_method_id' => ['required', 'integer'],

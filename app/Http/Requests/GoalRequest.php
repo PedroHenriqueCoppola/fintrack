@@ -7,6 +7,7 @@ use App\Models\Goal;
 use App\Services\GoalService;
 use App\Support\Money;
 use App\Support\Month;
+use App\Rules\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -22,11 +23,11 @@ class GoalRequest extends FormRequest
         $merge = [];
 
         if (is_string($this->input('name'))) {
-            $merge['name'] = trim($this->input('name'));
+            $merge['name'] = PlainText::collapse($this->input('name'));
         }
 
         if (is_string($this->input('notes'))) {
-            $notes = trim($this->input('notes'));
+            $notes = PlainText::collapse($this->input('notes'));
             $merge['notes'] = $notes === '' ? null : $notes;
         } elseif ($this->input('notes') === '') {
             $merge['notes'] = null;
@@ -49,11 +50,11 @@ class GoalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:60'],
+            'name' => ['required', 'string', 'max:60', new PlainText],
             'target_amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'category_id' => ['required', 'integer'],
             'deadline' => ['nullable', 'string', 'regex:/^\d{4}-\d{2}$/'],
-            'notes' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:255', new PlainText],
             'user_id' => ['missing'],
         ];
     }

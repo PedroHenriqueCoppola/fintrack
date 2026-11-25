@@ -5,6 +5,7 @@ import Modal from '../../components/Modal/Modal';
 import MoneyInput from '../../components/MoneyInput/MoneyInput';
 import MonthField from '../../components/MonthField/MonthField';
 import Select from '../../components/Select/Select';
+import TextInput from '../../components/TextInput/TextInput';
 import { categoryOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
 import { useToday } from '../../lib/format';
@@ -96,12 +97,10 @@ export default function GoalModal({ goal = null, categories, onClose }) {
                 <p className="goal-lead">O progresso vem do que foi guardado e resgatado na categoria.</p>
                 {frozen ? <p className="goals-note">{lockedHint}</p> : null}
                 <FormField label="Nome" error={form.errors.name}>
-                    <input
-                        type="text"
-                        autoComplete="off"
+                    <TextInput
                         maxLength={60}
                         value={form.data.name}
-                        onChange={(event) => setField('name', event.target.value)}
+                        onChange={(value) => setField('name', value)}
                     />
                 </FormField>
                 <FormField label="Valor alvo" error={form.errors.target_amount}>
@@ -131,12 +130,10 @@ export default function GoalModal({ goal = null, categories, onClose }) {
                     onChange={(value) => setField('deadline', value)}
                 />
                 <FormField label="Observação (opcional)" error={form.errors.notes}>
-                    <input
-                        type="text"
-                        autoComplete="off"
+                    <TextInput
                         maxLength={255}
                         value={form.data.notes}
-                        onChange={(event) => setField('notes', event.target.value)}
+                        onChange={(value) => setField('notes', value)}
                     />
                 </FormField>
             </form>

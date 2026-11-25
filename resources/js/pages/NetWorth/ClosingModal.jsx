@@ -6,6 +6,7 @@ import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
 import MoneyInput from '../../components/MoneyInput/MoneyInput';
+import TextInput from '../../components/TextInput/TextInput';
 import MonthField from '../../components/MonthField/MonthField';
 import { useFieldSetter } from '../../lib/fields';
 import {
@@ -346,9 +347,10 @@ export default function ClosingModal({ month, maxMonth, onClose }) {
                     <p className="closing-notice">Carregando…</p>
                 )}
                 <FormField label="Observações (opcional)" error={message(form.errors, 'notes')}>
-                    <input
+                    <TextInput
+                        maxLength={500}
                         value={form.data.notes}
-                        onChange={(event) => setField('notes', event.target.value)}
+                        onChange={(value) => setField('notes', value)}
                     />
                 </FormField>
             </form>

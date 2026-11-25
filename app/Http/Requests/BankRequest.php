@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,13 +13,20 @@ class BankRequest extends FormRequest
         return $this->user() !== null;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('name'))) {
+            $this->merge(['name' => PlainText::collapse($this->input('name'))]);
+        }
+    }
+
     /**
      * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', new PlainText],
             'color' => ['nullable', 'string', Rule::in(array_column(config('fintrack.colors'), 'value'))],
             'user_id' => ['missing'],
         ];

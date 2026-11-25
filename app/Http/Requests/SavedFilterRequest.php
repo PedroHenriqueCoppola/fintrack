@@ -7,6 +7,7 @@ use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
 use App\Support\AnalysisFilters;
+use App\Rules\PlainText;
 use App\Support\Money;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,7 +26,7 @@ class SavedFilterRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if (is_string($this->input('name'))) {
-            $this->merge(['name' => trim($this->input('name'))]);
+            $this->merge(['name' => PlainText::collapse($this->input('name'))]);
         }
     }
 
@@ -35,7 +36,7 @@ class SavedFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:40'],
+            'name' => ['required', 'string', 'max:40', new PlainText],
             'include_period' => ['required', 'boolean'],
             'filters' => ['present', 'array'],
             'filters.type' => ['nullable', 'string', Rule::in(['income', 'expense', 'reserve'])],

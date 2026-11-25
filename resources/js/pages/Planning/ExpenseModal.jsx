@@ -8,6 +8,7 @@ import Modal from '../../components/Modal/Modal';
 import MoneyInput from '../../components/MoneyInput/MoneyInput';
 import MonthField from '../../components/MonthField/MonthField';
 import Select from '../../components/Select/Select';
+import TextInput from '../../components/TextInput/TextInput';
 import { bankOption, cardOption, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { formatPlainMoney } from '../../lib/format';
 import { useFieldSetter } from '../../lib/fields';
@@ -147,7 +148,7 @@ export function FixedExpenseModal({ item, options, onClose }) {
             <form id="fixed-form" className="plan-form" noValidate onSubmit={submit}>
                 <p className="plan-lead">O valor padrão vira uma despesa pendente quando o mês é confirmado.</p>
                 <FormField label="Nome" error={form.errors.name}>
-                    <input value={form.data.name} autoComplete="off" onChange={(event) => setField('name', event.target.value)} />
+                    <TextInput maxLength={120} value={form.data.name} onChange={(value) => setField('name', value)} />
                 </FormField>
                 <FormField label="Categoria" error={form.errors.category_id}>
                     <Select
@@ -192,11 +193,11 @@ export function FixedExpenseModal({ item, options, onClose }) {
                 </div>
                 <PaymentFields form={form} setField={setField} options={options} />
                 <FormField label="Observação" error={form.errors.notes}>
-                    <textarea
+                    <TextInput
                         rows={3}
                         maxLength={500}
                         value={form.data.notes}
-                        onChange={(event) => setField('notes', event.target.value)}
+                        onChange={(value) => setField('notes', value)}
                     />
                 </FormField>
             </form>
@@ -290,7 +291,7 @@ export function InstallmentModal({ item, options, onClose }) {
             <form id="installment-form" className="plan-form" noValidate onSubmit={submit}>
                 <p className="plan-lead">Cada parcela vira uma despesa pendente no mês confirmado.</p>
                 <FormField label="Nome" error={form.errors.name}>
-                    <input value={form.data.name} autoComplete="off" onChange={(event) => setField('name', event.target.value)} />
+                    <TextInput maxLength={120} value={form.data.name} onChange={(value) => setField('name', value)} />
                 </FormField>
                 <FormField label="Categoria" error={form.errors.category_id}>
                     <Select
@@ -341,11 +342,11 @@ export function InstallmentModal({ item, options, onClose }) {
                 ) : null}
                 <PaymentFields form={form} setField={setField} options={options} />
                 <FormField label="Observação" error={form.errors.notes}>
-                    <textarea
+                    <TextInput
                         rows={3}
                         maxLength={500}
                         value={form.data.notes}
-                        onChange={(event) => setField('notes', event.target.value)}
+                        onChange={(value) => setField('notes', value)}
                     />
                 </FormField>
             </form>

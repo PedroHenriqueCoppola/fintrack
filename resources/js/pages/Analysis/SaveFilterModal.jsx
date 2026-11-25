@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
+import TextInput from '../../components/TextInput/TextInput';
 import { useFieldSetter } from '../../lib/fields';
 
 function storedFilters(filters, period, includePeriod) {
@@ -71,12 +72,10 @@ export default function SaveFilterModal({ filters, period, chips, onClose }) {
             <form id="save-filter-form" className="tx-form" noValidate onSubmit={submit}>
                 <p className="tx-lead">Dê um nome para aplicar esses filtros com um clique.</p>
                 <FormField label="Nome do filtro" error={form.errors.name}>
-                    <input
-                        type="text"
-                        autoComplete="off"
+                    <TextInput
                         maxLength={40}
                         value={form.data.name}
-                        onChange={(event) => setField('name', event.target.value, 'filters')}
+                        onChange={(value) => setField('name', value, 'filters')}
                     />
                 </FormField>
                 <div>
