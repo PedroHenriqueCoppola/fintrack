@@ -131,6 +131,7 @@ export default function GoalModal({ goal = null, categories, onClose }) {
                 />
                 <FormField label="Observação (opcional)" error={form.errors.notes}>
                     <TextInput
+                        rows={3}
                         maxLength={255}
                         value={form.data.notes}
                         onChange={(value) => setField('notes', value)}

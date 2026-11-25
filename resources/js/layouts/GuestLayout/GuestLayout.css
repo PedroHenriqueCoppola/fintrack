@@ -64,15 +64,8 @@
     letter-spacing: -0.02em;
 }
 
-.guest-brand__mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.guest-brand .logo--guest {
     width: 3.4rem;
     height: 3.4rem;
-    border-radius: 0.9rem;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-size: 1.7rem;
-    font-weight: 700;
+    flex-basis: 3.4rem;
 }

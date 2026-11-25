@@ -25,7 +25,7 @@ class NetWorthClosingRequest extends FormRequest
             return;
         }
 
-        $notes = PlainText::collapse($this->input('notes'));
+        $notes = PlainText::collapse($this->input('notes'), multiline: true);
         $this->merge(['notes' => $notes === '' ? null : $notes]);
     }
 
@@ -36,7 +36,7 @@ class NetWorthClosingRequest extends FormRequest
     {
         return [
             'month' => ['required', 'string', 'regex:/^\d{4}-\d{2}$/'],
-            'notes' => ['nullable', 'string', 'max:500', new PlainText],
+            'notes' => ['nullable', 'string', 'max:500', new PlainText(multiline: true)],
             'items' => ['required', 'array'],
             'items.*.bank_id' => ['required', 'integer', 'min:1'],
             'items.*.balance' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999999.99'],

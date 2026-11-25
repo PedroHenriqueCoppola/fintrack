@@ -17,11 +17,8 @@ class ReserveBalanceService
 
         return "coalesce(sum({$amount}) filter (where {$deposit}), 0) - coalesce(sum({$amount}) filter (where {$withdraw}), 0)";
     }
+
     /**
-     * Paid reserve balance of every category, one grouped query.
-     * A category with no paid reserve is absent. The balance is the whole
-     * history: a paid transaction cannot be in the future.
-     *
      * @var array<int, string>|null
      */
     private ?array $balances = null;
@@ -37,6 +34,10 @@ class ReserveBalanceService
     }
 
     /**
+     * Paid reserve balance of every category, one grouped query.
+     * A category with no paid reserve is absent. The balance is the whole
+     * history: a paid transaction cannot be in the future.
+     *
      * @return array<int, string>
      */
     public function balances(): array

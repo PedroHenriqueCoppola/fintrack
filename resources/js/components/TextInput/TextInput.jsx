@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import './TextInput.css';
 
-const PLAIN = /[^\p{L}\p{M}0-9 .,\-/&()'#+%]/gu;
+const PLAIN_CHARACTERS = '\\p{L}\\p{M}0-9 .,\\-/&()\'#+%:;!?"@$*';
 export const PLAIN_TEXT_MESSAGE = 'Use letras, números e pontuação simples.';
 
-export function keepPlainText(value) {
-    return String(value ?? '').replace(PLAIN, '');
+export function keepPlainText(value, multiline = false) {
+    const extra = multiline ? '\\n' : '';
+    const pattern = new RegExp(`[^${PLAIN_CHARACTERS}${extra}]`, 'gu');
+
+    return String(value ?? '').replace(pattern, '');
 }
 
 export default function TextInput({
@@ -34,14 +37,16 @@ export default function TextInput({
         timer.current = window.setTimeout(() => setNotice(''), 4000);
     }
 
+    const multiline = Boolean(rows);
+
     function apply(raw, cursor) {
-        const clean = keepPlainText(raw);
+        const clean = keepPlainText(raw, multiline);
 
         if (clean !== raw) {
             warn();
         }
 
-        const kept = keepPlainText(String(raw).slice(0, cursor)).length;
+        const kept = keepPlainText(String(raw).slice(0, cursor), multiline).length;
         onChange(clean);
 
         requestAnimationFrame(() => {
@@ -61,7 +66,7 @@ export default function TextInput({
             return;
         }
 
-        if (keepPlainText(event.data) !== event.data) {
+        if (keepPlainText(event.data, multiline) !== event.data) {
             event.preventDefault();
             warn();
         }

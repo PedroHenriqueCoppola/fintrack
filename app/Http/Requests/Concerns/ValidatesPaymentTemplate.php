@@ -24,7 +24,7 @@ trait ValidatesPaymentTemplate
         }
 
         if (is_string($this->input('notes'))) {
-            $notes = PlainText::collapse($this->input('notes'));
+            $notes = PlainText::collapse($this->input('notes'), multiline: true);
             $merge['notes'] = $notes === '' ? null : $notes;
         }
 

@@ -556,7 +556,7 @@ export default function Index({ definition, period, report, options, limits }) {
                                                         </thead>
                                                         <tbody>
                                                             {section.rows.map((row, rowIndex) => (
-                                                                <tr key={`${section.title || index}-${rowIndex}`}>
+                                                                <tr key={`${section.title || index}-${rowIndex}`} className={row.row_style === 'subtotal' ? 'reports-subtotal' : undefined}>
                                                                     {section.columns.map((column) => {
                                                                         const cell = row[column.key];
 

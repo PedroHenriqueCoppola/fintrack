@@ -367,6 +367,7 @@ export default function ClosingModal({ month, maxMonth, onClose }) {
                 )}
                 <FormField label="Observações (opcional)" error={message(form.errors, 'notes')}>
                     <TextInput
+                        rows={3}
                         maxLength={500}
                         value={form.data.notes}
                         onChange={(value) => setField('notes', value)}

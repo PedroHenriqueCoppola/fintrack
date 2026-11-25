@@ -34,7 +34,11 @@ class TransactionService
             $transaction = new Transaction;
             $this->fill($transaction, $data);
             $transaction->save();
-            $this->tags->sync($transaction, $data['tags'] ?? []);
+
+            if (array_key_exists('tags', $data)) {
+                $this->tags->sync($transaction, is_array($data['tags']) ? $data['tags'] : []);
+            }
+
             $this->guardReserve(null, $transaction);
 
             return $transaction;
@@ -66,7 +70,11 @@ class TransactionService
             }
 
             $transaction->save();
-            $this->tags->sync($transaction, $data['tags'] ?? []);
+
+            if (array_key_exists('tags', $data)) {
+                $this->tags->sync($transaction, is_array($data['tags']) ? $data['tags'] : []);
+            }
+
             $this->guardReserve($before, $transaction);
 
             if ($fixed instanceof FixedExpense && $previous !== null && $apply) {

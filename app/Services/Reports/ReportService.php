@@ -458,20 +458,32 @@ class ReportService
             }
         }
 
-        $banks = [
-            ...$accounts,
-            [
-                'bank' => 'Contas',
-                'kind' => 'Subtotal',
-                'balance' => $this->moneySum(array_column($accounts, 'balance')),
-            ],
-            ...$investments,
-            [
-                'bank' => 'Investimentos',
-                'kind' => 'Subtotal',
-                'balance' => $this->moneySum(array_column($investments, 'balance')),
-            ],
-        ];
+        $banks = [];
+
+        if ($accounts !== []) {
+            $banks = [
+                ...$accounts,
+                [
+                    'bank' => 'Contas',
+                    'kind' => 'Subtotal',
+                    'balance' => $this->moneySum(array_column($accounts, 'balance')),
+                    'row_style' => 'subtotal',
+                ],
+            ];
+        }
+
+        if ($investments !== []) {
+            $banks = [
+                ...$banks,
+                ...$investments,
+                [
+                    'bank' => 'Investimentos',
+                    'kind' => 'Subtotal',
+                    'balance' => $this->moneySum(array_column($investments, 'balance')),
+                    'row_style' => 'subtotal',
+                ],
+            ];
+        }
 
         return $this->pack('Patrimônio', [], [[
             'title' => null,
@@ -680,6 +692,10 @@ class ReportService
             }
 
             $presented[$column['key']] = $cell;
+        }
+
+        if (($row['row_style'] ?? null) === 'subtotal') {
+            $presented['row_style'] = 'subtotal';
         }
 
         return $presented;

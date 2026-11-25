@@ -39,7 +39,7 @@ class InstallmentRequest extends FormRequest
             'bank_id' => ['nullable', 'integer'],
             'payment_method_id' => ['required', 'integer'],
             'card_id' => ['nullable', 'integer'],
-            'notes' => ['nullable', 'string', 'max:500', new PlainText],
+            'notes' => ['nullable', 'string', 'max:500', new PlainText(multiline: true)],
             'user_id' => ['missing'],
         ];
 

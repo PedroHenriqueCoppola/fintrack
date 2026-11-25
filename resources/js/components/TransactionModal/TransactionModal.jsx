@@ -26,6 +26,16 @@ import './TransactionModal.css';
 
 const FUTURE_PAID_ERROR = 'Transação paga não pode ter data futura.';
 
+function tagError(errors) {
+    if (errors.tags) {
+        return errors.tags;
+    }
+
+    const key = Object.keys(errors).find((name) => /^tags\.\d+$/.test(name));
+
+    return key ? errors[key] : undefined;
+}
+
 function isoDate(value) {
     const parsed = parseBrDate(value);
 
@@ -633,7 +643,7 @@ export default function TransactionModal({
                         onChange={(value) => setField('description', value)}
                     />
                 </FormField>
-                <FormField label="Tags" error={form.errors.tags || form.errors['tags.0']}>
+                <FormField label="Tags" error={tagError(form.errors)}>
                     <TagInput
                         value={form.data.tags}
                         suggestions={options.tags ?? []}
@@ -713,6 +723,7 @@ export default function TransactionModal({
                         </div>
                         <FormField label="Observação (opcional)" error={form.errors.notes}>
                             <TextInput
+                                rows={3}
                                 maxLength={500}
                                 value={form.data.notes}
                                 onChange={(value) => setField('notes', value)}

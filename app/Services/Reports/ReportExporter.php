@@ -35,9 +35,11 @@ class ReportExporter
 
     private function pdf(ReportData $report): Response
     {
+        $mark = file_get_contents(public_path('brand/fintrack-mark-128.png'));
         $pdf = Pdf::loadView('reports.show', [
             'report' => $report,
             'formatter' => $this->formatter,
+            'mark' => $mark === false ? '' : 'data:image/png;base64,'.base64_encode($mark),
         ]);
         $pdf->setPaper('a4', $report->landscape ? 'landscape' : 'portrait');
         $pdf->setOption('default_font', 'DejaVu Sans');
@@ -143,7 +145,14 @@ class ReportExporter
             }
 
             foreach ($section['rows'] as $row) {
-                $this->writeDataRow($writer, $section['columns'], $row, false, $widths, $rowNumber);
+                $this->writeDataRow(
+                    $writer,
+                    $section['columns'],
+                    $row,
+                    ($row['row_style'] ?? null) === 'subtotal',
+                    $widths,
+                    $rowNumber,
+                );
             }
 
             if (! empty($section['totals'])) {

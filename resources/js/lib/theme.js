@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react';
+
 const THEME_KEY = 'theme';
+const THEME_EVENT = 'fintrack-theme';
 
 export function getStoredTheme() {
     try {
@@ -26,6 +29,25 @@ export function setTheme(theme) {
     }
 
     applyTheme(theme);
+    window.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: theme }));
+}
+
+export function useTheme() {
+    const [theme, setThemeState] = useState(() => (
+        document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
+    ));
+
+    useEffect(() => {
+        function onTheme(event) {
+            setThemeState(event.detail === 'light' ? 'light' : 'dark');
+        }
+
+        window.addEventListener(THEME_EVENT, onTheme);
+
+        return () => window.removeEventListener(THEME_EVENT, onTheme);
+    }, []);
+
+    return theme;
 }
 
 export function toggleTheme(current) {

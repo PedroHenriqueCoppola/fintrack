@@ -27,7 +27,7 @@ class GoalRequest extends FormRequest
         }
 
         if (is_string($this->input('notes'))) {
-            $notes = PlainText::collapse($this->input('notes'));
+            $notes = PlainText::collapse($this->input('notes'), multiline: true);
             $merge['notes'] = $notes === '' ? null : $notes;
         } elseif ($this->input('notes') === '') {
             $merge['notes'] = null;
@@ -54,7 +54,7 @@ class GoalRequest extends FormRequest
             'target_amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'category_id' => ['required', 'integer'],
             'deadline' => ['nullable', 'string', 'regex:/^\d{4}-\d{2}$/'],
-            'notes' => ['nullable', 'string', 'max:255', new PlainText],
+            'notes' => ['nullable', 'string', 'max:255', new PlainText(multiline: true)],
             'user_id' => ['missing'],
         ];
     }

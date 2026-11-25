@@ -15,7 +15,8 @@ import {
     Target,
 } from 'lucide-react';
 import CursorGlow from '../../components/CursorGlow/CursorGlow';
-import { toggleTheme } from '../../lib/theme';
+import Logo from '../../components/Logo/Logo';
+import { toggleTheme, useTheme } from '../../lib/theme';
 import './AppLayout.css';
 
 function initials(name) {
@@ -61,9 +62,7 @@ export default function AppLayout({ children }) {
     const profileRef = useRef(null);
     const [collapsed, setCollapsed] = useState(readCollapsed);
     const [menuOpen, setMenuOpen] = useState(false);
-    const [theme, setThemeState] = useState(() => (
-        document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
-    ));
+    const theme = useTheme();
 
     useEffect(() => {
         if (!menuOpen) {
@@ -98,7 +97,7 @@ export default function AppLayout({ children }) {
     }
 
     function onToggleTheme() {
-        setThemeState(toggleTheme(theme));
+        toggleTheme(theme);
     }
 
     function onLogout() {
@@ -111,7 +110,7 @@ export default function AppLayout({ children }) {
             <CursorGlow />
             <aside className="app-sidebar">
                 <Link href="/" className="brand" title="Fintrack">
-                    <span className="brand__mark" aria-hidden="true">F</span>
+                    <Logo />
                     <span className="sidebar-label">Fintrack</span>
                 </Link>
                 <nav className="app-nav" aria-label="Principal">

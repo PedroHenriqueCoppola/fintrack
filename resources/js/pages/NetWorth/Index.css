@@ -427,6 +427,10 @@
     font-weight: 500;
 }
 
+.net-worth-record__notes {
+    white-space: pre-line;
+}
+
 .net-worth-record__values span.is-positive {
     color: var(--color-positive);
 }

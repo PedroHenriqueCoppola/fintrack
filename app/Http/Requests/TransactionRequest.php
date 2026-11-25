@@ -34,7 +34,7 @@ class TransactionRequest extends FormRequest
         }
 
         if (is_string($this->input('notes'))) {
-            $notes = PlainText::collapse($this->input('notes'));
+            $notes = PlainText::collapse($this->input('notes'), multiline: true);
             $merge['notes'] = $notes === '' ? null : $notes;
         }
 
@@ -63,7 +63,7 @@ class TransactionRequest extends FormRequest
             'date' => ['bail', 'required', 'date_format:Y-m-d'],
             'competence_date' => ['bail', 'nullable', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:120', new PlainText],
-            'notes' => ['nullable', 'string', 'max:500', new PlainText],
+            'notes' => ['nullable', 'string', 'max:500', new PlainText(multiline: true)],
             'tags' => ['nullable', 'array', 'max:10'],
             'tags.*' => ['string', 'max:30', new PlainText],
             'category_id' => ['required', 'integer'],

@@ -8,7 +8,8 @@
         body { margin: 0; font-family: "DejaVu Sans", sans-serif; font-size: 10px; color: #1a1726; }
         .band { width: 100%; border-bottom: 1px solid #e0daee; margin: 0 0 16px; }
         .band td { padding: 0 0 8px; vertical-align: middle; }
-        .mark { display: inline-block; width: 16px; height: 16px; background: #7c4fd6; color: #fff; font-size: 10px; font-weight: 700; text-align: center; line-height: 16px; }
+        .mark { width: 22px; height: 22px; vertical-align: middle; }
+        table.data tr.subtotal td { font-weight: 700; }
         .brand { font-size: 12px; font-weight: 700; }
         .generated { color: #6f6a84; font-size: 9px; text-align: right; }
         h1 { margin: 0; font-size: 20px; font-weight: 700; }
@@ -40,7 +41,7 @@
 <body>
     <table class="band">
         <tr>
-            <td><span class="mark">F</span> <span class="brand">Fintrack</span></td>
+            <td>@if ($mark !== '')<img class="mark" src="{{ $mark }}" alt="" width="22" height="22">@endif <span class="brand">Fintrack</span></td>
             <td class="generated">Gerado em {{ $formatter->generatedAt($report->generatedAt) }}</td>
         </tr>
     </table>
@@ -83,7 +84,7 @@
                 </thead>
                 <tbody>
                     @foreach ($section['rows'] as $row)
-                        <tr>
+                        <tr class="{{ ($row['row_style'] ?? '') === 'subtotal' ? 'subtotal' : '' }}">
                             @foreach ($section['columns'] as $column)
                                 @php $cell = $row[$column['key']]; @endphp
                                 <td class="{{ in_array($column['type'], ['money', 'percent', 'integer'], true) ? 'num' : '' }} {{ $cell['tone'] === 'negative' ? 'neg' : ($cell['tone'] === 'positive' ? 'pos' : ($cell['tone'] === 'muted' ? 'muted' : '')) }}">
