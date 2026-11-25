@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
+import TextInput from '../../components/TextInput/TextInput';
 import GuestLayout from '../../layouts/GuestLayout/GuestLayout';
 import { useFieldSetter } from '../../lib/fields';
 import AuthFrame from './AuthFrame';
@@ -35,13 +36,13 @@ export default function Register() {
             >
                 <form className="auth-form" noValidate onSubmit={submit}>
                     <FormField label="Nome" error={form.errors.name}>
-                        <input
-                            type="text"
+                        <TextInput
                             name="name"
                             autoComplete="name"
                             autoFocus
+                            maxLength={255}
                             value={form.data.name}
-                            onChange={(event) => setField('name', event.target.value)}
+                            onChange={(value) => setField('name', value)}
                         />
                     </FormField>
                     <FormField label="E-mail" error={form.errors.email}>

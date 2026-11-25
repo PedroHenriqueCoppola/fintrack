@@ -6,7 +6,10 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Tag;
 use App\Support\AnalysisFilters;
+use App\Support\CatalogGuard;
+use App\Rules\PlainText;
 use App\Support\Money;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,7 +28,7 @@ class SavedFilterRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if (is_string($this->input('name'))) {
-            $this->merge(['name' => trim($this->input('name'))]);
+            $this->merge(['name' => PlainText::collapse($this->input('name'))]);
         }
     }
 
@@ -35,7 +38,7 @@ class SavedFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:40'],
+            'name' => ['required', 'string', 'max:40', new PlainText],
             'include_period' => ['required', 'boolean'],
             'filters' => ['present', 'array'],
             'filters.type' => ['nullable', 'string', Rule::in(['income', 'expense', 'reserve'])],
@@ -44,6 +47,8 @@ class SavedFilterRequest extends FormRequest
             'filters.bank_id' => ['nullable', 'integer', 'min:1'],
             'filters.card_id' => ['nullable', 'integer', 'min:1'],
             'filters.payment_method_id' => ['nullable', 'integer', 'min:1'],
+            'filters.tags' => ['nullable', 'array', 'max:20'],
+            'filters.tags.*' => ['integer', 'min:1'],
             'filters.min_amount' => ['nullable', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'filters.max_amount' => ['nullable', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'filters.q' => ['nullable', 'string', 'max:500'],
@@ -131,7 +136,12 @@ class SavedFilterRequest extends FormRequest
             $this->owned($validator, Category::class, $filters['category_id'] ?? null, 'filters.category_id', 'Escolha uma categoria.');
             $this->owned($validator, Bank::class, $filters['bank_id'] ?? null, 'filters.bank_id', 'Escolha um banco.');
             $this->owned($validator, Card::class, $filters['card_id'] ?? null, 'filters.card_id', 'Escolha um cartão.');
+            CatalogGuard::cardBelongsToBank($validator, $filters['bank_id'] ?? null, $filters['card_id'] ?? null, 'filters.card_id');
+            CatalogGuard::accountBank($validator, $filters['bank_id'] ?? null, 'filters.bank_id');
             $this->owned($validator, PaymentMethod::class, $filters['payment_method_id'] ?? null, 'filters.payment_method_id', 'Escolha uma forma de pagamento.');
+            foreach ((array) ($filters['tags'] ?? []) as $tagId) {
+                $this->owned($validator, Tag::class, $tagId, 'filters.tags', 'Escolha uma tag.');
+            }
 
             if ($validator->errors()->isNotEmpty()) {
                 return;
@@ -175,6 +185,12 @@ class SavedFilterRequest extends FormRequest
             if (! empty($filters[$key])) {
                 $clean[$key] = (int) $filters[$key];
             }
+        }
+
+        $tags = array_values(array_unique(array_map('intval', array_filter((array) ($filters['tags'] ?? [])))));
+
+        if ($tags !== []) {
+            $clean['tags'] = $tags;
         }
 
         foreach (['min_amount', 'max_amount'] as $key) {

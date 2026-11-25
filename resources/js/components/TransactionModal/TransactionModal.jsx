@@ -6,27 +6,57 @@ import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import DatePicker from '../DatePicker/DatePicker';
 import FormField from '../FormField/FormField';
 import Modal from '../Modal/Modal';
+import MoneyInput from '../MoneyInput/MoneyInput';
 import ReferenceSeal from '../ReferenceSeal/ReferenceSeal';
+import Select from '../Select/Select';
+import TagInput from '../TagInput/TagInput';
+import TextInput from '../TextInput/TextInput';
+import { bankOption, cardOption, cardsForBank, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
 import {
-    blurMoneyInput,
     formatDate,
-    formatMoneyInput,
     formatNeutralMoney,
     formatPlainMoney,
     isoFromDate,
     parseBrDate,
-    parseMoneyInput,
     useToday,
 } from '../../lib/format';
+import { moneyPayload } from '../../lib/moneyField';
 import './TransactionModal.css';
 
 const FUTURE_PAID_ERROR = 'Transação paga não pode ter data futura.';
+
+function tagError(errors) {
+    if (errors.tags) {
+        return errors.tags;
+    }
+
+    const key = Object.keys(errors).find((name) => /^tags\.\d+$/.test(name));
+
+    return key ? errors[key] : undefined;
+}
 
 function isoDate(value) {
     const parsed = parseBrDate(value);
 
     return parsed ? isoFromDate(parsed) : '';
+}
+
+const SHORT_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+function referenceLabel(dateText, competenceText) {
+    const date = parseBrDate(dateText);
+    const competence = parseBrDate(competenceText);
+
+    if (!date || !competence) {
+        return null;
+    }
+
+    if (date.getFullYear() === competence.getFullYear() && date.getMonth() === competence.getMonth()) {
+        return null;
+    }
+
+    return `${SHORT_MONTHS[competence.getMonth()]}/${competence.getFullYear()}`;
 }
 
 function plusYears(iso, years) {
@@ -65,10 +95,6 @@ export function NewTransactionButton({ onClick }) {
             Nova transação
         </Button>
     );
-}
-
-function moneyPayload(value) {
-    return parseMoneyInput(String(value ?? '').replace(/\s/g, '').replace(/^R\$/i, ''));
 }
 
 function datePayload(value) {
@@ -121,10 +147,6 @@ function reserveSupport(balances, data, transaction) {
     return '0.00';
 }
 
-function optionLabel(item) {
-    return item.archived ? `${item.name} (arquivado)` : item.name;
-}
-
 function buildInitial(mode, transaction, options, today, preset) {
     if (preset && (!transaction || mode === 'create')) {
         return {
@@ -134,6 +156,7 @@ function buildInitial(mode, transaction, options, today, preset) {
             amount: '',
             date: formatDate(today),
             description: '',
+            tags: [],
             category_id: String(preset.category_id ?? ''),
             bank_id: '',
             payment_method_id: '',
@@ -152,6 +175,7 @@ function buildInitial(mode, transaction, options, today, preset) {
             amount: '',
             date: formatDate(today),
             description: '',
+            tags: [],
             category_id: '',
             bank_id: '',
             payment_method_id: '',
@@ -169,9 +193,10 @@ function buildInitial(mode, transaction, options, today, preset) {
         type: transaction.type,
         reserve_action: transaction.reserve_action || 'deposit',
         status: duplicate ? 'paid' : transaction.status,
-        amount: formatMoneyInput(transaction.amount),
+        amount: transaction.amount == null ? '' : String(transaction.amount),
         date: formatDate(duplicate ? today : transaction.date),
         description: transaction.description ?? '',
+        tags: (transaction.tags ?? []).map((tag) => tag.name),
         category_id: duplicate ? known(categories, transaction.category?.id) : String(transaction.category?.id ?? ''),
         bank_id: duplicate ? known(options.banks, transaction.bank?.id) : String(transaction.bank?.id ?? ''),
         payment_method_id: duplicate
@@ -265,17 +290,6 @@ function Segment({ label, value, options, onChange }) {
     );
 }
 
-function SelectField({ value, onChange, children, disabled = false }) {
-    return (
-        <div className="tx-select">
-            <select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
-                {children}
-            </select>
-            <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-        </div>
-    );
-}
-
 export default function TransactionModal({
     mode,
     transaction = null,
@@ -322,10 +336,7 @@ export default function TransactionModal({
     const method = paymentMethods.find((item) => String(item.id) === String(form.data.payment_method_id));
     const card = cards.find((item) => String(item.id) === String(form.data.card_id));
     const requiresCard = Boolean(method?.requires_card);
-    const lockedBank = requiresCard && card;
-    const bankName = card?.bank_name
-        || banks.find((item) => String(item.id) === String(card?.bank_id))?.name
-        || '';
+    const visibleCards = cardsForBank(cards, form.data.bank_id);
     const dateLimit = form.data.status === 'pending' ? plusYears(today, 5) : today;
     const missing = [];
 
@@ -389,11 +400,31 @@ export default function TransactionModal({
 
     function changeMethod(id) {
         const next = paymentMethods.find((item) => String(item.id) === id);
-        setField((data) => ({
-            ...data,
-            payment_method_id: id,
-            card_id: next?.requires_card ? data.card_id : '',
-        }), 'payment_method_id', 'card_id', 'bank_id');
+        setField((data) => {
+            const current = cards.find((item) => String(item.id) === String(data.card_id));
+            const keep = Boolean(next?.requires_card)
+                && current
+                && (!data.bank_id || String(current.bank_id) === String(data.bank_id));
+
+            return {
+                ...data,
+                payment_method_id: id,
+                card_id: keep ? data.card_id : '',
+            };
+        }, 'payment_method_id', 'card_id', 'bank_id');
+    }
+
+    function changeBank(id) {
+        setField((data) => {
+            const current = cards.find((item) => String(item.id) === String(data.card_id));
+            const keep = !id || (current && String(current.bank_id) === String(id));
+
+            return {
+                ...data,
+                bank_id: id,
+                card_id: keep ? data.card_id : '',
+            };
+        }, 'bank_id', 'card_id');
     }
 
     function changeCard(id) {
@@ -433,6 +464,7 @@ export default function TransactionModal({
             amount: moneyPayload(form.data.amount),
             date: datePayload(form.data.date),
             description: form.data.description,
+            tags: form.data.tags,
             category_id: form.data.category_id || null,
             payment_method_id: form.data.payment_method_id || null,
             bank_id: requiresCard ? (card?.bank_id ?? null) : (form.data.bank_id || null),
@@ -575,18 +607,9 @@ export default function TransactionModal({
                 {form.errors.reserve_action ? <p className="tx-inline-error" role="alert">{form.errors.reserve_action}</p> : null}
                 <div className="tx-grid">
                     <FormField label="Valor" error={form.errors.amount}>
-                        <input
-                            className="tx-money"
-                            inputMode="decimal"
-                            autoComplete="off"
+                        <MoneyInput
                             value={form.data.amount}
-                            onChange={(event) => setField('amount', event.target.value)}
-                            onBlur={() => {
-                                const formatted = blurMoneyInput(form.data.amount);
-                                if (formatted !== null) {
-                                    setField('amount', formatted);
-                                }
-                            }}
+                            onChange={(value) => setField('amount', value)}
                         />
                     </FormField>
                     <DatePicker
@@ -613,13 +636,18 @@ export default function TransactionModal({
                     </label>
                 ) : null}
                 <FormField label="Descrição" error={form.errors.description}>
-                    <input
-                        type="text"
-                        autoComplete="off"
+                    <TextInput
                         maxLength={120}
                         placeholder={form.data.type === 'reserve' ? 'Ex.: Aporte reserva de emergência' : undefined}
                         value={form.data.description}
-                        onChange={(event) => setField('description', event.target.value)}
+                        onChange={(value) => setField('description', value)}
+                    />
+                </FormField>
+                <FormField label="Tags" error={tagError(form.errors)}>
+                    <TagInput
+                        value={form.data.tags}
+                        suggestions={options.tags ?? []}
+                        onChange={(tags) => setField('tags', tags)}
                     />
                 </FormField>
                 <div className="tx-grid">
@@ -632,54 +660,44 @@ export default function TransactionModal({
                                 ? `Guardado nesta categoria: ${formatNeutralMoney(supportBalance)}`
                                 : null)}
                     >
-                        <SelectField
+                        <Select
                             value={form.data.category_id}
                             disabled={lockCategory}
+                            placeholder="Escolha"
+                            emptyOption="Escolha"
+                            options={categories.map((item) => categoryOption(item))}
                             onChange={(value) => setField('category_id', value)}
-                        >
-                            <option value="">Escolha</option>
-                            {categories.map((item) => (
-                                <option key={item.id} value={item.id}>{optionLabel(item)}</option>
-                            ))}
-                        </SelectField>
+                        />
                     </FormField>
-                    <div className={lockedBank ? 'tx-locked' : undefined}>
-                        <FormField label="Banco" error={form.errors.bank_id}>
-                            {lockedBank ? (
-                                <input type="text" value={`${bankName} · do cartão`} disabled readOnly />
-                            ) : (
-                                <SelectField
-                                    value={form.data.bank_id}
-                                    onChange={(value) => setField('bank_id', value)}
-                                >
-                                    <option value="">Escolha</option>
-                                    {banks.map((item) => (
-                                        <option key={item.id} value={item.id}>{optionLabel(item)}</option>
-                                    ))}
-                                </SelectField>
-                            )}
-                        </FormField>
-                    </div>
+                    <FormField label="Banco" error={form.errors.bank_id}>
+                        <Select
+                            value={form.data.bank_id}
+                            placeholder="Escolha"
+                            emptyOption="Escolha"
+                            options={banks.map((item) => bankOption(item))}
+                            onChange={changeBank}
+                        />
+                    </FormField>
                 </div>
                 <div className={requiresCard ? 'tx-grid' : undefined}>
                     <FormField label="Forma de pagamento" error={form.errors.payment_method_id}>
-                        <SelectField value={form.data.payment_method_id} onChange={changeMethod}>
-                            <option value="">Escolha</option>
-                            {paymentMethods.map((item) => (
-                                <option key={item.id} value={item.id}>{optionLabel(item)}</option>
-                            ))}
-                        </SelectField>
+                        <Select
+                            value={form.data.payment_method_id}
+                            placeholder="Escolha"
+                            emptyOption="Escolha"
+                            options={paymentMethods.map((item) => namedOption(item))}
+                            onChange={changeMethod}
+                        />
                     </FormField>
                     {requiresCard ? (
                         <FormField label="Cartão" error={form.errors.card_id}>
-                            <SelectField value={form.data.card_id} onChange={changeCard}>
-                                <option value="">Escolha</option>
-                                {cards.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {`${optionLabel(item)} · fecha dia ${item.closing_day}`}
-                                    </option>
-                                ))}
-                            </SelectField>
+                            <Select
+                                value={form.data.card_id}
+                                placeholder="Escolha"
+                                emptyOption="Escolha"
+                                options={visibleCards.map((item) => cardOption(item, banks))}
+                                onChange={changeCard}
+                            />
                         </FormField>
                     ) : null}
                 </div>
@@ -701,15 +719,14 @@ export default function TransactionModal({
                                 error={form.errors.competence_date}
                                 onChange={(value) => setField('competence_date', value)}
                             />
-                            <ReferenceSeal label={editing ? transaction?.competence_label : null} />
+                            <ReferenceSeal label={referenceLabel(form.data.date, form.data.competence_date)} />
                         </div>
                         <FormField label="Observação (opcional)" error={form.errors.notes}>
-                            <input
-                                type="text"
-                                autoComplete="off"
+                            <TextInput
+                                rows={3}
                                 maxLength={500}
                                 value={form.data.notes}
-                                onChange={(event) => setField('notes', event.target.value)}
+                                onChange={(value) => setField('notes', value)}
                             />
                         </FormField>
                     </div>

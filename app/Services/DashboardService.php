@@ -455,6 +455,7 @@ class DashboardService
                 'card:id,name,closing_day,bank_id,archived_at',
                 'fixedExpense:id,name',
                 'installment:id,name,installments_count',
+                'tags:id,name',
             ])
             ->orderByDesc('date')
             ->orderByDesc('id')

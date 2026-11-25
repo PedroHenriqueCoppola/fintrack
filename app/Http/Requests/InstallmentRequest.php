@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Http\Requests\Concerns\ValidatesPaymentTemplate;
 use App\Models\Installment;
 use App\Services\InstallmentService;
+use App\Rules\PlainText;
 use App\Support\Money;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -33,12 +34,12 @@ class InstallmentRequest extends FormRequest
             && app(InstallmentService::class)->hasGenerated($installment);
 
         $rules = [
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PlainText],
             'category_id' => ['required', 'integer'],
             'bank_id' => ['nullable', 'integer'],
             'payment_method_id' => ['required', 'integer'],
             'card_id' => ['nullable', 'integer'],
-            'notes' => ['nullable', 'string', 'max:500'],
+            'notes' => ['nullable', 'string', 'max:500', new PlainText(multiline: true)],
             'user_id' => ['missing'],
         ];
 

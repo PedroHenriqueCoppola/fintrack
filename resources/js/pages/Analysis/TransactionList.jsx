@@ -21,6 +21,26 @@ function signedAmount(transaction) {
     return transaction.amount;
 }
 
+function TagChips({ tags }) {
+    const list = Array.isArray(tags) ? tags : [];
+
+    if (list.length === 0) {
+        return null;
+    }
+
+    const shown = list.slice(0, 3);
+    const extra = list.length - shown.length;
+
+    return (
+        <span className="tx-tags">
+            {shown.map((tag) => (
+                <span key={tag.id} className="tx-tag">{tag.name}</span>
+            ))}
+            {extra > 0 ? <span className="tx-tag">{`+${extra}`}</span> : null}
+        </span>
+    );
+}
+
 function Row({ transaction, onEdit, onPay, paying }) {
     return (
         <div
@@ -50,6 +70,7 @@ function Row({ transaction, onEdit, onPay, paying }) {
             <div className="tx-row__copy">
                 <div className="tx-row__title">
                     <span className="tx-row__name">{transaction.description}</span>
+                    <TagChips tags={transaction.tags} />
                     <ReferenceSeal label={transaction.competence_label} />
                     {transaction.status === 'pending' ? <span className="tx-badge">Pendente</span> : null}
                     {transaction.fixed_expense ? <span className="tx-badge tx-badge--neutral">Fixo</span> : null}
@@ -129,9 +150,15 @@ export default function TransactionList({ transactions, grouped, onEdit, onPay, 
 
     return (
         <div>
-            {groupsFor(transactions).map((group, index) => (
-                <section key={group.date} className={index === 0 ? 'tx-group' : 'tx-group tx-group--next'}>
-                    <div className="tx-day">
+            {groupsFor(transactions).map((group, index, groups) => {
+                const previous = groups[index - 1];
+                const showMonth = group.items[0]?.month_heading
+                    && group.items[0].month_heading !== previous?.items?.[0]?.month_heading;
+
+                return (
+                    <section key={group.date} className={index === 0 ? 'tx-group' : 'tx-group tx-group--next'}>
+                        {showMonth ? <p className="tx-month">{group.items[0].month_heading}</p> : null}
+                        <div className="tx-day">
                         <span>{formatLongDate(group.date)}</span>
                         {group.total != null ? <Money value={group.total} /> : null}
                     </div>
@@ -144,8 +171,9 @@ export default function TransactionList({ transactions, grouped, onEdit, onPay, 
                             paying={payingId === transaction.id}
                         />
                     ))}
-                </section>
-            ))}
+                    </section>
+                );
+            })}
         </div>
     );
 }

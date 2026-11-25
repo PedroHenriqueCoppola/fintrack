@@ -204,6 +204,49 @@ Linha principal em `--color-primary-soft`, 2.4px, pontas arredondadas, ponto fin
 - **Direita (o resto da largura): a prévia como documento.** Cabeçalho com título (2.4rem, 700), período com datas, etiquetas de filtro e, no canto direito, as ações: **"Baixar PDF"** (botão primário com ícone) e **"Baixar Excel"** (secundário com ícone). Abaixo, as caixas de indicadores (quando houver) e as tabelas. "Mostrando 50 de N" em texto pequeno abaixo da tabela.
 - Até 1280px: tudo empilhado (Configurar em cima, documento embaixo). Tabelas rolam na horizontal dentro do documento só quando não cabem.
 
+### Campo de seleção (módulo 11a; substitui o select nativo)
+
+- Botão com a aparência do campo de formulário (mesma altura, borda, fundo, raio, foco), mostrando o item escolhido com o ícone/cor quando houver (categoria: quadrado de ícone pequeno; banco: bolinha da cor) e uma seta `ChevronDown` que gira ao abrir.
+- Lista em popover com o mesmo visual do seletor de data: fundo `--color-modal`, borda `--color-modal-border`, `--shadow-modal`, raio `--radius-md`, altura máxima ~32rem com rolagem. Item com 3.6rem de altura, hover e item ativo com `--color-accent`/`--color-accent-text`, selecionado com `Check` à direita. Item arquivado com "(arquivado)" em texto suave. Grupos com rótulo pequeno em maiúsculas quando a lista tiver grupos.
+- Busca no topo da lista quando houver mais de 8 opções (ignora acento e maiúscula), com "Nenhum resultado".
+- Opção vazia ("Todos", "Todas", "Nenhum") quando o campo aceita vazio, sempre no topo.
+- Teclado: Enter/Espaço/↓ abre; ↑ ↓ Home End navegam; letras saltam para o item; Enter escolhe; Esc fecha e devolve o foco. Padrão ARIA de combobox + listbox. Dentro de modal, a lista não é cortada pela borda do modal.
+
+### Campo de valor (módulo 11a)
+
+- Mostra "1.234.567,89" enquanto digita: pontos de milhar automáticos, vírgula para centavos (no máximo 2 casas). Só aceita dígitos e uma vírgula; colar "R$ 1.234,56", "1234.56" ou "1.234,56" é normalizado. Prefixo "R$" fixo à esquerda dentro do campo, em texto suave. Texto alinhado à esquerda, como os outros campos. `inputMode="decimal"`.
+- Campos de número inteiro (dia, quantidade de parcelas) só aceitam dígitos, com mínimo e máximo.
+
+### Validação de texto (módulo 11a)
+
+- Texto aceita letras (com acento), números, espaço e . , - / & ( ) ' # + %. Caractere fora disso não entra no campo enquanto digita; colado, mostra o erro "Use letras, números e pontuação simples." no campo. O servidor valida igual.
+
+### Tags (módulo 11a)
+
+- No modal: campo de tags com chips (`--color-chip-bg`/`--color-chip-text`, raio cheio, "×" para remover), sugestões das tags existentes numa lista como a do campo de seleção. Na Análise, chips pequenos ao lado da descrição, no máximo 3 visíveis e "+N".
+
+### Banco de investimento (módulo 11a)
+
+- No Patrimônio, os bancos aparecem em dois grupos com título pequeno: "Contas" e "Investimentos", cada um com subtotal; o total geral continua em destaque.
+
+### Marca: símbolo e favicon (módulo 11a, correção)
+
+- Símbolo **Caixinhas**: quadrado arredondado em degradê roxo (`#8b5cf0` → `#6a3fc8`) com três cartões empilhados e três barras subindo no cartão da frente. Arquivos em `public/brand/` (vêm prontos no pacote): `fintrack-mark.svg` (símbolo completo), `fintrack-favicon.svg` (versão simplificada para tamanhos pequenos), `favicon.ico` (16, 32 e 48), `favicon-32.png`, `favicon-16.png`, `apple-touch-icon.png` (180) e `fintrack-mark-128.png` (para o PDF).
+- Uso: sidebar e telas de login/cadastro com o símbolo completo ao lado do nome "Fintrack" (o mesmo tamanho do quadrado "F" de hoje: 3.2rem; na sidebar recolhida, só o símbolo). Aba do navegador com o favicon. Cabeçalho do PDF dos relatórios com o PNG de 128 px exibido a 22 px. Não recolorir, não esticar, não pôr borda nem sombra.
+
+### Análise: painel "Mais filtros" (módulo 11a, correção)
+
+- Todos os campos numa linha só acima de 1280px: Buscar (mais largo, ~1.6×) e depois Categoria, Banco, Cartão (quando existir no painel), Pagamento, Tags e Valor, com a mesma largura. Abaixo de 1280px a grade quebra em linhas de três; abaixo de 900px, duas. Nada de campo sozinho numa segunda linha em tela larga.
+
+### Meu perfil (módulo 11a, correção)
+
+- Coluna única centralizada, largura máxima ~72rem, cards empilhados com espaço de 2.4rem.
+- **Cabeçalho de identidade** (card): avatar grande com as iniciais (7.2rem, fundo `--color-accent`, texto `--color-accent-text`, 2.6rem/700), ao lado o nome (2.2rem/700), o e-mail em texto secundário e "Conta criada em novembro de 2026" em texto suave.
+- **Dados** (card): Nome e E-mail lado a lado (uma coluna abaixo de 700px); botão "Salvar alterações" à direita, tamanho normal (não ocupa a largura toda), desabilitado enquanto nada mudou.
+- **Segurança** (card): Senha atual numa linha; Nova senha e Confirmar lado a lado; botão de mostrar/ocultar (ícone `Eye`/`EyeOff`) dentro de cada campo de senha; dica "Mínimo de 8 caracteres." abaixo da nova senha; botão "Trocar senha" à direita, tamanho normal. Texto pequeno: "Ao trocar a senha, as outras sessões abertas são encerradas."
+- **Aparência** (card): segmento "Escuro | Claro" ligado ao mesmo controle de tema do topo.
+- Cada card com título (1.6rem/600) e uma linha de descrição em texto secundário. Sucesso em aviso discreto no próprio card (não um banner no topo).
+
 ## 7. Movimento
 
 - Transição padrão: `var(--transition)` (0.25s, `cubic-bezier(0.4, 0, 0.2, 1)`) em cor, borda, fundo e `transform`.

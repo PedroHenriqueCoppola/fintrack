@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import Card from '../../components/Card/Card';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import Modal from '../../components/Modal/Modal';
 import CatalogIcon from './icons';
@@ -45,7 +46,7 @@ function ItemMarker({ item, fallbackIcon }) {
 }
 
 function firstError(errors) {
-    return errors.bank || errors.name || errors.bank_id || 'Não foi possível concluir.';
+    return errors.delete || errors.bank || errors.name || errors.bank_id || 'Não foi possível concluir.';
 }
 
 export default function CatalogList({
@@ -57,11 +58,13 @@ export default function CatalogList({
     onEdit,
     archivePath,
     restorePath,
+    deletePath,
     detail,
     fallbackIcon = null,
     groups = null,
 }) {
     const [pending, setPending] = useState(null);
+    const [deleting, setDeleting] = useState(null);
     const [actionError, setActionError] = useState('');
     const [busy, setBusy] = useState(false);
     const foldedQuery = fold(query);
@@ -107,6 +110,9 @@ export default function CatalogList({
                             {item.archived ? <span className="manage-badge">Arquivado</span> : null}
                         </div>
                         <p className="manage-card__detail">{detail(item)}</p>
+                        {item.usage_summary ? (
+                            <p className="manage-card__usage">{`Em uso: ${item.usage_summary}`}</p>
+                        ) : null}
                     </div>
                 </div>
                 <div className="manage-card__actions">
@@ -138,6 +144,19 @@ export default function CatalogList({
                             Arquivar
                         </Button>
                     )}
+                    {item.can_delete ? (
+                        <Button
+                            variant="quiet"
+                            aria-label={`Excluir ${item.name}`}
+                            disabled={busy}
+                            onClick={() => {
+                                setActionError('');
+                                setDeleting(item);
+                            }}
+                        >
+                            Excluir
+                        </Button>
+                    ) : null}
                 </div>
             </Card>
         );
@@ -223,6 +242,36 @@ export default function CatalogList({
                 </p>
                 {actionError ? <p className="manage-alert" role="alert">{actionError}</p> : null}
             </Modal>
+            <ConfirmDialog
+                open={deleting !== null}
+                title={deleting ? `Excluir ${deleting.name}?` : 'Excluir?'}
+                confirmLabel="Excluir"
+                busy={busy}
+                onConfirm={() => {
+                    if (!deleting) {
+                        return;
+                    }
+
+                    router.delete(deletePath(deleting), {
+                        preserveScroll: true,
+                        preserveState: true,
+                        onStart: () => setBusy(true),
+                        onFinish: () => setBusy(false),
+                        onSuccess: () => setDeleting(null),
+                        onError: (errors) => {
+                            setDeleting(null);
+                            setActionError(firstError(errors));
+                        },
+                    });
+                }}
+                onCancel={() => {
+                    if (!busy) {
+                        setDeleting(null);
+                    }
+                }}
+            >
+                Essa ação não pode ser desfeita.
+            </ConfirmDialog>
         </>
     );
 }

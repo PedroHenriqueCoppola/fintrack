@@ -1,16 +1,14 @@
-import { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import CursorGlow from '../../components/CursorGlow/CursorGlow';
-import { toggleTheme } from '../../lib/theme';
+import Logo from '../../components/Logo/Logo';
+import { toggleTheme, useTheme } from '../../lib/theme';
 import './GuestLayout.css';
 
 export default function GuestLayout({ children }) {
-    const [theme, setThemeState] = useState(() => (
-        document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
-    ));
+    const theme = useTheme();
 
     function onToggleTheme() {
-        setThemeState(toggleTheme(theme));
+        toggleTheme(theme);
     }
 
     return (
@@ -27,7 +25,7 @@ export default function GuestLayout({ children }) {
             <main className="guest-main">
                 <div className="guest-panel">
                     <p className="guest-brand">
-                        <span className="guest-brand__mark" aria-hidden="true">F</span>
+                        <Logo className="logo--guest" />
                         Fintrack
                     </p>
                     {children}

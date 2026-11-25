@@ -10,6 +10,7 @@ use App\Support\Money;
 use App\Support\Month;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
@@ -343,11 +344,29 @@ class CardInvoiceService
         $ids = $cards->modelKeys();
         $transactions = Transaction::query()
             ->where('type', 'expense')
-            ->whereIn('card_id', $ids)
-            ->get(['card_id', 'date', 'amount', 'status']);
+            ->whereIn('card_id', $ids);
+
+        if ($from !== null) {
+            $transactions->whereDate('date', '>=', Carbon::parse($from)->subMonths(2)->toDateString());
+        }
+
+        if ($to !== null) {
+            $transactions->whereDate('date', '<=', $to);
+        }
+
+        $transactions = $transactions->get(['card_id', 'date', 'amount', 'status']);
         $payments = CardInvoicePayment::query()
-            ->whereIn('card_id', $ids)
-            ->get(['card_id', 'closing_month', 'paid_on']);
+            ->whereIn('card_id', $ids);
+
+        if ($from !== null) {
+            $payments->whereDate('closing_month', '>=', Carbon::parse($from)->subMonth()->startOfMonth()->toDateString());
+        }
+
+        if ($to !== null) {
+            $payments->whereDate('closing_month', '<=', $to);
+        }
+
+        $payments = $payments->get(['card_id', 'closing_month', 'paid_on']);
         $purchases = [];
         $paid = [];
 
@@ -711,6 +730,7 @@ class CardInvoiceService
                 'card:id,name,closing_day,bank_id,archived_at',
                 'fixedExpense:id,name',
                 'installment:id,name,installments_count',
+                'tags:id,name',
             ])
             ->orderByDesc('date')
             ->orderByDesc('id')

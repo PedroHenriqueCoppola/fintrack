@@ -6,6 +6,7 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import Tabs from '../../components/Tabs/Tabs';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
 import CatalogList from './CatalogList';
+import TagPanel from './TagPanel';
 import { BankForm, CardForm, CategoryForm, PaymentMethodForm } from './forms';
 import './Index.css';
 
@@ -14,6 +15,7 @@ const TABS = [
     { id: 'banks', label: 'Bancos', create: 'Novo banco' },
     { id: 'cards', label: 'Cartões', create: 'Novo cartão' },
     { id: 'payment-methods', label: 'Pagamentos', create: 'Nova forma de pagamento' },
+    { id: 'tags', label: 'Tags', create: null },
 ];
 
 function labelFor(options, value) {
@@ -40,7 +42,7 @@ function cardDetail(item) {
     return `${item.bank_name} · fecha dia ${item.closing_day}${due}`;
 }
 
-function ManageTools({ query, onQueryChange, showArchived, onToggleArchived }) {
+function ManageTools({ query, onQueryChange, showArchived, onToggleArchived, allowArchive = true }) {
     return (
         <div className="manage-tools">
             <label className="manage-search">
@@ -54,18 +56,20 @@ function ManageTools({ query, onQueryChange, showArchived, onToggleArchived }) {
                     onChange={(event) => onQueryChange(event.target.value)}
                 />
             </label>
-            <Button
-                variant="secondary"
-                aria-pressed={showArchived}
-                onClick={onToggleArchived}
-            >
-                Mostrar arquivados
-            </Button>
+            {allowArchive ? (
+                <Button
+                    variant="secondary"
+                    aria-pressed={showArchived}
+                    onClick={onToggleArchived}
+                >
+                    Mostrar arquivados
+                </Button>
+            ) : null}
         </div>
     );
 }
 
-export default function Index({ banks, categories, cards, paymentMethods, options }) {
+export default function Index({ banks, categories, cards, paymentMethods, tags = [], options }) {
     const [tab, setTab] = useState('categories');
     const [query, setQuery] = useState('');
     const [showArchived, setShowArchived] = useState(false);
@@ -88,13 +92,13 @@ export default function Index({ banks, categories, cards, paymentMethods, option
             <div className="page">
                 <PageHeader
                     title="Gerenciar"
-                    subtitle="Deixe tudo do seu jeito: categorias, bancos, cartões e formas de pagamento."
-                    actions={(
+                    subtitle="Deixe tudo do seu jeito: categorias, bancos, cartões, formas de pagamento e tags."
+                    actions={current.create ? (
                         <Button onClick={() => setDialog({ kind: tab, item: null })}>
                             <Plus aria-hidden="true" strokeWidth={1.75} />
                             {current.create}
                         </Button>
-                    )}
+                    ) : null}
                 />
                 <Tabs
                     label="Cadastros"
@@ -106,6 +110,7 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                             onQueryChange={setQuery}
                             showArchived={showArchived}
                             onToggleArchived={() => setShowArchived((value) => !value)}
+                            allowArchive={tab !== 'tags'}
                         />
                     )}
                     tabs={[
@@ -122,6 +127,7 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                                     onEdit={(item) => setDialog({ kind: 'categories', item })}
                                     archivePath={(item) => `/manage/categories/${item.id}/archive`}
                                     restorePath={(item) => `/manage/categories/${item.id}/restore`}
+                                    deletePath={(item) => `/manage/categories/${item.id}`}
                                     detail={(item) => categoryDetail(item, options)}
                                     groups={[
                                         {
@@ -149,8 +155,13 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                                     onEdit={(item) => setDialog({ kind: 'banks', item })}
                                     archivePath={(item) => `/manage/banks/${item.id}/archive`}
                                     restorePath={(item) => `/manage/banks/${item.id}/restore`}
+                                    deletePath={(item) => `/manage/banks/${item.id}`}
                                     detail={(item) => bankDetail(item, options)}
                                     fallbackIcon="Landmark"
+                                    groups={[
+                                        { title: 'Contas', match: (item) => item.kind !== 'investment' },
+                                        { title: 'Investimentos', match: (item) => item.kind === 'investment' },
+                                    ]}
                                 />
                             ),
                         },
@@ -167,6 +178,7 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                                     onEdit={(item) => setDialog({ kind: 'cards', item })}
                                     archivePath={(item) => `/manage/cards/${item.id}/archive`}
                                     restorePath={(item) => `/manage/cards/${item.id}/restore`}
+                                    deletePath={(item) => `/manage/cards/${item.id}`}
                                     detail={cardDetail}
                                     fallbackIcon="CreditCard"
                                 />
@@ -185,10 +197,16 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                                     onEdit={(item) => setDialog({ kind: 'payment-methods', item })}
                                     archivePath={(item) => `/manage/payment-methods/${item.id}/archive`}
                                     restorePath={(item) => `/manage/payment-methods/${item.id}/restore`}
+                                    deletePath={(item) => `/manage/payment-methods/${item.id}`}
                                     detail={(item) => (item.requires_card ? 'Exige cartão' : 'Não exige cartão')}
                                     fallbackIcon={(item) => (item.requires_card ? 'CreditCard' : 'Wallet')}
                                 />
                             ),
+                        },
+                        {
+                            id: 'tags',
+                            label: 'Tags',
+                            panel: <TagPanel tags={tags} query={query} />,
                         },
                     ]}
                 />

@@ -465,6 +465,10 @@
     font-weight: 500;
 }
 
+.reports-scroll tbody tr.reports-subtotal td {
+    font-weight: 700;
+}
+
 .reports-scroll .num {
     text-align: right;
     white-space: nowrap;

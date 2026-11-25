@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
+import TextInput from '../../components/TextInput/TextInput';
 import { useFieldSetter } from '../../lib/fields';
 
 function storedFilters(filters, period, includePeriod) {
@@ -13,6 +14,9 @@ function storedFilters(filters, period, includePeriod) {
     if (filters.bank_id) payload.bank_id = Number(filters.bank_id);
     if (filters.card_id) payload.card_id = Number(filters.card_id);
     if (filters.payment_method_id) payload.payment_method_id = Number(filters.payment_method_id);
+    if (Array.isArray(filters.tags) && filters.tags.length) {
+        payload.tags = filters.tags.map((id) => Number(id));
+    }
     if (filters.min_amount) payload.min_amount = filters.min_amount;
     if (filters.max_amount) payload.max_amount = filters.max_amount;
     if (filters.q) payload.q = filters.q;
@@ -71,12 +75,10 @@ export default function SaveFilterModal({ filters, period, chips, onClose }) {
             <form id="save-filter-form" className="tx-form" noValidate onSubmit={submit}>
                 <p className="tx-lead">Dê um nome para aplicar esses filtros com um clique.</p>
                 <FormField label="Nome do filtro" error={form.errors.name}>
-                    <input
-                        type="text"
-                        autoComplete="off"
+                    <TextInput
                         maxLength={40}
                         value={form.data.name}
-                        onChange={(event) => setField('name', event.target.value, 'filters')}
+                        onChange={(value) => setField('name', value, 'filters')}
                     />
                 </FormField>
                 <div>

@@ -10,6 +10,7 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Tag;
 use App\Models\Transaction;
 use App\Support\Money;
 
@@ -29,11 +30,7 @@ class TransactionOptionsService
             ->where('type', 'reserve')
             ->where('status', 'paid')
             ->groupBy('category_id')
-            ->selectRaw("
-                category_id,
-                coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
-                - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as balance
-            ");
+            ->selectRaw('category_id, '.ReserveBalanceService::netSql().' as balance');
         $categories = Category::query()
             ->leftJoinSub($balances, 'reserve_balance_rows', function ($join): void {
                 $join->on('reserve_balance_rows.category_id', '=', 'categories.id');
@@ -69,7 +66,7 @@ class TransactionOptionsService
                 )->resolve(),
             ],
             'banks' => BankResource::collection(
-                Bank::query()->whereNull('archived_at')->orderBy('name')->get()
+                Bank::query()->account()->whereNull('archived_at')->orderBy('name')->get()
             )->resolve(),
             'cards' => CardResource::collection(
                 Card::query()
@@ -81,6 +78,10 @@ class TransactionOptionsService
             'paymentMethods' => PaymentMethodResource::collection(
                 PaymentMethod::query()->whereNull('archived_at')->orderBy('name')->get()
             )->resolve(),
+            'tags' => Tag::query()->orderBy('name')->get(['id', 'name'])->map(fn (Tag $tag): array => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+            ])->values()->all(),
             'reserve_balances' => $this->reserves->balances(),
         ];
     }

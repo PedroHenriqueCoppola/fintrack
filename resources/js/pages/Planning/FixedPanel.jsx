@@ -6,10 +6,14 @@ import Card from '../../components/Card/Card';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import FormField from '../../components/FormField/FormField';
+import IntegerInput from '../../components/IntegerInput/IntegerInput';
+import MoneyInput from '../../components/MoneyInput/MoneyInput';
+import Select from '../../components/Select/Select';
+import { categoryOption } from '../../lib/catalogOptions';
 import { formatPlainMoney } from '../../lib/format';
 import CatalogIcon from '../Manage/icons';
 import { FixedExpenseModal, InstallmentModal } from './ExpenseModal';
-import { moneyPayload, moneyText } from './fields';
+import { moneyPayload } from './fields';
 import { visitPlanning } from './visit';
 
 function plain(value) {
@@ -88,8 +92,8 @@ export default function FixedPanel({ page, editor, setEditor }) {
     const [archive, setArchive] = useState(null);
     const [archiving, setArchiving] = useState(false);
     const [percent, setPercent] = useState(String(fixed.high_impact_percent));
-    const [minAmount, setMinAmount] = useState(fixed.filters.min_amount ? moneyText(fixed.filters.min_amount) : '');
-    const [maxAmount, setMaxAmount] = useState(fixed.filters.max_amount ? moneyText(fixed.filters.max_amount) : '');
+    const [minAmount, setMinAmount] = useState(fixed.filters.min_amount ? String(fixed.filters.min_amount) : '');
+    const [maxAmount, setMaxAmount] = useState(fixed.filters.max_amount ? String(fixed.filters.max_amount) : '');
 
     function applyFilters(overrides) {
         visitPlanning(page, {
@@ -187,11 +191,12 @@ export default function FixedPanel({ page, editor, setEditor }) {
             </div>
             <FormField label="Alto impacto a partir de" hint="Porcentagem do planejado de gastos.">
                 <span className="plan-impact">
-                    <input
-                        inputMode="numeric"
+                    <IntegerInput
+                        min={1}
+                        max={100}
                         aria-label="Alto impacto a partir de"
                         value={percent}
-                        onChange={(event) => setPercent(event.target.value.replace(/\D/g, '').slice(0, 3))}
+                        onChange={setPercent}
                         onBlur={savePercent}
                     />
                     <span>%</span>
@@ -199,47 +204,44 @@ export default function FixedPanel({ page, editor, setEditor }) {
             </FormField>
             <div className="plan-filters">
                 <FormField label="Categoria">
-                    <select
+                    <Select
                         value={fixed.filters.category_id ?? ''}
-                        onChange={(event) => applyFilters({
-                            category_id: event.target.value || undefined,
+                        placeholder="Todas"
+                        emptyOption="Todas"
+                        options={(page.options.filter_categories ?? []).map((category) => categoryOption(category))}
+                        onChange={(value) => applyFilters({
+                            category_id: value || undefined,
                         })}
-                    >
-                        <option value="">Todas</option>
-                        {page.options.filter_categories.map((category) => (
-                            <option key={category.id} value={category.id}>{category.name}</option>
-                        ))}
-                    </select>
+                    />
                 </FormField>
                 <FormField label="Valor mínimo">
-                    <input
-                        inputMode="decimal"
+                    <MoneyInput
                         value={minAmount}
-                        onChange={(event) => setMinAmount(event.target.value)}
+                        onChange={setMinAmount}
                         onBlur={() => applyFilters({
                             min_amount: moneyPayload(minAmount) || undefined,
                         })}
                     />
                 </FormField>
                 <FormField label="Valor máximo">
-                    <input
-                        inputMode="decimal"
+                    <MoneyInput
                         value={maxAmount}
-                        onChange={(event) => setMaxAmount(event.target.value)}
+                        onChange={setMaxAmount}
                         onBlur={() => applyFilters({
                             max_amount: moneyPayload(maxAmount) || undefined,
                         })}
                     />
                 </FormField>
                 <FormField label="Ordenação">
-                    <select
+                    <Select
                         value={fixed.filters.sort}
-                        onChange={(event) => applyFilters({ sort: event.target.value })}
-                    >
-                        <option value="name">Nome</option>
-                        <option value="amount">Valor</option>
-                        <option value="due">Vencimento</option>
-                    </select>
+                        options={[
+                            { value: 'name', label: 'Nome' },
+                            { value: 'amount', label: 'Valor' },
+                            { value: 'due', label: 'Vencimento' },
+                        ]}
+                        onChange={(value) => applyFilters({ sort: value })}
+                    />
                 </FormField>
             </div>
             {listsEmpty ? (

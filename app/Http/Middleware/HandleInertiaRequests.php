@@ -41,6 +41,9 @@ class HandleInertiaRequests extends Middleware
                 'user' => fn () => $request->user()?->only(['id', 'name', 'email']),
             ],
             'today' => fn () => now(config('app.timezone'))->toDateString(),
+            'status' => fn () => $request->session()->get('status'),
+            'profile_saved' => fn () => $request->session()->get('profile_saved'),
+            'password_saved' => fn () => $request->session()->get('password_saved'),
         ];
     }
 }

@@ -15,7 +15,7 @@ O Fintrack é um sistema web de finanças pessoais que substitui a planilha e o 
 
 1. O backend é a fonte da verdade: todo cálculo de dinheiro acontece no servidor, e os valores ficam em `DECIMAL`.
 2. O uso básico precisa ser simples; os recursos avançados ficam opcionais.
-3. Nada que já tem histórico é apagado: o item é arquivado.
+3. Nada que já tem histórico é apagado: o item é arquivado. Cadastro **sem nenhum uso** (banco, categoria, cartão, forma de pagamento) pode ser excluído de verdade; meta pode ser excluída sempre (o progresso vem das transações); tag pode ser excluída sempre (sai das transações). (Módulo 11a.)
 4. Só computador. Não haverá trabalho de layout para celular.
 5. Roda localmente com Docker, com backup do banco.
 6. Projeto de portfólio: modo demo com dados fictícios, README com prints e documentação das regras.
@@ -157,6 +157,10 @@ Mantém o que o autor mais gostou, com o fechamento feito por banco.
 
 Todos os cadastros que servem para separar e organizar o sistema, em cards com ícone e cor, busca e contagem de uso. Criar e editar em modal. Item em uso é arquivado, não apagado.
 
+- **Excluir (módulo 11a):** o botão Excluir aparece só no item sem nenhum uso (nenhuma transação, cartão, fixo, parcelado, plano, meta, fechamento ou pagamento de fatura ligado a ele); com uso, só Arquivar, e o card diz por quê. Confirmação no modal padrão.
+- **Bancos de investimento (módulo 11a):** o banco tem o tipo **Conta** (padrão) ou **Investimento**. Investimento não recebe transações nem cartões e só aparece no fechamento do Patrimônio, num grupo próprio.
+- **Tags (módulo 11a):** lista de tags com o número de usos, renomear e excluir (a exclusão tira a tag das transações, com confirmação dizendo quantas).
+
 - Bancos, categorias (com natureza Gasto ou Reserva), cartões (ligados a um banco, com dia de fechamento) e formas de pagamento (Pix, Débito e Crédito de partida).
 - O tipo da transação é fixo (Receita, Despesa ou Reserva) e não tem cadastro.
 
@@ -287,7 +291,7 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 
 - **Parcelamento:** não entra no módulo 4. Nasce junto com os gastos fixos, no Planejamento (módulo 5).
 - **Tags:** ficam para depois do módulo 4. A data de competência entra agora.
-- **Exclusão de transação:** definitiva, com confirmação. A regra de nunca apagar de verdade vale para bancos, categorias, cartões e formas de pagamento.
+- **Exclusão de transação:** definitiva, com confirmação. A regra de nunca apagar de verdade vale para bancos, categorias, cartões e formas de pagamento **que já foram usados** (sem uso, podem ser excluídos a partir do módulo 11a).
 - **Banco e cartão:** ao escolher um cartão, o banco é o do cartão e fica travado.
 - **Pendente:** não entra nos totais do resumo (receitas, despesas, saldo e média). A quantidade conta todas as transações do filtro.
 - **Filtros:** ficam na URL, os salvos entram no módulo 4 e a lista carrega de 50 em 50.
@@ -356,7 +360,7 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Estados:** Ativa, Concluída (calculada) e Arquivada (congela o valor do dia). Sem pausada, cancelada nem exclusão. Filtro "Todas | Ativas | Concluídas | Arquivadas" na lista, com etiqueta de estado em cada card quando "Todas" está selecionado.
 - **Uma meta em curso por categoria, e recomeço do zero (ajuste pós-teste):** meta concluída não impede a próxima. Ao criar uma meta numa categoria que já teve metas, a nova conta só as reservas com data igual ou posterior ao dia da criação (um lançamento antigo, como de meses atrás, fica no histórico da meta anterior e não conta), e a meta concluída que estava na categoria é **congelada** no valor de hoje, sem ser arquivada (continua em Concluídas). Meta ainda em andamento continua impedindo uma nova na mesma categoria (o usuário conclui ou arquiva antes).
 - **Visualizações:** cards com barra de progresso, gráfico geral do total guardado e, no detalhe, o gráfico da meta. Metas usa o filtro de período padrão (decisão do autor), que não altera o progresso, só o que foi guardado no período e os gráficos.
-- **Exclusão de meta:** adiada. O autor quer decidir sobre exclusão (de metas e dos demais cadastros) no fim, na etapa de correções e estética: perguntar a ele nessa etapa.
+- **Exclusão de meta:** decidida no módulo 11a: meta pode ser excluída sempre, com confirmação.
 
 ### Módulo 10
 
@@ -365,3 +369,18 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **PDF e Excel**, os dois, gerados a partir da mesma tabela de dados que alimenta a prévia, para os três nunca discordarem. PDF sem gráficos desenhados: só a barra de percentual dentro da tabela dos Gastos por categoria.
 - **Mesma regra de números da Análise e do Dashboard:** valores por data da transação; filtros iguais aos da Análise. Os modelos prontos usam só Pagas. No construtor de Transações, as somas e os totais **seguem a situação escolhida** (Paga, Pendente ou Todas; padrão Paga) (ajuste da correção 1).
 - **Visual (correção 1):** formatação feita uma vez no servidor para prévia e PDF; despesas positivas e neutras; página com card "Configurar" à esquerda e a prévia como documento à direita, com os botões de download no próprio documento; PDF com cabeçalho Fintrack, caixas de indicadores e numeração de páginas sem execução de PHP.
+
+### Módulo 11a (formulários, cadastros e regras)
+
+- **Exclusão:** metas sempre (com confirmação); bancos, categorias, cartões e formas de pagamento só quando nunca foram usados; tags sempre (saem das transações). Com uso, continua só arquivar.
+- **Campo de valor com máscara:** digitar 1000000 mostra 1.000.000; a vírgula abre os centavos (1.000.000,50, no máximo 2 casas). Só dígitos e uma vírgula. O formulário envia o número no formato do servidor.
+- **Validação de texto:** nomes, descrições e observações aceitam letras (com acento), números, espaço e a pontuação . , - / & ( ) ' # + %; emoji e outros símbolos são recusados com mensagem no campo, no navegador e no servidor.
+- **Banco e cartão ligados nos dois sentidos**, no modal e nos filtros da Análise e dos relatórios: escolher um banco mostra só os cartões dele; escolher um cartão preenche o banco; trocar de banco limpa o cartão que não é dele.
+- **Campo de seleção próprio** no lugar do select nativo, com busca acima de 8 opções, ícone e cor de categoria e banco, teclado completo.
+- **Tags simples:** várias por transação, criadas no modal (Enter, com sugestão das existentes), sem cor; etiquetas na Análise; filtro por tag (qualquer uma das escolhidas) na Análise, nos filtros salvos e no construtor de relatórios; coluna Tags no Extrato.
+- **Investimentos no Patrimônio:** banco com tipo Investimento aparece só no fechamento, no grupo "Investimentos"; o Patrimônio mostra Contas + Investimentos = Total. Sem rentabilidade nem aportes.
+- **Perfil:** saudação com o nome da pessoa; página Meu perfil para trocar nome, e-mail e senha (senha exige a atual).
+- **Análise:** o separador de mês mostra o ano quando ele não é o atual ("Novembro de 2025").
+- **Pequenos ajustes:** Pendente → Paga no modal segue a regra de data do "marcar como paga" quando a data não foi mexida; selo "Ref." atualiza na hora no modal; a renda do Planejamento só salva quando o valor muda; tom da variação de Despesas invertido no Resumo dos relatórios (subir é ruim); relatório de Faturas lê só as compras perto do período; a conta "guardar menos resgatar" passa a existir num lugar só.
+- **Correção do 11a:** a pontuação aceita passa a incluir também : ; ! ? " @ $ * (dados antigos voltam a salvar), e os campos de Observação aceitam quebra de linha; trocar a senha encerra as outras sessões; símbolo "Caixinhas" na sidebar, no login, no favicon e no PDF; painel "Mais filtros" numa linha só; página Meu perfil redesenhada (identidade, dados, segurança e aparência).
+- **Fora (decisão do autor):** restaurar transação gerada excluída, pular faturas vazias, enxugar o Planejamento e mudar o Planejamento para data em vez de competência.

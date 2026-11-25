@@ -211,6 +211,11 @@ export default function Index({
                             <Card className="card--highlight net-worth-span-4 net-worth-indicator">
                                 <p className="net-worth-label">Patrimônio atual</p>
                                 <p className="net-worth-value">{formatPlainMoney(indicators.total)}</p>
+                                {indicators.accounts_total != null ? (
+                                    <p className="net-worth-split">
+                                        {`Contas ${formatPlainMoney(indicators.accounts_total)} · Investimentos ${formatPlainMoney(indicators.investments_total)}`}
+                                    </p>
+                                ) : null}
                                 <p className="net-worth-note">
                                     {indicators.variation_kind === 'amount' ? (
                                         <>
@@ -243,23 +248,34 @@ export default function Index({
                             {byBank ? (
                                 <Card className="net-worth-span-5" title={byBank.title}>
                                     <div className="net-worth-banks">
-                                        {byBank.banks.map((bank) => (
-                                            <div className="net-worth-bank" key={bank.id}>
-                                                <span
-                                                    className={bank.color ? 'net-worth-tile' : 'net-worth-tile net-worth-tile--plain'}
-                                                    style={bank.color ? { '--item-color': bank.color } : undefined}
-                                                >
-                                                    <Landmark aria-hidden="true" strokeWidth={1.75} />
-                                                </span>
-                                                <div className="net-worth-bank__name">
-                                                    <strong>{bank.name}</strong>
-                                                    <span className={toneClass(bank.variation_kind, bank.variation)}>
-                                                        {bank.variation_kind === 'amount'
-                                                            ? `Variação ${formatMoney(bank.variation)}`
-                                                            : amountVariation(bank.variation_kind, bank.variation)}
-                                                    </span>
-                                                </div>
-                                                <span className="net-worth-bank__balance">{formatPlainMoney(bank.balance)}</span>
+                                        {(byBank.groups ?? [{ title: null, total: null, banks: byBank.banks }]).map((group) => (
+                                            <div key={group.title ?? 'banks'}>
+                                                {group.title ? <p className="net-worth-group__title">{group.title}</p> : null}
+                                                {group.banks.map((bank) => (
+                                                    <div className="net-worth-bank" key={bank.id}>
+                                                        <span
+                                                            className={bank.color ? 'net-worth-tile' : 'net-worth-tile net-worth-tile--plain'}
+                                                            style={bank.color ? { '--item-color': bank.color } : undefined}
+                                                        >
+                                                            <Landmark aria-hidden="true" strokeWidth={1.75} />
+                                                        </span>
+                                                        <div className="net-worth-bank__name">
+                                                            <strong>{bank.name}</strong>
+                                                            <span className={toneClass(bank.variation_kind, bank.variation)}>
+                                                                {bank.variation_kind === 'amount'
+                                                                    ? `Variação ${formatMoney(bank.variation)}`
+                                                                    : amountVariation(bank.variation_kind, bank.variation)}
+                                                            </span>
+                                                        </div>
+                                                        <span className="net-worth-bank__balance">{formatPlainMoney(bank.balance)}</span>
+                                                    </div>
+                                                ))}
+                                                {group.total != null ? (
+                                                    <p className="net-worth-group__total">
+                                                        <span>Subtotal</span>
+                                                        <strong>{formatPlainMoney(group.total)}</strong>
+                                                    </p>
+                                                ) : null}
                                             </div>
                                         ))}
                                     </div>

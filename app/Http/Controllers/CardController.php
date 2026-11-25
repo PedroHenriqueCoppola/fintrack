@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CardRequest;
 use App\Models\Card;
 use App\Services\CardService;
+use App\Services\CatalogUsage;
 use Illuminate\Http\RedirectResponse;
 
 class CardController extends Controller
@@ -33,6 +34,13 @@ class CardController extends Controller
     public function restore(Card $card, CardService $cards): RedirectResponse
     {
         $cards->restore($card);
+
+        return back();
+    }
+
+    public function destroy(Card $card, CatalogUsage $usage): RedirectResponse
+    {
+        $usage->delete($card, 'card', 'card_id');
 
         return back();
     }

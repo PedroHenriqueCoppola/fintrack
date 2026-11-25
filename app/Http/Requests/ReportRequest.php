@@ -6,7 +6,9 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Tag;
 use App\Support\AnalysisFilters;
+use App\Support\CatalogGuard;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -43,6 +45,7 @@ class ReportRequest extends FormRequest
                 $clean['payment_method_id'] = $this->filledQuery('payment_method_id');
                 $clean['status'] = $this->filledQuery('status') ?? 'paid';
                 $clean['group_by'] = $this->filledQuery('group_by') ?? 'none';
+                $clean['tags'] = $this->integerList('tags');
             } elseif ($dataset === 'invoices') {
                 $clean['card_id'] = $this->filledQuery('card_id');
             } elseif ($dataset === 'goals') {
@@ -78,6 +81,8 @@ class ReportRequest extends FormRequest
             'bank_id' => ['nullable', 'integer', 'min:1'],
             'card_id' => ['nullable', 'integer', 'min:1'],
             'payment_method_id' => ['nullable', 'integer', 'min:1'],
+            'tags' => ['nullable', 'array', 'max:20'],
+            'tags.*' => ['integer', 'min:1'],
         ];
 
         if ($this->routeIs('reports.download')) {
@@ -112,6 +117,8 @@ class ReportRequest extends FormRequest
             'bank_id.integer' => 'Escolha um banco.',
             'card_id.integer' => 'Escolha um cartão.',
             'payment_method_id.integer' => 'Escolha uma forma de pagamento.',
+            'tags.array' => 'Escolha uma tag.',
+            'tags.*.integer' => 'Escolha uma tag.',
             'format.required' => 'Escolha PDF ou Excel.',
             'format.in' => 'Escolha PDF ou Excel.',
         ];
@@ -127,7 +134,12 @@ class ReportRequest extends FormRequest
             $this->owned($validator, Category::class, $this->input('category_id'), 'category_id', 'Escolha uma categoria.');
             $this->owned($validator, Bank::class, $this->input('bank_id'), 'bank_id', 'Escolha um banco.');
             $this->owned($validator, Card::class, $this->input('card_id'), 'card_id', 'Escolha um cartão.');
+            CatalogGuard::cardBelongsToBank($validator, $this->input('bank_id'), $this->input('card_id'));
+            CatalogGuard::accountBank($validator, $this->input('bank_id'));
             $this->owned($validator, PaymentMethod::class, $this->input('payment_method_id'), 'payment_method_id', 'Escolha uma forma de pagamento.');
+            foreach ((array) $this->input('tags', []) as $tagId) {
+                $this->owned($validator, Tag::class, $tagId, 'tags', 'Escolha uma tag.');
+            }
         });
     }
 
@@ -153,6 +165,9 @@ class ReportRequest extends FormRequest
             'bank_id' => isset($data['bank_id']) ? (int) $data['bank_id'] : null,
             'card_id' => isset($data['card_id']) ? (int) $data['card_id'] : null,
             'payment_method_id' => isset($data['payment_method_id']) ? (int) $data['payment_method_id'] : null,
+            'tag_ids' => $dataset === 'transactions'
+                ? array_values(array_unique(array_map('intval', $data['tags'] ?? [])))
+                : [],
             'status' => $dataset === 'transactions' ? ($data['status'] ?? 'paid') : 'paid',
             'group_by' => $dataset === 'transactions' ? ($data['group_by'] ?? 'none') : 'none',
             'goal_status' => $dataset === 'goals' ? ($data['goal_status'] ?? 'all') : 'all',
@@ -203,6 +218,10 @@ class ReportRequest extends FormRequest
                 if ($data['group_by'] !== 'none') {
                     $query['group_by'] = $data['group_by'];
                 }
+
+                if ($data['tag_ids'] !== []) {
+                    $query['tags'] = $data['tag_ids'];
+                }
             } elseif ($data['dataset'] === 'invoices') {
                 $this->put($query, 'card_id', $data['card_id']);
             } elseif ($data['dataset'] === 'goals' && $data['goal_status'] !== 'all') {
@@ -233,6 +252,20 @@ class ReportRequest extends FormRequest
         $value = trim($value);
 
         return $value === '' ? null : $value;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function integerList(string $key): array
+    {
+        $value = $this->query($key, []);
+
+        if (! is_array($value)) {
+            $value = $value === null || $value === '' ? [] : [$value];
+        }
+
+        return array_values(array_unique(array_filter(array_map('intval', $value))));
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use App\Rules\PlainText;
 use Illuminate\Validation\ValidationException;
 
 class RegisterRequest extends FormRequest
@@ -22,9 +23,15 @@ class RegisterRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $this->merge([
+        $merge = [
             'email' => Str::lower(trim((string) $this->input('email', ''))),
-        ]);
+        ];
+
+        if (is_string($this->input('name'))) {
+            $merge['name'] = PlainText::collapse($this->input('name'));
+        }
+
+        $this->merge($merge);
 
         RateLimiter::hit($this->throttleKey(), self::DECAY_SECONDS);
     }
@@ -35,8 +42,8 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'name' => ['required', 'string', 'max:255', new PlainText],
+            'email' => ['required', 'string', 'email:rfc', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
             'password_confirmation' => ['required', 'string', 'same:password'],
         ];

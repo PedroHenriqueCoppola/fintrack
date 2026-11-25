@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Category;
+use App\Rules\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,6 +12,13 @@ class CategoryRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user() !== null;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('name'))) {
+            $this->merge(['name' => PlainText::collapse($this->input('name'))]);
+        }
     }
 
     /**
@@ -22,7 +30,7 @@ class CategoryRequest extends FormRequest
         $editing = $category instanceof Category;
 
         $rules = [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', new PlainText],
             'icon' => ['nullable', 'string', Rule::in(array_column(config('fintrack.icons'), 'value'))],
             'color' => ['nullable', 'string', Rule::in(array_column(config('fintrack.colors'), 'value'))],
             'initial_month' => ['missing'],

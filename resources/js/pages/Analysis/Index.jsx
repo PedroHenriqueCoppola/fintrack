@@ -8,7 +8,9 @@ import EmptyState from '../../components/EmptyState/EmptyState';
 import Money from '../../components/Money/Money';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import TransactionModal, { NewTransactionButton } from '../../components/TransactionModal/TransactionModal';
+import Select from '../../components/Select/Select';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
+import { bankOption, cardOption, cardsForBank, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { formatDate, formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import MoreFilters from './MoreFilters';
 import PeriodPopover from './PeriodPopover';
@@ -49,6 +51,10 @@ function buildChips(filters, options) {
     if (filters.bank_id) chips.push({ key: 'bank_id', label: `Banco: ${nameOf(options.banks ?? [], filters.bank_id)}` });
     if (filters.payment_method_id) chips.push({ key: 'payment_method_id', label: `Pagamento: ${nameOf(options.paymentMethods ?? [], filters.payment_method_id)}` });
     if (filters.card_id) chips.push({ key: 'card_id', label: `Cartão: ${nameOf(options.cards ?? [], filters.card_id)}` });
+    if (Array.isArray(filters.tags) && filters.tags.length) {
+        const names = filters.tags.map((id) => nameOf(options.tags ?? [], id)).join(', ');
+        chips.push({ key: 'tags', label: `Tags: ${names}` });
+    }
     const typeLabels = { income: 'Receita', expense: 'Despesa', reserve: 'Reserva' };
     if (filters.type) chips.push({ key: 'type', label: `Tipo: ${typeLabels[filters.type] ?? filters.type}` });
     if (filters.status) chips.push({ key: 'status', label: `Status: ${filters.status === 'paid' ? 'Pagas' : 'Pendentes'}` });
@@ -157,7 +163,7 @@ export default function Index({
     function removeChip(key) {
         visitAnalysis({
             ...currentQuery(),
-            [key]: key === 'sort' ? 'date_desc' : '',
+            [key]: key === 'sort' ? 'date_desc' : (key === 'tags' ? [] : ''),
         });
     }
 
@@ -290,48 +296,51 @@ export default function Index({
                             </label>
                             <label className="filter-field">
                                 <span>Categoria</span>
-                                <div className="tx-select">
-                                    <select
-                                        value={filters.category_id ?? ''}
-                                        onChange={(event) => setFilter('category_id', event.target.value)}
-                                    >
-                                        <option value="">Todas</option>
-                                        {categoriesOf(options).map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-                                </div>
+                                <Select
+                                    value={filters.category_id ?? ''}
+                                    emptyOption="Todas"
+                                    placeholder="Todas"
+                                    options={categoriesOf(options).map((item) => categoryOption(item))}
+                                    onChange={(value) => setFilter('category_id', value)}
+                                />
                             </label>
                             <label className="filter-field">
                                 <span>Banco</span>
-                                <div className="tx-select">
-                                    <select
-                                        value={filters.bank_id ?? ''}
-                                        onChange={(event) => setFilter('bank_id', event.target.value)}
-                                    >
-                                        <option value="">Todos</option>
-                                        {(options.banks ?? []).map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-                                </div>
+                                <Select
+                                    value={filters.bank_id ?? ''}
+                                    emptyOption="Todos"
+                                    placeholder="Todos"
+                                    options={(options.banks ?? []).map((item) => bankOption(item))}
+                                    onChange={(value) => {
+                                        const card = (options.cards ?? []).find((item) => String(item.id) === String(filters.card_id));
+                                        const clearCard = value && card && String(card.bank_id) !== String(value);
+                                        visitAnalysis({
+                                            ...currentQuery(),
+                                            bank_id: value,
+                                            ...(clearCard ? { card_id: '' } : {}),
+                                        });
+                                    }}
+                                />
                             </label>
                             <label className="filter-field">
                                 <span>Pagamento</span>
-                                <div className="tx-select">
-                                    <select
-                                        value={filters.payment_method_id ?? ''}
-                                        onChange={(event) => setFilter('payment_method_id', event.target.value)}
-                                    >
-                                        <option value="">Todas</option>
-                                        {(options.paymentMethods ?? []).map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-                                </div>
+                                <Select
+                                    value={filters.payment_method_id ?? ''}
+                                    emptyOption="Todas"
+                                    placeholder="Todas"
+                                    options={(options.paymentMethods ?? []).map((item) => namedOption(item))}
+                                    onChange={(value) => setFilter('payment_method_id', value)}
+                                />
+                            </label>
+                            <label className="filter-field">
+                                <span>Tags</span>
+                                <Select
+                                    multiple
+                                    value={(filters.tags ?? []).map(String)}
+                                    placeholder="Todas"
+                                    options={(options.tags ?? []).map((item) => ({ value: String(item.id), label: item.name }))}
+                                    onChange={(value) => setFilter('tags', value)}
+                                />
                             </label>
                             <label className="filter-field">
                                 <span>Valor</span>

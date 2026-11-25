@@ -1,15 +1,12 @@
 import {
     formatDate,
-    formatMoneyInput,
     isoFromDate,
     parseBrDate,
-    parseMoneyInput,
 } from '../../lib/format';
+import { moneyPayload as canonicalPayload } from '../../lib/moneyField';
 
 export function moneyPayload(value, empty = '') {
-    const parsed = parseMoneyInput(String(value ?? '').replace(/\s/g, '').replace(/^R\$/i, ''));
-
-    return parsed === '' ? empty : parsed;
+    return canonicalPayload(value, empty);
 }
 
 export function datePayload(value) {
@@ -40,10 +37,6 @@ export function monthText(value) {
     }
 
     return `${match[2]}/${match[1]}`;
-}
-
-export function moneyText(value) {
-    return formatMoneyInput(value);
 }
 
 export { formatDate };

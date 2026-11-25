@@ -5,7 +5,7 @@ import { parseMoneyInput } from './format';
  * Accepts "8200.00" and the field text "8.200,00".
  */
 export function toCents(value) {
-    const parsed = parseMoneyInput(String(value ?? '').trim());
+    const parsed = parseMoneyInput(String(value ?? '').trim()).replace(/\.$/, '');
     const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(parsed);
 
     if (!match) {

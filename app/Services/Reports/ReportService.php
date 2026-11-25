@@ -6,6 +6,7 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Tag;
 use App\Models\Transaction;
 use App\Services\CardInvoiceService;
 use App\Services\GoalService;
@@ -440,12 +441,47 @@ class ReportService
         }
 
         $latest = $presented['records'][0];
-        $banks = [];
+        $accounts = [];
+        $investments = [];
 
         foreach ($latest['banks'] as $bank) {
-            $banks[] = [
+            $row = [
                 'bank' => $bank['name'],
+                'kind' => ($bank['kind'] ?? 'account') === 'investment' ? 'Investimento' : 'Conta',
                 'balance' => $bank['balance'],
+            ];
+
+            if (($bank['kind'] ?? 'account') === 'investment') {
+                $investments[] = $row;
+            } else {
+                $accounts[] = $row;
+            }
+        }
+
+        $banks = [];
+
+        if ($accounts !== []) {
+            $banks = [
+                ...$accounts,
+                [
+                    'bank' => 'Contas',
+                    'kind' => 'Subtotal',
+                    'balance' => $this->moneySum(array_column($accounts, 'balance')),
+                    'row_style' => 'subtotal',
+                ],
+            ];
+        }
+
+        if ($investments !== []) {
+            $banks = [
+                ...$banks,
+                ...$investments,
+                [
+                    'bank' => 'Investimentos',
+                    'kind' => 'Subtotal',
+                    'balance' => $this->moneySum(array_column($investments, 'balance')),
+                    'row_style' => 'subtotal',
+                ],
             ];
         }
 
@@ -463,6 +499,7 @@ class ReportService
             'title' => 'Por banco no último fechamento do período',
             'columns' => [
                 $this->column('bank', 'Banco', 'text'),
+                $this->column('kind', 'Tipo', 'text'),
                 $this->column('balance', 'Saldo', 'money'),
             ],
             'rows' => $banks,
@@ -642,11 +679,23 @@ class ReportService
         foreach ($columns as $column) {
             $cell = $this->formatter->present($row[$column['key']] ?? null, $column);
 
+            if (($row['metric'] ?? null) === 'Despesas' && in_array($column['key'], ['delta', 'share'], true)) {
+                $cell['tone'] = match ($cell['tone']) {
+                    'positive' => 'negative',
+                    'negative' => 'positive',
+                    default => $cell['tone'],
+                };
+            }
+
             if ($bar === $column['key']) {
                 $cell['bar'] = $this->formatter->barWidth($cell['raw']);
             }
 
             $presented[$column['key']] = $cell;
+        }
+
+        if (($row['row_style'] ?? null) === 'subtotal') {
+            $presented['row_style'] = 'subtotal';
         }
 
         return $presented;
@@ -759,6 +808,7 @@ class ReportService
         return [
             $this->column('date', 'Data', 'date'),
             $this->column('description', 'Descrição', 'text'),
+            $this->column('tags', 'Tags', 'text'),
             $this->column('category', 'Categoria', 'text'),
             $this->column('account', 'Banco/Cartão', 'text'),
             $this->column('payment', 'Forma de pagamento', 'text'),
@@ -783,6 +833,9 @@ class ReportService
         return [
             'date' => $transaction->date?->toDateString(),
             'description' => $transaction->description,
+            'tags' => $transaction->relationLoaded('tags') && $transaction->tags->isNotEmpty()
+                ? $transaction->tags->pluck('name')->implode(', ')
+                : '—',
             'category' => $transaction->category?->name ?? '—',
             'account' => $account,
             'payment' => $transaction->paymentMethod?->name ?? '—',
@@ -914,6 +967,16 @@ class ReportService
             }
         }
 
+        $tagIds = $definition['tag_ids'] ?? [];
+
+        if ($tagIds !== []) {
+            $names = Tag::query()->whereIn('id', $tagIds)->orderBy('name')->pluck('name');
+
+            if ($names->isNotEmpty()) {
+                $tags[] = ['label' => 'Tags', 'value' => $names->implode(', ')];
+            }
+        }
+
         if ($definition['status'] !== null && $definition['status'] !== 'paid') {
             $tags[] = [
                 'label' => 'Situação',
@@ -1012,6 +1075,20 @@ class ReportService
         }
 
         return $column;
+    }
+
+    /**
+     * @param  array<int, string>  $amounts
+     */
+    private function moneySum(array $amounts): string
+    {
+        $total = '0.00';
+
+        foreach ($amounts as $amount) {
+            $total = Money::add($total, $amount);
+        }
+
+        return $total;
     }
 
     private function brDate(string $date): string

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Concerns;
 
 use App\Models\Category;
 use App\Support\CatalogGuard;
+use App\Rules\PlainText;
 use Illuminate\Validation\Validator;
 
 trait ValidatesPaymentTemplate
@@ -19,11 +20,11 @@ trait ValidatesPaymentTemplate
         }
 
         if (is_string($this->input('name'))) {
-            $merge['name'] = trim($this->input('name'));
+            $merge['name'] = PlainText::collapse($this->input('name'));
         }
 
         if (is_string($this->input('notes'))) {
-            $notes = trim($this->input('notes'));
+            $notes = PlainText::collapse($this->input('notes'), multiline: true);
             $merge['notes'] = $notes === '' ? null : $notes;
         }
 

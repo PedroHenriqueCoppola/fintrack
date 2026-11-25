@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Transaction extends Model
 {
@@ -64,6 +65,11 @@ class Transaction extends Model
     public function installment(): BelongsTo
     {
         return $this->belongsTo(Installment::class);
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)->orderBy('name');
     }
 
     public function isGenerated(): bool

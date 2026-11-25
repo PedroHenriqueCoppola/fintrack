@@ -100,6 +100,11 @@ class GoalService
         $goal->save();
     }
 
+    public function delete(Goal $goal): void
+    {
+        $goal->delete();
+    }
+
     public function restore(Goal $goal): void
     {
         if ($goal->archived_at === null) {
@@ -181,10 +186,7 @@ class GoalService
             })
             ->groupBy('goals.id')
             ->select('goals.id')
-            ->selectRaw("
-                coalesce(sum(transactions.amount) filter (where transactions.reserve_action = 'deposit'), 0)
-                - coalesce(sum(transactions.amount) filter (where transactions.reserve_action = 'withdraw'), 0) as net
-            ")
+            ->selectRaw(ReserveBalanceService::netSql('transactions.amount', 'transactions.reserve_action').' as net')
             ->get();
         $progress = [];
 
@@ -604,12 +606,9 @@ class GoalService
 
         $nets = [];
 
-        foreach ($query->groupBy('category_id')->groupBy('date')->selectRaw("
-            category_id,
-            date,
-            coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
-            - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as net
-        ")->get() as $row) {
+        foreach ($query->groupBy('category_id')->groupBy('date')->selectRaw(
+            'category_id, date, '.ReserveBalanceService::netSql().' as net'
+        )->get() as $row) {
             $nets[(int) $row->category_id][substr((string) $row->date, 0, 10)] = Money::of($row->net);
         }
 
@@ -700,12 +699,11 @@ class GoalService
         $rows = $query
             ->groupBy('category_id')
             ->groupByRaw("to_char(date, 'YYYY-MM')")
-            ->selectRaw("
+            ->selectRaw('
                 category_id,
-                to_char(date, 'YYYY-MM') as month_key,
-                coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
-                - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as net
-            ")
+                to_char(date, \'YYYY-MM\') as month_key,
+                '.ReserveBalanceService::netSql().' as net
+            ')
             ->get();
 
         foreach ($rows as $row) {
@@ -785,36 +783,27 @@ class GoalService
             return ['saved' => '0.00', 'period' => '0.00'];
         }
 
-        $deposit = "reserve_action = 'deposit'";
-        $withdraw = "reserve_action = 'withdraw'";
-        $bindings = [];
+        $when = [];
+        $bounds = [];
 
         if ($from !== null) {
-            $deposit .= ' and date >= ?';
-            $withdraw .= ' and date >= ?';
+            $when[] = 'date >= ?';
+            $bounds[] = $from;
         }
 
         if ($to !== null) {
-            $deposit .= ' and date <= ?';
-            $withdraw .= ' and date <= ?';
-        }
-
-        foreach ([$from, $to, $from, $to] as $bound) {
-            if ($bound !== null) {
-                $bindings[] = $bound;
-            }
+            $when[] = 'date <= ?';
+            $bounds[] = $to;
         }
 
         $row = Transaction::query()
             ->where('type', 'reserve')
             ->where('status', 'paid')
             ->whereIn('category_id', $categoryIds)
-            ->selectRaw("
-                coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
-                - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as saved,
-                coalesce(sum(amount) filter (where {$deposit}), 0)
-                - coalesce(sum(amount) filter (where {$withdraw}), 0) as period_saved
-            ", $bindings)
+            ->selectRaw(
+                ReserveBalanceService::netSql().' as saved, '.ReserveBalanceService::netSql('amount', 'reserve_action', implode(' and ', $when)).' as period_saved',
+                array_merge($bounds, $bounds),
+            )
             ->first();
 
         return [
@@ -1034,6 +1023,7 @@ class GoalService
                 'card:id,name,closing_day,bank_id,archived_at',
                 'fixedExpense:id,name',
                 'installment:id,name,installments_count',
+                'tags:id,name',
             ])
             ->orderByDesc('date')
             ->orderByDesc('id')

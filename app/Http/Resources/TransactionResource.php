@@ -29,6 +29,7 @@ class TransactionResource extends JsonResource
             'status' => $this->status,
             'amount' => $this->amount,
             'date' => $this->date?->toDateString(),
+            'month_heading' => $this->date ? Month::heading($this->date->toDateString()) : null,
             'competence_date' => $this->competence_date?->toDateString(),
             'competence_label' => Month::competenceLabel(
                 $this->date?->toDateString(),
@@ -74,6 +75,10 @@ class TransactionResource extends JsonResource
                 'number' => $this->installment_number,
                 'count' => $this->installment?->installments_count,
             ],
+            'tags' => $this->whenLoaded('tags', fn () => $this->tags->map(fn ($tag) => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+            ])->values()->all()),
         ];
     }
 }

@@ -17,7 +17,10 @@ class BankResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'color' => $this->color,
+            'kind' => $this->kind ?? 'account',
             'archived' => $this->archived_at !== null,
+            'can_delete' => (bool) ($this->can_delete ?? false),
+            'usage_summary' => $this->usage_summary,
             'usage' => (int) $this->active_cards_count > 0
                 ? UsageLabel::count((int) $this->active_cards_count, 'cartão', 'cartões')
                 : null,

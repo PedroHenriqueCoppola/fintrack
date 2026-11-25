@@ -8,6 +8,7 @@ use App\Models\Goal;
 use App\Services\GoalService;
 use App\Services\TransactionOptionsService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -56,5 +57,12 @@ class GoalController extends Controller
         $goals->restore($goal);
 
         return back();
+    }
+
+    public function destroy(Request $request, Goal $goal, GoalService $goals): RedirectResponse
+    {
+        $goals->delete($goal);
+
+        return redirect()->route('goals', $request->query());
     }
 }

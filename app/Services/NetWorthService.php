@@ -172,6 +172,7 @@ class NetWorthService
                 'bank_id' => $bank->id,
                 'name' => $bank->name,
                 'color' => $bank->color,
+                'kind' => $bank->kind ?? 'account',
                 'balance' => $balance,
                 'reference_balance' => $previous === null
                     ? null
@@ -318,6 +319,8 @@ class NetWorthService
             'suggested_month' => $this->suggestedMonth($currentKey),
             'indicators' => [
                 'total' => $latest['total'] ?? null,
+                'accounts_total' => $latest === null ? null : $this->kindTotal($latest['banks'], 'account'),
+                'investments_total' => $latest === null ? null : $this->kindTotal($latest['banks'], 'investment'),
                 'variation' => $latest['variation'] ?? null,
                 'variation_kind' => $latest['variation_kind'] ?? 'none',
                 'last_label' => $latest === null ? null : Month::label($latest['month']),
@@ -326,6 +329,7 @@ class NetWorthService
             'by_bank' => $latest === null ? null : [
                 'title' => 'Por banco, em '.Month::name($latest['month'], true),
                 'banks' => $latest['banks'],
+                'groups' => $this->bankGroups($latest['banks']),
             ],
             'chart' => $this->chart($rows),
             'records' => array_reverse($rows),
@@ -416,6 +420,7 @@ class NetWorthService
                 'id' => $item->bank_id,
                 'name' => $item->bank->name,
                 'color' => $item->bank->color,
+                'kind' => $item->bank->kind ?? 'account',
                 'balance' => $balance,
                 'variation' => $variation,
                 'variation_kind' => $kind,
@@ -557,6 +562,51 @@ class NetWorthService
     private function orderedBanks(): Collection
     {
         return $this->banks ??= Bank::query()->orderBy('name')->orderBy('id')->get();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $banks
+     */
+    private function kindTotal(array $banks, string $kind): string
+    {
+        $total = '0.00';
+
+        foreach ($banks as $bank) {
+            if (($bank['kind'] ?? 'account') === $kind) {
+                $total = Money::add($total, $bank['balance']);
+            }
+        }
+
+        return $total;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $banks
+     * @return array<int, array{title: string, kind: string, total: string, banks: array<int, array<string, mixed>>}>
+     */
+    private function bankGroups(array $banks): array
+    {
+        $groups = [];
+
+        foreach (['account' => 'Contas', 'investment' => 'Investimentos'] as $kind => $title) {
+            $items = array_values(array_filter(
+                $banks,
+                fn (array $bank): bool => ($bank['kind'] ?? 'account') === $kind,
+            ));
+
+            if ($items === []) {
+                continue;
+            }
+
+            $groups[] = [
+                'title' => $title,
+                'kind' => $kind,
+                'total' => $this->kindTotal($items, $kind),
+                'banks' => $items,
+            ];
+        }
+
+        return $groups;
     }
 
     /**
