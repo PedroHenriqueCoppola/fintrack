@@ -58,6 +58,7 @@ export default function Select({
     placeholder = 'Escolha',
     emptyOption = null,
     searchable,
+    multiple = false,
     disabled = false,
     id,
     'aria-invalid': ariaInvalid,
@@ -75,8 +76,9 @@ export default function Select({
     const typeTimer = useRef(null);
     const stateRef = useRef({});
     const showSearch = searchable ?? options.length > SEARCH_AFTER;
-    const selected = options.find((option) => String(option.value) === String(value ?? ''));
-    const empty = emptyOption ? { value: '', label: emptyOption, empty: true } : null;
+    const selectedIds = new Set((Array.isArray(value) ? value : []).map(String));
+    const selected = multiple ? null : options.find((option) => String(option.value) === String(value ?? ''));
+    const empty = !multiple && emptyOption ? { value: '', label: emptyOption, empty: true } : null;
     const folded = fold(query);
     const visible = useMemo(() => {
         const matches = options.filter((option) => {
@@ -93,7 +95,7 @@ export default function Select({
         .map((option, index) => (option.disabled ? -1 : index))
         .filter((index) => index >= 0);
     stateRef.current = {
-        active, visible, enabledIndexes, showSearch, typed, onChange,
+        active, visible, enabledIndexes, showSearch, typed, onChange, multiple, value,
     };
 
     useLayoutEffect(() => {
@@ -189,10 +191,18 @@ export default function Select({
         }
 
         function choose(index) {
-            const { visible: items, onChange: change } = stateRef.current;
+            const { visible: items, onChange: change, multiple: many, value: currentValue } = stateRef.current;
             const option = items[index];
 
             if (!option || option.disabled) {
+                return;
+            }
+
+            if (many) {
+                const current = Array.isArray(currentValue) ? currentValue.map(String) : [];
+                const id = String(option.value);
+                const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+                change(next);
                 return;
             }
 
@@ -359,6 +369,7 @@ export default function Select({
             <ul
                 id={listId}
                 role="listbox"
+                aria-multiselectable={multiple ? 'true' : undefined}
                 className="select__list"
                 style={{ maxHeight: position?.maxHeight ?? 320 }}
             >
@@ -370,7 +381,9 @@ export default function Select({
                         {group.name ? <p className="select__group">{group.name}</p> : null}
                         <ul>
                             {group.items.map(({ option, index }) => {
-                                const chosen = option.empty ? String(value ?? '') === '' : String(option.value) === String(value ?? '');
+                                const chosen = multiple
+                                    ? selectedIds.has(String(option.value))
+                                    : (option.empty ? String(value ?? '') === '' : String(option.value) === String(value ?? ''));
 
                                 return (
                                     <li key={`${option.value}-${index}`}>
@@ -385,6 +398,16 @@ export default function Select({
                                             onMouseDown={(event) => event.preventDefault()}
                                             onClick={() => {
                                                 if (option.disabled) {
+                                                    return;
+                                                }
+
+                                                if (multiple) {
+                                                    const current = Array.isArray(value) ? value.map(String) : [];
+                                                    const id = String(option.value);
+                                                    const next = current.includes(id)
+                                                        ? current.filter((item) => item !== id)
+                                                        : [...current, id];
+                                                    onChange(next);
                                                     return;
                                                 }
 
@@ -408,7 +431,12 @@ export default function Select({
         </div>
     ) : null;
 
-    const closedLabel = selected?.label || (String(value ?? '') === '' && empty ? empty.label : '');
+    const multipleLabels = multiple
+        ? options.filter((option) => selectedIds.has(String(option.value))).map((option) => option.label)
+        : [];
+    const closedLabel = multiple
+        ? multipleLabels.join(', ')
+        : (selected?.label || (String(value ?? '') === '' && empty ? empty.label : ''));
 
     return (
         <div className={disabled ? 'select select--disabled' : 'select'}>
@@ -429,7 +457,7 @@ export default function Select({
                 onKeyDown={onButtonKey}
             >
                 {selected ? <OptionMark option={selected} /> : null}
-                <span className={closedLabel ? 'select__value' : 'select__value select__value--placeholder'}>
+                <span className={closedLabel ? 'select__value' : 'select__value select__value--placeholder'} title={multipleLabels.join(', ') || undefined}>
                     {closedLabel || placeholder}
                     {selected?.archived ? <span className="select__archived"> (arquivado)</span> : null}
                 </span>

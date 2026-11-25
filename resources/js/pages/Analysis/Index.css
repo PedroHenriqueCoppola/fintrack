@@ -365,6 +365,21 @@
     overflow-wrap: anywhere;
 }
 
+.tx-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.tx-tag {
+    padding: 0.1rem 0.7rem;
+    border-radius: 999px;
+    background: var(--color-chip-bg);
+    color: var(--color-chip-text);
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+
 .tx-row__meta {
     margin: 0.2rem 0 0;
     color: var(--color-text-subtle);

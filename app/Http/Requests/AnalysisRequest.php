@@ -6,6 +6,7 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Tag;
 use App\Support\AnalysisFilters;
 use App\Support\CatalogGuard;
 use App\Support\Money;
@@ -61,6 +62,8 @@ class AnalysisRequest extends FormRequest
             'bank_id' => ['nullable', 'integer', 'min:1'],
             'card_id' => ['nullable', 'integer', 'min:1'],
             'payment_method_id' => ['nullable', 'integer', 'min:1'],
+            'tags' => ['nullable', 'array', 'max:20'],
+            'tags.*' => ['integer', 'min:1'],
             'min_amount' => ['nullable', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'max_amount' => ['nullable', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'q' => ['nullable', 'string', 'max:500'],
@@ -87,6 +90,8 @@ class AnalysisRequest extends FormRequest
             'bank_id.integer' => 'Escolha um banco.',
             'card_id.integer' => 'Escolha um cartão.',
             'payment_method_id.integer' => 'Escolha uma forma de pagamento.',
+            'tags.array' => 'Escolha uma tag.',
+            'tags.*.integer' => 'Escolha uma tag.',
             'min_amount.numeric' => 'Informe um valor mínimo válido.',
             'min_amount.gt' => 'O valor mínimo precisa ser maior que zero.',
             'min_amount.decimal' => 'Informe o valor mínimo com no máximo duas casas decimais.',
@@ -119,6 +124,9 @@ class AnalysisRequest extends FormRequest
             $this->owned($validator, Card::class, $this->input('card_id'), 'card_id', 'Escolha um cartão.');
             CatalogGuard::cardBelongsToBank($validator, $this->input('bank_id'), $this->input('card_id'));
             $this->owned($validator, PaymentMethod::class, $this->input('payment_method_id'), 'payment_method_id', 'Escolha uma forma de pagamento.');
+            foreach ((array) $this->input('tags', []) as $tagId) {
+                $this->owned($validator, Tag::class, $tagId, 'tags', 'Escolha uma tag.');
+            }
         });
     }
 
@@ -140,6 +148,7 @@ class AnalysisRequest extends FormRequest
             'bank_id' => isset($data['bank_id']) ? (int) $data['bank_id'] : null,
             'card_id' => isset($data['card_id']) ? (int) $data['card_id'] : null,
             'payment_method_id' => isset($data['payment_method_id']) ? (int) $data['payment_method_id'] : null,
+            'tag_ids' => array_values(array_unique(array_map('intval', $data['tags'] ?? []))),
             'min_amount' => isset($data['min_amount']) ? Money::of($data['min_amount']) : null,
             'max_amount' => isset($data['max_amount']) ? Money::of($data['max_amount']) : null,
             'q' => $data['q'] ?? null,

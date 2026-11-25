@@ -5,8 +5,9 @@ namespace App\Http\Requests;
 use App\Models\Category;
 use App\Models\PaymentMethod;
 use App\Models\Transaction;
-use App\Support\CatalogGuard;
 use App\Rules\PlainText;
+use App\Support\CatalogGuard;
+use App\Support\NameNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -37,6 +38,10 @@ class TransactionRequest extends FormRequest
             $merge['notes'] = $notes === '' ? null : $notes;
         }
 
+        if (is_array($this->input('tags'))) {
+            $merge['tags'] = $this->collapsedTags($this->input('tags'));
+        }
+
         $this->merge($merge);
     }
 
@@ -59,6 +64,8 @@ class TransactionRequest extends FormRequest
             'competence_date' => ['bail', 'nullable', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:120', new PlainText],
             'notes' => ['nullable', 'string', 'max:500', new PlainText],
+            'tags' => ['nullable', 'array', 'max:10'],
+            'tags.*' => ['string', 'max:30', new PlainText],
             'category_id' => ['required', 'integer'],
             'bank_id' => ['nullable', 'integer'],
             'payment_method_id' => ['required', 'integer'],
@@ -95,6 +102,8 @@ class TransactionRequest extends FormRequest
             'description.required' => 'Informe a descrição.',
             'description.max' => 'A descrição pode ter no máximo 120 caracteres.',
             'notes.max' => 'A observação pode ter no máximo 500 caracteres.',
+            'tags.max' => 'Uma transação pode ter no máximo 10 tags.',
+            'tags.*.max' => 'A tag pode ter no máximo 30 caracteres.',
             'category_id.required' => 'Escolha a categoria.',
             'category_id.integer' => 'Escolha a categoria.',
             'bank_id.integer' => 'Escolha o banco.',
@@ -231,6 +240,40 @@ class TransactionRequest extends FormRequest
         if ($method instanceof PaymentMethod && $method->requires_card) {
             $validator->errors()->add('payment_method_id', 'Reserva não pode ser lançada no cartão de crédito.');
         }
+    }
+
+    /**
+     * @param  array<int, mixed>  $tags
+     * @return array<int, string>
+     */
+    private function collapsedTags(array $tags): array
+    {
+        $normalizer = app(NameNormalizer::class);
+        $seen = [];
+        $names = [];
+
+        foreach ($tags as $tag) {
+            if (! is_string($tag)) {
+                continue;
+            }
+
+            $name = PlainText::collapse($tag);
+
+            if ($name === '') {
+                continue;
+            }
+
+            $key = $normalizer->key($name);
+
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $names[] = $name;
+        }
+
+        return $names;
     }
 
     private function usable(object $model, mixed $currentId): bool

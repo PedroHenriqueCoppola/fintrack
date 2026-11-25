@@ -10,6 +10,7 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Tag;
 use App\Services\CatalogUsage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,6 +24,17 @@ class ManageController extends Controller
             'categories' => CategoryResource::collection($this->annotate($usage, $this->categories(), 'category'))->resolve(),
             'cards' => CardResource::collection($this->annotate($usage, $this->cards(), 'card'))->resolve(),
             'paymentMethods' => PaymentMethodResource::collection($this->annotate($usage, $this->paymentMethods(), 'payment_method'))->resolve(),
+            'tags' => Tag::query()
+                ->withCount('transactions')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Tag $tag): array => [
+                    'id' => $tag->id,
+                    'name' => $tag->name,
+                    'usage_count' => (int) $tag->transactions_count,
+                ])
+                ->values()
+                ->all(),
             'options' => [
                 'colors' => $this->options('colors'),
                 'icons' => $this->options('icons'),

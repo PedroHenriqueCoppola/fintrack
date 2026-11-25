@@ -51,6 +51,10 @@ function buildChips(filters, options) {
     if (filters.bank_id) chips.push({ key: 'bank_id', label: `Banco: ${nameOf(options.banks ?? [], filters.bank_id)}` });
     if (filters.payment_method_id) chips.push({ key: 'payment_method_id', label: `Pagamento: ${nameOf(options.paymentMethods ?? [], filters.payment_method_id)}` });
     if (filters.card_id) chips.push({ key: 'card_id', label: `Cartão: ${nameOf(options.cards ?? [], filters.card_id)}` });
+    if (Array.isArray(filters.tags) && filters.tags.length) {
+        const names = filters.tags.map((id) => nameOf(options.tags ?? [], id)).join(', ');
+        chips.push({ key: 'tags', label: `Tags: ${names}` });
+    }
     const typeLabels = { income: 'Receita', expense: 'Despesa', reserve: 'Reserva' };
     if (filters.type) chips.push({ key: 'type', label: `Tipo: ${typeLabels[filters.type] ?? filters.type}` });
     if (filters.status) chips.push({ key: 'status', label: `Status: ${filters.status === 'paid' ? 'Pagas' : 'Pendentes'}` });
@@ -159,7 +163,7 @@ export default function Index({
     function removeChip(key) {
         visitAnalysis({
             ...currentQuery(),
-            [key]: key === 'sort' ? 'date_desc' : '',
+            [key]: key === 'sort' ? 'date_desc' : (key === 'tags' ? [] : ''),
         });
     }
 
@@ -326,6 +330,16 @@ export default function Index({
                                     placeholder="Todas"
                                     options={(options.paymentMethods ?? []).map((item) => namedOption(item))}
                                     onChange={(value) => setFilter('payment_method_id', value)}
+                                />
+                            </label>
+                            <label className="filter-field">
+                                <span>Tags</span>
+                                <Select
+                                    multiple
+                                    value={(filters.tags ?? []).map(String)}
+                                    placeholder="Todas"
+                                    options={(options.tags ?? []).map((item) => ({ value: String(item.id), label: item.name }))}
+                                    onChange={(value) => setFilter('tags', value)}
                                 />
                             </label>
                             <label className="filter-field">

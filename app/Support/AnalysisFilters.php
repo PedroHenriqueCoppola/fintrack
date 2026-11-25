@@ -28,6 +28,7 @@ class AnalysisFilters
         'bank_id',
         'card_id',
         'payment_method_id',
+        'tags',
         'min_amount',
         'max_amount',
         'q',

@@ -12,6 +12,7 @@ export function visitAnalysis(next, { replace = false, loadMore = false, onStart
         bank_id: next.bank_id || undefined,
         card_id: next.card_id || undefined,
         payment_method_id: next.payment_method_id || undefined,
+        tags: Array.isArray(next.tags) && next.tags.length ? next.tags : undefined,
         min_amount: next.min_amount || undefined,
         max_amount: next.max_amount || undefined,
         q: next.q || undefined,

@@ -10,6 +10,7 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Tag;
 use App\Models\Transaction;
 use App\Support\Money;
 
@@ -81,6 +82,10 @@ class TransactionOptionsService
             'paymentMethods' => PaymentMethodResource::collection(
                 PaymentMethod::query()->whereNull('archived_at')->orderBy('name')->get()
             )->resolve(),
+            'tags' => Tag::query()->orderBy('name')->get(['id', 'name'])->map(fn (Tag $tag): array => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+            ])->values()->all(),
             'reserve_balances' => $this->reserves->balances(),
         ];
     }

@@ -79,6 +79,7 @@ function toQuery(definition) {
             if (definition.bank_id) params.bank_id = definition.bank_id;
             if (definition.card_id) params.card_id = definition.card_id;
             if (definition.payment_method_id) params.payment_method_id = definition.payment_method_id;
+            if (Array.isArray(definition.tag_ids) && definition.tag_ids.length) params.tags = definition.tag_ids;
             if (definition.status && definition.status !== 'paid') params.status = definition.status;
             if (definition.group_by && definition.group_by !== 'none') params.group_by = definition.group_by;
         } else if (dataset === 'invoices' && definition.card_id) {
@@ -91,6 +92,23 @@ function toQuery(definition) {
     }
 
     return params;
+}
+
+function queryString(params) {
+    const search = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+            value.forEach((item) => search.append(`${key}[]`, String(item)));
+            return;
+        }
+
+        if (value !== undefined && value !== null && value !== '') {
+            search.append(key, String(value));
+        }
+    });
+
+    return search.toString();
 }
 
 function allCategories(options) {
@@ -151,15 +169,16 @@ function cellClass(column, cell) {
     return classes.join(' ');
 }
 
-function SelectField({ label, value, onChange, error, options, emptyOption }) {
+function SelectField({ label, value, onChange, error, options, emptyOption, multiple = false }) {
     return (
         <label className="reports-field">
             <span>{label}</span>
             <Select
-                value={value ?? ''}
+                multiple={multiple}
+                value={multiple ? value : (value ?? '')}
                 onChange={onChange}
                 options={options}
-                emptyOption={emptyOption}
+                emptyOption={multiple ? null : emptyOption}
                 placeholder={emptyOption || 'Escolha'}
                 aria-invalid={error ? 'true' : undefined}
             />
@@ -273,7 +292,7 @@ export default function Index({ definition, period, report, options, limits }) {
         schedule(next);
     }
 
-    const downloadQuery = new URLSearchParams(toQuery(definition)).toString();
+    const downloadQuery = queryString(toQuery(definition));
 
     function downloadHref(format) {
         const query = downloadQuery ? `${downloadQuery}&format=${format}` : `format=${format}`;
@@ -355,6 +374,7 @@ export default function Index({ definition, period, report, options, limits }) {
                     <SelectField label="Banco" value={draft.bank_id ?? ''} error={errorText(pageErrors, 'bank_id')} emptyOption="Todos" options={(options.banks ?? []).map((item) => bankOption(item))} onChange={(value) => setField('bank_id', value)} />
                     <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} emptyOption="Todos" options={cardsForBank(options.cards, draft.bank_id).map((item) => cardOption(item, options.banks))} onChange={(value) => setField('card_id', value)} />
                     <SelectField label="Forma de pagamento" value={draft.payment_method_id ?? ''} error={errorText(pageErrors, 'payment_method_id')} emptyOption="Todas" options={(options.paymentMethods ?? []).map((item) => namedOption(item))} onChange={(value) => setField('payment_method_id', value)} />
+                    <SelectField label="Tags" multiple value={(draft.tag_ids ?? []).map(String)} error={errorText(pageErrors, 'tags')} emptyOption="Todas" options={(options.tags ?? []).map((item) => ({ value: String(item.id), label: item.name }))} onChange={(value) => setField('tag_ids', value)} />
                     <SelectField label="Situação" value={draft.status ?? 'paid'} error={errorText(pageErrors, 'status')} options={[
                         { value: 'paid', label: 'Paga' },
                         { value: 'pending', label: 'Pendente' },

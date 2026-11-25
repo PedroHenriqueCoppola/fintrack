@@ -9,6 +9,7 @@ import Modal from '../Modal/Modal';
 import MoneyInput from '../MoneyInput/MoneyInput';
 import ReferenceSeal from '../ReferenceSeal/ReferenceSeal';
 import Select from '../Select/Select';
+import TagInput from '../TagInput/TagInput';
 import TextInput from '../TextInput/TextInput';
 import { bankOption, cardOption, cardsForBank, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
@@ -128,6 +129,7 @@ function buildInitial(mode, transaction, options, today, preset) {
             amount: '',
             date: formatDate(today),
             description: '',
+            tags: [],
             category_id: String(preset.category_id ?? ''),
             bank_id: '',
             payment_method_id: '',
@@ -146,6 +148,7 @@ function buildInitial(mode, transaction, options, today, preset) {
             amount: '',
             date: formatDate(today),
             description: '',
+            tags: [],
             category_id: '',
             bank_id: '',
             payment_method_id: '',
@@ -166,6 +169,7 @@ function buildInitial(mode, transaction, options, today, preset) {
         amount: transaction.amount == null ? '' : String(transaction.amount),
         date: formatDate(duplicate ? today : transaction.date),
         description: transaction.description ?? '',
+        tags: (transaction.tags ?? []).map((tag) => tag.name),
         category_id: duplicate ? known(categories, transaction.category?.id) : String(transaction.category?.id ?? ''),
         bank_id: duplicate ? known(options.banks, transaction.bank?.id) : String(transaction.bank?.id ?? ''),
         payment_method_id: duplicate
@@ -433,6 +437,7 @@ export default function TransactionModal({
             amount: moneyPayload(form.data.amount),
             date: datePayload(form.data.date),
             description: form.data.description,
+            tags: form.data.tags,
             category_id: form.data.category_id || null,
             payment_method_id: form.data.payment_method_id || null,
             bank_id: requiresCard ? (card?.bank_id ?? null) : (form.data.bank_id || null),
@@ -609,6 +614,13 @@ export default function TransactionModal({
                         placeholder={form.data.type === 'reserve' ? 'Ex.: Aporte reserva de emergência' : undefined}
                         value={form.data.description}
                         onChange={(value) => setField('description', value)}
+                    />
+                </FormField>
+                <FormField label="Tags" error={form.errors.tags || form.errors['tags.0']}>
+                    <TagInput
+                        value={form.data.tags}
+                        suggestions={options.tags ?? []}
+                        onChange={(tags) => setField('tags', tags)}
                     />
                 </FormField>
                 <div className="tx-grid">

@@ -14,6 +14,9 @@ function storedFilters(filters, period, includePeriod) {
     if (filters.bank_id) payload.bank_id = Number(filters.bank_id);
     if (filters.card_id) payload.card_id = Number(filters.card_id);
     if (filters.payment_method_id) payload.payment_method_id = Number(filters.payment_method_id);
+    if (Array.isArray(filters.tags) && filters.tags.length) {
+        payload.tags = filters.tags.map((id) => Number(id));
+    }
     if (filters.min_amount) payload.min_amount = filters.min_amount;
     if (filters.max_amount) payload.max_amount = filters.max_amount;
     if (filters.q) payload.q = filters.q;

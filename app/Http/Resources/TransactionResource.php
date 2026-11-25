@@ -74,6 +74,10 @@ class TransactionResource extends JsonResource
                 'number' => $this->installment_number,
                 'count' => $this->installment?->installments_count,
             ],
+            'tags' => $this->whenLoaded('tags', fn () => $this->tags->map(fn ($tag) => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+            ])->values()->all()),
         ];
     }
 }

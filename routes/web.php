@@ -16,6 +16,7 @@ use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SavedFilterController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Middleware\SyncCurrentPendings;
@@ -106,5 +107,7 @@ Route::middleware(['auth', 'inertia.encrypt', SyncCurrentPendings::class])->grou
     Route::post('/manage/payment-methods/{paymentMethod}/archive', [PaymentMethodController::class, 'archive'])->name('payment-methods.archive')->whereNumber('paymentMethod');
     Route::post('/manage/payment-methods/{paymentMethod}/restore', [PaymentMethodController::class, 'restore'])->name('payment-methods.restore')->whereNumber('paymentMethod');
     Route::delete('/manage/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy')->whereNumber('paymentMethod');
+    Route::put('/manage/tags/{tag}', [TagController::class, 'update'])->name('tags.update')->whereNumber('tag');
+    Route::delete('/manage/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy')->whereNumber('tag');
     Route::get('/styleguide', fn () => Inertia::render('Styleguide/Index'))->name('styleguide');
 });

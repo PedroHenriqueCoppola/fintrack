@@ -21,6 +21,26 @@ function signedAmount(transaction) {
     return transaction.amount;
 }
 
+function TagChips({ tags }) {
+    const list = Array.isArray(tags) ? tags : [];
+
+    if (list.length === 0) {
+        return null;
+    }
+
+    const shown = list.slice(0, 3);
+    const extra = list.length - shown.length;
+
+    return (
+        <span className="tx-tags">
+            {shown.map((tag) => (
+                <span key={tag.id} className="tx-tag">{tag.name}</span>
+            ))}
+            {extra > 0 ? <span className="tx-tag">{`+${extra}`}</span> : null}
+        </span>
+    );
+}
+
 function Row({ transaction, onEdit, onPay, paying }) {
     return (
         <div
@@ -50,6 +70,7 @@ function Row({ transaction, onEdit, onPay, paying }) {
             <div className="tx-row__copy">
                 <div className="tx-row__title">
                     <span className="tx-row__name">{transaction.description}</span>
+                    <TagChips tags={transaction.tags} />
                     <ReferenceSeal label={transaction.competence_label} />
                     {transaction.status === 'pending' ? <span className="tx-badge">Pendente</span> : null}
                     {transaction.fixed_expense ? <span className="tx-badge tx-badge--neutral">Fixo</span> : null}

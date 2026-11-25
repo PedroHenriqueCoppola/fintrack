@@ -6,6 +6,7 @@ use App\Models\Bank;
 use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Tag;
 use App\Models\Transaction;
 use App\Services\CardInvoiceService;
 use App\Services\GoalService;
@@ -759,6 +760,7 @@ class ReportService
         return [
             $this->column('date', 'Data', 'date'),
             $this->column('description', 'Descrição', 'text'),
+            $this->column('tags', 'Tags', 'text'),
             $this->column('category', 'Categoria', 'text'),
             $this->column('account', 'Banco/Cartão', 'text'),
             $this->column('payment', 'Forma de pagamento', 'text'),
@@ -783,6 +785,9 @@ class ReportService
         return [
             'date' => $transaction->date?->toDateString(),
             'description' => $transaction->description,
+            'tags' => $transaction->relationLoaded('tags') && $transaction->tags->isNotEmpty()
+                ? $transaction->tags->pluck('name')->implode(', ')
+                : '—',
             'category' => $transaction->category?->name ?? '—',
             'account' => $account,
             'payment' => $transaction->paymentMethod?->name ?? '—',
@@ -911,6 +916,16 @@ class ReportService
 
             if ($tag !== null) {
                 $tags[] = $tag;
+            }
+        }
+
+        $tagIds = $definition['tag_ids'] ?? [];
+
+        if ($tagIds !== []) {
+            $names = Tag::query()->whereIn('id', $tagIds)->orderBy('name')->pluck('name');
+
+            if ($names->isNotEmpty()) {
+                $tags[] = ['label' => 'Tags', 'value' => $names->implode(', ')];
             }
         }
 

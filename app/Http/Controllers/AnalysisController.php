@@ -58,6 +58,7 @@ class AnalysisController extends Controller
                 'bank_id' => $filters['bank_id'],
                 'card_id' => $filters['card_id'],
                 'payment_method_id' => $filters['payment_method_id'],
+                'tags' => $filters['tag_ids'],
                 'min_amount' => $filters['min_amount'],
                 'max_amount' => $filters['max_amount'],
                 'q' => $filters['q'],
