@@ -14,6 +14,7 @@ use App\Http\Controllers\NetWorthController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SavedFilterController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\TransactionController;
@@ -77,7 +78,8 @@ Route::middleware(['auth', 'inertia.encrypt', SyncCurrentPendings::class])->grou
     Route::post('/net-worth', [NetWorthController::class, 'store'])->name('net-worth.store');
     Route::put('/net-worth/{closing}', [NetWorthController::class, 'update'])->name('net-worth.update')->whereNumber('closing');
     Route::delete('/net-worth/{closing}', [NetWorthController::class, 'destroy'])->name('net-worth.destroy')->whereNumber('closing');
-    Route::get('/reports', fn () => Inertia::render('Reports/Index'))->name('reports');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports');
+    Route::get('/reports/download', [ReportController::class, 'download'])->name('reports.download');
     Route::get('/manage', [ManageController::class, 'index'])->name('manage');
 
     Route::post('/manage/banks', [BankController::class, 'store'])->name('banks.store');

@@ -180,6 +180,14 @@ Linha acima do conteúdo: segmento com Mês atual, Mês anterior, Trimestre, Sem
 ### Gráficos (usados a partir do módulo 7)
 Linha principal em `--color-primary-soft`, 2.4px, pontas arredondadas, ponto final destacado, com área abaixo em gradiente de 22% de opacidade até 0. Linhas de grade em `--color-border`. Eixos em 1.1rem `--color-text-subtle`. Séries extras: azul `#6f9ee0`, verde-água `#7cc4ac`, laranja `#e6b08d` (no claro: `#2f64b0`, `#2a7a62`, `#a65a24`). Legenda sempre em texto. Rosca com espessura 14 e trilho `--color-border-input`; o centro mostra o total do período; segmentos nas cores dos cadastros (categoria, banco ou cartão) e "Outras" em `--color-text-subtle`; legenda em texto com valor e %. **Barras** (receitas × despesas por mês): duas barras por mês, cantos superiores arredondados (4px), receitas em `--color-positive` e despesas em `--color-destructive`, sem grade vertical, mês abreviado no eixo, tooltip com o mês por extenso e os dois valores. Todo gráfico tem `role="img"` com `aria-label` resumindo os dados e uma alternativa em texto (legenda ou lista) com os mesmos números. Vermelho só para despesas.
 
+### Relatórios em PDF e Excel (usados a partir do módulo 10)
+
+- **PDF sempre em tema claro**, fundo branco, com os mesmos tokens do tema claro escritos uma única vez numa folha de estilo do PDF (texto `#1a1726`, texto secundário `#5f5a72`, destaque `#7c4fd6`, texto de destaque `#5a2fb0`, fundo suave `#ece4fb`, positivo/ok `#2a7a62`, negativo `#c23b43`, borda `#e0daee`). Nenhuma outra cor.
+- Fonte: a do gerador de PDF que tenha o sinal de menos (−) e os acentos do português (por exemplo DejaVu Sans). Não depende de internet.
+- Cabeçalho: nome "Fintrack", título do relatório, período por extenso, filtros usados em uma linha e "Gerado em dd/mm/aaaa HH:mm". Rodapé: "Página X de Y". Tabela com cabeçalho repetido a cada página, linhas alternadas bem suaves, valores à direita e linha de total em negrito.
+- Valores: positivos neutros, negativos em `#c23b43` com o sinal "−R$", como no sistema. Meses por extenso ("Novembro 2026" nas tabelas, "novembro de 2026" em frases).
+- **Excel:** uma aba por relatório (nome curto, até 31 caracteres), título, período e filtros nas primeiras linhas, cabeçalho em negrito com a linha congelada, valores como número com formato de moeda `R$ #,##0.00` (negativos com sinal), percentuais como número com formato `0.0%`, datas como data `dd/mm/aaaa`, linha de total em negrito, colunas com largura ajustada. Sem gráficos nem cores.
+
 ## 7. Movimento
 
 - Transição padrão: `var(--transition)` (0.25s, `cubic-bezier(0.4, 0, 0.2, 1)`) em cor, borda, fundo e `transform`.

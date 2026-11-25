@@ -323,6 +323,105 @@ class CardInvoiceService
     }
 
     /**
+     * One row per invoice whose closing date falls in the period.
+     * Invoices with no purchase and no payment are left out.
+     * Three queries for the whole list: cards, purchases and payments.
+     *
+     * @return array<int, array{card: string, invoice: string, closing: string, due: ?string, posted: string, forecast: string, total: string, situation: string}>
+     */
+    public function reportInvoices(?int $cardId, ?string $from, ?string $to): array
+    {
+        $cards = Card::query()
+            ->when($cardId !== null, fn ($query) => $query->whereKey($cardId))
+            ->orderBy('name')
+            ->get();
+
+        if ($cards->isEmpty()) {
+            return [];
+        }
+
+        $ids = $cards->modelKeys();
+        $transactions = Transaction::query()
+            ->where('type', 'expense')
+            ->whereIn('card_id', $ids)
+            ->get(['card_id', 'date', 'amount', 'status']);
+        $payments = CardInvoicePayment::query()
+            ->whereIn('card_id', $ids)
+            ->get(['card_id', 'closing_month', 'paid_on']);
+        $purchases = [];
+        $paid = [];
+
+        foreach ($transactions as $transaction) {
+            $purchases[$transaction->card_id][] = $transaction;
+        }
+
+        foreach ($payments as $payment) {
+            $paid[$payment->card_id][substr($this->day($payment->closing_month), 0, 7)] = true;
+        }
+
+        $rows = [];
+
+        foreach ($cards as $card) {
+            $calculator = $this->calculator($card);
+            $buckets = [];
+
+            foreach ($purchases[$card->id] ?? [] as $transaction) {
+                $key = $calculator->invoiceKeyFor($this->day($transaction->date));
+
+                if (! isset($buckets[$key])) {
+                    $buckets[$key] = ['posted' => '0.00', 'forecast' => '0.00'];
+                }
+
+                $field = $transaction->status === 'paid' ? 'posted' : 'forecast';
+                $buckets[$key][$field] = Money::add($buckets[$key][$field], $transaction->amount);
+            }
+
+            $keys = array_unique(array_merge(array_keys($buckets), array_keys($paid[$card->id] ?? [])));
+
+            foreach ($keys as $key) {
+                $hasPurchase = isset($buckets[$key]);
+                $hasPayment = isset($paid[$card->id][$key]);
+
+                if (! $hasPurchase && ! $hasPayment) {
+                    continue;
+                }
+
+                $closing = $calculator->periodFor($key)['closing'];
+
+                if (($from !== null && $closing < $from) || ($to !== null && $closing > $to)) {
+                    continue;
+                }
+
+                $posted = $buckets[$key]['posted'] ?? '0.00';
+                $forecast = $buckets[$key]['forecast'] ?? '0.00';
+                $situation = $calculator->situation($key, $hasPayment);
+                $rows[] = [
+                    'card' => $card->name,
+                    'invoice' => Month::label($key),
+                    'closing' => $closing,
+                    'due' => $calculator->dueDateFor($key),
+                    'posted' => $posted,
+                    'forecast' => $forecast,
+                    'total' => Money::add($posted, $forecast),
+                    'situation' => match ($situation) {
+                        'paid' => 'Paga',
+                        'closed' => 'Fechada',
+                        default => 'Aberta',
+                    },
+                ];
+            }
+        }
+
+        usort($rows, function (array $left, array $right): int {
+            $byDate = strcmp($right['closing'], $left['closing']);
+
+            return $byDate !== 0 ? $byDate : strnatcasecmp($left['card'], $right['card']);
+        });
+
+        return $rows;
+    }
+
+    /**
      * @param  array<int, array{open: string, start: string, closing: string, previous: string, previous_start: string, previous_closing: string}>  $cycles
      * @return array<int, array{posted: string, forecast: string, previous_count: int}>
      */
