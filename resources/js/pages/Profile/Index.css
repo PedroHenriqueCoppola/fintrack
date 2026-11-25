@@ -1,0 +1,25 @@
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.6rem;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    max-width: 42rem;
+}
+
+.profile-status {
+    margin: 0 0 1.6rem;
+    color: var(--color-positive);
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -13,6 +13,7 @@ use App\Http\Controllers\ManageController;
 use App\Http\Controllers\NetWorthController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PlanningController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SavedFilterController;
@@ -36,6 +37,9 @@ Route::post('/logout', [SessionController::class, 'destroy'])
 
 Route::middleware(['auth', 'inertia.encrypt', SyncCurrentPendings::class])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
     Route::get('/analysis', [AnalysisController::class, 'index'])->name('analysis');
     Route::post('/analysis/clear', [AnalysisController::class, 'clear'])->name('analysis.clear');
 

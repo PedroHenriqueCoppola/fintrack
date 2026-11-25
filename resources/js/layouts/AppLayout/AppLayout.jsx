@@ -13,11 +13,17 @@ import {
     Settings,
     Sun,
     Target,
-    User,
 } from 'lucide-react';
 import CursorGlow from '../../components/CursorGlow/CursorGlow';
 import { toggleTheme } from '../../lib/theme';
 import './AppLayout.css';
+
+function initials(name) {
+    const parts = String(name ?? '').trim().split(/\s+/).filter(Boolean);
+    const letters = parts.slice(0, 2).map((part) => part.charAt(0)).join('');
+
+    return letters.toLocaleUpperCase('pt-BR');
+}
 
 const SIDEBAR_KEY = 'sidebar-collapsed';
 
@@ -164,11 +170,14 @@ export default function AppLayout({ children }) {
                                     aria-expanded={menuOpen}
                                     onClick={() => setMenuOpen((open) => !open)}
                                 >
-                                    <User aria-hidden="true" strokeWidth={1.75} />
+                                    <span className="profile__initials">{initials(user.name)}</span>
                                 </button>
                                 {menuOpen ? (
                                     <div className="profile__menu">
                                         <p className="profile__name">{user.name}</p>
+                                        <Link href="/profile" className="profile__link" onClick={() => setMenuOpen(false)}>
+                                            Meu perfil
+                                        </Link>
                                         <button type="button" className="profile__logout" onClick={onLogout}>
                                             Sair
                                         </button>

@@ -246,4 +246,60 @@ class LoginRequest extends FormRequest
     {
         return sha1((string) $this->ip());
     }
+
+    public static function assertOpen(Request $request, string $email, string $field): void
+    {
+        static::from($request, $email)->rejectIfLockedOn($field);
+    }
+
+    public static function recordFailure(Request $request, string $email, string $field, string $message): void
+    {
+        $probe = static::from($request, $email);
+        $until = max($probe->recordPairFailure() ?? 0, $probe->recordIpFailure() ?? 0);
+
+        if ($until > time()) {
+            $probe->throwLockedOn($until, $field);
+        }
+
+        throw ValidationException::withMessages([
+            $field => $message,
+        ]);
+    }
+
+    public static function clearFailures(Request $request, string $email): void
+    {
+        $probe = static::from($request, $email);
+        Cache::forget($probe->pairFailureKey());
+        Cache::forget($probe->ipFailureKey());
+        $probe->session()->forget(self::LOCK_UNTIL);
+    }
+
+    private static function from(Request $request, string $email): self
+    {
+        $probe = static::createFrom($request);
+        $probe->merge([
+            'email' => Str::lower(trim($email)),
+        ]);
+
+        return $probe;
+    }
+
+    private function rejectIfLockedOn(string $field): void
+    {
+        $until = $this->activeUntil();
+
+        if ($until !== null) {
+            $this->throwLockedOn($until, $field);
+        }
+    }
+
+    private function throwLockedOn(int $until, string $field): void
+    {
+        $this->rememberSessionLock($until);
+        $seconds = max(1, $until - time());
+
+        throw ValidationException::withMessages([
+            $field => "Muitas tentativas de login. Tente novamente em {$seconds} segundos.",
+        ]);
+    }
 }
