@@ -30,11 +30,7 @@ class TransactionOptionsService
             ->where('type', 'reserve')
             ->where('status', 'paid')
             ->groupBy('category_id')
-            ->selectRaw("
-                category_id,
-                coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
-                - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as balance
-            ");
+            ->selectRaw('category_id, '.ReserveBalanceService::netSql().' as balance');
         $categories = Category::query()
             ->leftJoinSub($balances, 'reserve_balance_rows', function ($join): void {
                 $join->on('reserve_balance_rows.category_id', '=', 'categories.id');

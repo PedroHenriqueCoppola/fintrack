@@ -24,6 +24,16 @@ function isZero(value) {
     return String(value ?? '').replace(/[0.]/g, '') === '';
 }
 
+function sameMoney(left, right) {
+    const pad = (value) => {
+        const [whole, fraction = ''] = String(value).split('.');
+
+        return `${whole}.${fraction.padEnd(2, '0').slice(0, 2)}`;
+    };
+
+    return pad(left) === pad(right);
+}
+
 function CategoryName({ row }) {
     return (
         <div className="plan-cat">
@@ -194,7 +204,7 @@ export default function PlanMonth({ month, plan, navigation }) {
         const next = moneyPayload(form.data.expected_income, '0');
         const saved = moneyPayload(plan.expected_income, '0');
 
-        if (next === saved) {
+        if (sameMoney(next, saved)) {
             return;
         }
 
@@ -206,7 +216,7 @@ export default function PlanMonth({ month, plan, navigation }) {
         const next = moneyPayload(form.data.amounts[categoryId], '0');
         const saved = moneyPayload(row?.planned, '0');
 
-        if (next === saved) {
+        if (sameMoney(next, saved)) {
             return;
         }
 

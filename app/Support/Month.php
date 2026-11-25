@@ -118,6 +118,16 @@ class Month
         return self::SHORT[$month].'/'.$year;
     }
 
+    public static function heading(string $date): string
+    {
+        $year = (int) substr($date, 0, 4);
+        $month = (int) substr($date, 5, 2);
+        $name = self::NAMES[$month - 1] ?? '';
+        $currentYear = (int) now('America/Sao_Paulo')->format('Y');
+
+        return $year === $currentYear ? $name : $name.' de '.$year;
+    }
+
     public static function label(string $key): string
     {
         $start = self::start($key);

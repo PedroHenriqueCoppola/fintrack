@@ -381,11 +381,7 @@ class PlanningService
             ->selectRaw("
                 transactions.category_id as category_id,
                 coalesce(sum(transactions.amount) filter (where transactions.type = 'expense' and transactions.status = 'paid'), 0) as spent,
-                coalesce(sum(case
-                    when transactions.type = 'reserve' and transactions.status = 'paid' and transactions.reserve_action = 'deposit' then transactions.amount
-                    when transactions.type = 'reserve' and transactions.status = 'paid' and transactions.reserve_action = 'withdraw' then -transactions.amount
-                    else 0
-                end), 0) as saved,
+                ".ReserveBalanceService::netSql('transactions.amount', 'transactions.reserve_action', "transactions.type = 'reserve' and transactions.status = 'paid'")." as saved,
                 coalesce(sum(transactions.amount) filter (
                     where transactions.type = 'expense'
                     and transactions.status = 'pending'

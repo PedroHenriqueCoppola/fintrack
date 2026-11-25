@@ -150,9 +150,15 @@ export default function TransactionList({ transactions, grouped, onEdit, onPay, 
 
     return (
         <div>
-            {groupsFor(transactions).map((group, index) => (
-                <section key={group.date} className={index === 0 ? 'tx-group' : 'tx-group tx-group--next'}>
-                    <div className="tx-day">
+            {groupsFor(transactions).map((group, index, groups) => {
+                const previous = groups[index - 1];
+                const showMonth = group.items[0]?.month_heading
+                    && group.items[0].month_heading !== previous?.items?.[0]?.month_heading;
+
+                return (
+                    <section key={group.date} className={index === 0 ? 'tx-group' : 'tx-group tx-group--next'}>
+                        {showMonth ? <p className="tx-month">{group.items[0].month_heading}</p> : null}
+                        <div className="tx-day">
                         <span>{formatLongDate(group.date)}</span>
                         {group.total != null ? <Money value={group.total} /> : null}
                     </div>
@@ -165,8 +171,9 @@ export default function TransactionList({ transactions, grouped, onEdit, onPay, 
                             paying={payingId === transaction.id}
                         />
                     ))}
-                </section>
-            ))}
+                    </section>
+                );
+            })}
         </div>
     );
 }

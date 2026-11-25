@@ -32,6 +32,23 @@ function isoDate(value) {
     return parsed ? isoFromDate(parsed) : '';
 }
 
+const SHORT_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+function referenceLabel(dateText, competenceText) {
+    const date = parseBrDate(dateText);
+    const competence = parseBrDate(competenceText);
+
+    if (!date || !competence) {
+        return null;
+    }
+
+    if (date.getFullYear() === competence.getFullYear() && date.getMonth() === competence.getMonth()) {
+        return null;
+    }
+
+    return `${SHORT_MONTHS[competence.getMonth()]}/${competence.getFullYear()}`;
+}
+
 function plusYears(iso, years) {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
 
@@ -692,7 +709,7 @@ export default function TransactionModal({
                                 error={form.errors.competence_date}
                                 onChange={(value) => setField('competence_date', value)}
                             />
-                            <ReferenceSeal label={editing ? transaction?.competence_label : null} />
+                            <ReferenceSeal label={referenceLabel(form.data.date, form.data.competence_date)} />
                         </div>
                         <FormField label="Observação (opcional)" error={form.errors.notes}>
                             <TextInput

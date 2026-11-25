@@ -57,7 +57,14 @@ class TransactionService
 
         return DB::transaction(function () use ($transaction, $data, $apply, $fixed, $previous) {
             $before = $this->reserveSnapshot($transaction);
+            $wasPending = $transaction->status === 'pending';
+            $originalDate = $transaction->date->toDateString();
             $this->fill($transaction, $data);
+
+            if ($wasPending && $transaction->status === 'paid' && $transaction->date->toDateString() === $originalDate) {
+                $this->applyPaidDate($transaction, $originalDate, now('America/Sao_Paulo')->toDateString());
+            }
+
             $transaction->save();
             $this->tags->sync($transaction, $data['tags'] ?? []);
             $this->guardReserve($before, $transaction);
@@ -113,25 +120,34 @@ class TransactionService
 
         $today = now('America/Sao_Paulo')->toDateString();
         $date = $transaction->date->toDateString();
-        $movesToToday = $date > $today || ($date < $today && $transaction->card_id === null);
 
-        return DB::transaction(function () use ($transaction, $movesToToday, $date, $today) {
+        return DB::transaction(function () use ($transaction, $date, $today) {
             $before = $this->reserveSnapshot($transaction);
-
-            if ($movesToToday) {
-                if ($transaction->competence_date === null) {
-                    $transaction->competence_date = $date;
-                }
-
-                $transaction->date = $today;
-            }
-
+            $this->applyPaidDate($transaction, $date, $today);
             $transaction->status = 'paid';
             $transaction->save();
             $this->guardReserve($before, $transaction);
 
             return $transaction;
         });
+    }
+
+    /**
+     * The same date move used by "marcar como paga".
+     */
+    private function applyPaidDate(Transaction $transaction, string $date, string $today): void
+    {
+        $movesToToday = $date > $today || ($date < $today && $transaction->card_id === null);
+
+        if (! $movesToToday) {
+            return;
+        }
+
+        if ($transaction->competence_date === null) {
+            $transaction->competence_date = $date;
+        }
+
+        $transaction->date = $today;
     }
 
     /**
@@ -465,13 +481,17 @@ class TransactionService
     private function totalsSelectSql(bool $paidOnly): string
     {
         $status = $paidOnly ? "transactions.status = 'paid' and " : '';
+        $reserved = ReserveBalanceService::netSql(
+            'transactions.amount',
+            'transactions.reserve_action',
+            trim($status."transactions.type = 'reserve'"),
+        );
 
         return "
             count(*) as aggregate_count,
             coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'income'), 0) as income_total,
             coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'expense'), 0) as spending_total,
-            coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'reserve' and transactions.reserve_action = 'deposit'), 0)
-            - coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'reserve' and transactions.reserve_action = 'withdraw'), 0) as reserved_total,
+            {$reserved} as reserved_total,
             count(*) filter (where {$status}transactions.type = 'income') as income_count,
             count(*) filter (where {$status}transactions.type = 'expense') as spending_count
         ";

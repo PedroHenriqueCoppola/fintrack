@@ -667,6 +667,14 @@ class ReportService
         foreach ($columns as $column) {
             $cell = $this->formatter->present($row[$column['key']] ?? null, $column);
 
+            if (($row['metric'] ?? null) === 'Despesas' && in_array($column['key'], ['delta', 'share'], true)) {
+                $cell['tone'] = match ($cell['tone']) {
+                    'positive' => 'negative',
+                    'negative' => 'positive',
+                    default => $cell['tone'],
+                };
+            }
+
             if ($bar === $column['key']) {
                 $cell['bar'] = $this->formatter->barWidth($cell['raw']);
             }

@@ -8,6 +8,16 @@ use App\Support\Money;
 class ReserveBalanceService
 {
     /**
+     * Paid deposits minus paid withdrawals. Callers add their own filters.
+     */
+    public static function netSql(string $amount = 'amount', string $action = 'reserve_action', string $when = ''): string
+    {
+        $deposit = $when === '' ? "{$action} = 'deposit'" : "{$when} and {$action} = 'deposit'";
+        $withdraw = $when === '' ? "{$action} = 'withdraw'" : "{$when} and {$action} = 'withdraw'";
+
+        return "coalesce(sum({$amount}) filter (where {$deposit}), 0) - coalesce(sum({$amount}) filter (where {$withdraw}), 0)";
+    }
+    /**
      * Paid reserve balance of every category, one grouped query.
      * A category with no paid reserve is absent. The balance is the whole
      * history: a paid transaction cannot be in the future.
@@ -39,11 +49,7 @@ class ReserveBalanceService
             ->where('type', 'reserve')
             ->where('status', 'paid')
             ->groupBy('category_id')
-            ->selectRaw("
-                category_id,
-                coalesce(sum(amount) filter (where reserve_action = 'deposit'), 0)
-                - coalesce(sum(amount) filter (where reserve_action = 'withdraw'), 0) as balance
-            ")
+            ->selectRaw('category_id, '.self::netSql().' as balance')
             ->get();
 
         $balances = [];
