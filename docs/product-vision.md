@@ -162,10 +162,13 @@ Todos os cadastros que servem para separar e organizar o sistema, em cards com �
 
 ### Relatórios
 
-Duas áreas.
+Uma página com duas áreas e **nada fica salvo**: o relatório é gerado na hora, com os dados de agora.
 
-- **Montar relatório:** escolher período, quais dados entram (só gastos, só ganhos, gastos de uma categoria, saldo de cada mês, faturas, patrimônio, metas), filtros (tipo, categoria, banco, cartão, forma de pagamento) e agrupamento (dia, semana, mês, categoria, banco). Prévia ao vivo e opção de salvar como modelo.
-- **Relatórios gerados:** lista com nome, data e filtros usados, para reabrir ou baixar em **PDF** (bem formatado, na identidade visual) e **Excel**.
+- **Modelos prontos:** Gastos por categoria, Resumo do período, Extrato de transações e Saldo mês a mês. A pessoa escolhe o modelo e o período (filtro de período padrão), vê a prévia e baixa.
+- **Montar o meu:** escolher o período, **o que incluir** (Transações, Faturas, Patrimônio ou Metas) e, para Transações, os filtros (tipo, categoria, banco, cartão, forma de pagamento e situação, os mesmos da Análise) e o agrupamento (sem agrupamento, dia, semana, mês, categoria ou banco). Prévia ao vivo.
+- **Baixar em PDF** (bem formatado, na identidade visual, sempre em tema claro, com a barra de percentual nos Gastos por categoria e caixas de indicadores nos totais) **e em Excel** (uma planilha simples, valores como número e datas como data).
+- Despesas aparecem como valor positivo nas colunas que já dizem "Despesas"; vermelho só para o que é negativo de verdade. Filtros só aparecem quando existem.
+- Não há lista de relatórios gerados nem "salvar modelo". O que a pessoa monta vive só na URL da página.
 
 ## Cadastros e campos
 
@@ -184,7 +187,6 @@ Cada entidade abaixo tem um dono (o usuário), datas de criação e atualizaçã
 | Gasto parcelado | nome, categoria, valor total, número de parcelas, início | forma de pagamento, observação |
 | Meta | nome, valor alvo, categoria de Reserva | prazo (mês), observação |
 | Fechamento do patrimônio | mês de referência, saldo de cada banco | observações |
-| Relatório salvo | nome, período, dados incluídos | filtros, agrupamento |
 
 A lista de campos é a proposta inicial e será refinada no modelo do banco da etapa 2 e pode mudar durante o desenvolvimento, sempre por novas migrações (nunca editando uma migração já aplicada).
 
@@ -264,7 +266,7 @@ São onze módulos em sequência, mais o 3.5 de visual, cada um dependendo do an
 7. **Patrimônio:** saldo por banco, fechamento mensal e evolução. Pronto quando o fechamento pré-preenche com o mês anterior.
 8. **Dashboard:** lê tudo dos módulos 4 a 7, por isso vem depois deles.
 9. **Metas:** metas ligadas a categorias de Reserva, Resgate, valor mensal sugerido e gráficos. Pronto quando guardar e resgatar na categoria move o progresso da meta e o resgate acima do guardado é recusado.
-10. **Relatórios:** construtor, relatórios gerados, PDF e Excel.
+10. **Relatórios:** quatro modelos prontos e construtor livre (Transações, Faturas, Patrimônio e Metas), prévia ao vivo, download em PDF e Excel, sem histórico. Pronto quando o PDF, o Excel e a prévia mostram os mesmos números e batem com a Análise.
 11. **Acabamento:** (perguntar ao autor sobre a exclusão de metas e de outros cadastros, hoje só arquivados); responsividade de todo o sistema (reduzir a janela do navegador sem quebrar elementos; isso substitui a regra "só desktop"), favicon e logo de verdade (hoje é um F branco sobre roxo), modo demo (usuário demo com 12 meses de dados fictícios coerentes com as regras), backup, README profissional escrito pelo agente (apresentação, funcionalidades, stack, como subir com Docker, regras de negócio, diagrama do banco e usuário demo; os prints são tirados pelo autor), mapa de rotas e revisão final.
 
 ## Decisões da revisão
@@ -355,3 +357,11 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Uma meta em curso por categoria, e recomeço do zero (ajuste pós-teste):** meta concluída não impede a próxima. Ao criar uma meta numa categoria que já teve metas, a nova conta só as reservas com data igual ou posterior ao dia da criação (um lançamento antigo, como de meses atrás, fica no histórico da meta anterior e não conta), e a meta concluída que estava na categoria é **congelada** no valor de hoje, sem ser arquivada (continua em Concluídas). Meta ainda em andamento continua impedindo uma nova na mesma categoria (o usuário conclui ou arquiva antes).
 - **Visualizações:** cards com barra de progresso, gráfico geral do total guardado e, no detalhe, o gráfico da meta. Metas usa o filtro de período padrão (decisão do autor), que não altera o progresso, só o que foi guardado no período e os gráficos.
 - **Exclusão de meta:** adiada. O autor quer decidir sobre exclusão (de metas e dos demais cadastros) no fim, na etapa de correções e estética: perguntar a ele nessa etapa.
+
+### Módulo 10
+
+- **Modelos prontos e construtor livre juntos**, sem histórico: o relatório é gerado na hora e nada é salvo (sem tabela nova, sem "Relatórios gerados", sem "Salvar modelo").
+- **Quatro modelos prontos:** Gastos por categoria, Resumo do período, Extrato de transações e Saldo mês a mês. Faturas, patrimônio e metas ficam no construtor.
+- **PDF e Excel**, os dois, gerados a partir da mesma tabela de dados que alimenta a prévia, para os três nunca discordarem. PDF sem gráficos desenhados: só a barra de percentual dentro da tabela dos Gastos por categoria.
+- **Mesma regra de números da Análise e do Dashboard:** valores por data da transação; filtros iguais aos da Análise. Os modelos prontos usam só Pagas. No construtor de Transações, as somas e os totais **seguem a situação escolhida** (Paga, Pendente ou Todas; padrão Paga) (ajuste da correção 1).
+- **Visual (correção 1):** formatação feita uma vez no servidor para prévia e PDF; despesas positivas e neutras; página com card "Configurar" à esquerda e a prévia como documento à direita, com os botões de download no próprio documento; PDF com cabeçalho Fintrack, caixas de indicadores e numeração de páginas sem execução de PHP.

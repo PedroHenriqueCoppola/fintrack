@@ -11,6 +11,7 @@ use App\Support\Money;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -256,6 +257,233 @@ class TransactionService
     }
 
     /**
+     * Same filter as the Análise, for reports. Status "all" means every status.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function filteredForReport(array $filters): Builder
+    {
+        return $this->filtered($this->reportFilter($filters));
+    }
+
+    /**
+     * Paid income, expense, reserve and balance for the filter.
+     * The status filter is ignored: the sums are always the paid rows,
+     * matching paidBreakdown. One query. Used by Análise and the Dashboard.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{count: int, income: string, expense: string, reserved: string, balance: string, average_expense: string}
+     */
+    public function paidSummary(array $filters): array
+    {
+        $filters['status'] = null;
+
+        return $this->summary($this->reportFilter($filters));
+    }
+
+    /**
+     * Income, expense, reserve and balance of the rows the report filter
+     * already selected, including Paga, Pendente or Todas. One query.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{count: int, income: string, expense: string, reserved: string, balance: string}
+     */
+    public function reportSummary(array $filters): array
+    {
+        $row = $this->filteredForReport($filters)->selectRaw($this->totalsSelectSql(false))->first();
+        $income = Money::of($row->income_total ?? '0');
+        $expense = Money::of($row->spending_total ?? '0');
+        $reserved = Money::of($row->reserved_total ?? '0');
+
+        return [
+            'count' => (int) ($row->aggregate_count ?? 0),
+            'income' => $income,
+            'expense' => $expense,
+            'reserved' => $reserved,
+            'balance' => Money::sub($income, $expense),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function reportCount(array $filters): int
+    {
+        return $this->filteredForReport($filters)->count();
+    }
+
+    /**
+     * Transactions of the filter, newest first. $limit null loads every row.
+     * The caller counts once, before this load.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Collection<int, Transaction>
+     */
+    public function reportLines(array $filters, ?int $limit): Collection
+    {
+        $query = $this->filteredForReport($filters);
+        $this->sort($query, 'date_desc');
+        $query->with([
+            'category:id,name',
+            'bank:id,name',
+            'paymentMethod:id,name',
+            'card:id,name',
+        ]);
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Totals grouped like paidBreakdown. One query.
+     * The report filter decides the status; the sums do not force Paga.
+     * Time groups come back oldest first. Category and bank come back
+     * by expense descending, then name.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<int, array{key: string, name: string, income: string, expense: string, reserved: string, balance: string, count: int}>
+     */
+    public function groupedPaidTotals(array $filters, string $groupBy): array
+    {
+        $query = $this->filteredForReport($filters);
+        $time = in_array($groupBy, ['day', 'week', 'month'], true);
+
+        if ($groupBy === 'category') {
+            $query->join('categories', 'categories.id', '=', 'transactions.category_id')
+                ->groupByRaw('transactions.category_id::text, categories.name')
+                ->selectRaw('transactions.category_id::text as group_key, categories.name as group_name, '.$this->totalsSelectSql(false));
+        } elseif ($groupBy === 'bank') {
+            $query->join('banks', 'banks.id', '=', 'transactions.bank_id')
+                ->groupByRaw('transactions.bank_id::text, banks.name')
+                ->selectRaw('transactions.bank_id::text as group_key, banks.name as group_name, '.$this->totalsSelectSql(false));
+        } elseif ($groupBy === 'week') {
+            $bucket = "to_char(date_trunc('week', transactions.date::timestamp), 'YYYY-MM-DD')";
+            $query->groupByRaw($bucket)
+                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->totalsSelectSql(false))
+                ->orderByRaw($bucket);
+        } elseif ($groupBy === 'month') {
+            $bucket = "to_char(transactions.date, 'YYYY-MM')";
+            $query->groupByRaw($bucket)
+                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->totalsSelectSql(false))
+                ->orderByRaw($bucket);
+        } else {
+            $bucket = "to_char(transactions.date, 'YYYY-MM-DD')";
+            $query->groupByRaw($bucket)
+                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->totalsSelectSql(false))
+                ->orderByRaw($bucket);
+        }
+
+        $groups = [];
+
+        foreach ($query->get() as $row) {
+            $income = Money::of($row->income_total ?? '0');
+            $expense = Money::of($row->spending_total ?? '0');
+            $groups[] = [
+                'key' => (string) $row->group_key,
+                'name' => (string) ($row->group_name ?? ''),
+                'income' => $income,
+                'expense' => $expense,
+                'reserved' => Money::of($row->reserved_total ?? '0'),
+                'balance' => Money::sub($income, $expense),
+                'count' => (int) ($row->aggregate_count ?? 0),
+            ];
+        }
+
+        if ($time) {
+            return $groups;
+        }
+
+        usort($groups, function (array $left, array $right): int {
+            $byExpense = Money::compare($right['expense'], $left['expense']);
+
+            return $byExpense !== 0 ? $byExpense : strnatcasecmp($left['name'], $right['name']);
+        });
+
+        return $groups;
+    }
+
+    /**
+     * First and last transaction date of the user, or nulls when there are none.
+     *
+     * @return array{from: ?string, to: ?string}
+     */
+    public function dateSpan(): array
+    {
+        $row = Transaction::query()
+            ->selectRaw('min(date) as first_date, max(date) as last_date')
+            ->first();
+
+        return [
+            'from' => $this->spanDate($row?->first_date),
+            'to' => $this->spanDate($row?->last_date),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function reportFilter(array $filters): array
+    {
+        $status = $filters['status'] ?? null;
+
+        return [
+            'period' => $filters['period'],
+            'from' => $filters['from'] ?? null,
+            'to' => $filters['to'] ?? null,
+            'type' => $filters['type'] ?? null,
+            'status' => $status === 'all' ? null : $status,
+            'category_id' => $filters['category_id'] ?? null,
+            'bank_id' => $filters['bank_id'] ?? null,
+            'card_id' => $filters['card_id'] ?? null,
+            'payment_method_id' => $filters['payment_method_id'] ?? null,
+            'min_amount' => null,
+            'max_amount' => null,
+            'q' => null,
+        ];
+    }
+
+    private function paidSelectSql(): string
+    {
+        return $this->totalsSelectSql(true);
+    }
+
+    /**
+     * Shared totals. $paidOnly keeps Análise and the Dashboard on paid rows.
+     * Reports pass false and let the filter decide the status.
+     */
+    private function totalsSelectSql(bool $paidOnly): string
+    {
+        $status = $paidOnly ? "transactions.status = 'paid' and " : '';
+
+        return "
+            count(*) as aggregate_count,
+            coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'income'), 0) as income_total,
+            coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'expense'), 0) as spending_total,
+            coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'reserve' and transactions.reserve_action = 'deposit'), 0)
+            - coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'reserve' and transactions.reserve_action = 'withdraw'), 0) as reserved_total,
+            count(*) filter (where {$status}transactions.type = 'income') as income_count,
+            count(*) filter (where {$status}transactions.type = 'expense') as spending_count
+        ";
+    }
+
+    private function spanDate(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        return substr((string) $value, 0, 10);
+    }
+
+    /**
      * @param  array<string, mixed>  $filters
      */
     private function filtered(array $filters): Builder
@@ -301,17 +529,7 @@ class TransactionService
      */
     private function paidBreakdown(Builder $query): array
     {
-        $row = (clone $query)
-            ->selectRaw("
-                count(*) as aggregate_count,
-                coalesce(sum(amount) filter (where status = 'paid' and type = 'income'), 0) as income_total,
-                coalesce(sum(amount) filter (where status = 'paid' and type = 'expense'), 0) as spending_total,
-                coalesce(sum(amount) filter (where status = 'paid' and type = 'reserve' and reserve_action = 'deposit'), 0)
-                - coalesce(sum(amount) filter (where status = 'paid' and type = 'reserve' and reserve_action = 'withdraw'), 0) as reserved_total,
-                count(*) filter (where status = 'paid' and type = 'income') as income_count,
-                count(*) filter (where status = 'paid' and type = 'expense') as spending_count
-            ")
-            ->first();
+        $row = (clone $query)->selectRaw($this->paidSelectSql())->first();
 
         $income = Money::of($row->income_total ?? '0');
         $expense = Money::of($row->spending_total ?? '0');

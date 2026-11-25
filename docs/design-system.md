@@ -180,6 +180,30 @@ Linha acima do conteúdo: segmento com Mês atual, Mês anterior, Trimestre, Sem
 ### Gráficos (usados a partir do módulo 7)
 Linha principal em `--color-primary-soft`, 2.4px, pontas arredondadas, ponto final destacado, com área abaixo em gradiente de 22% de opacidade até 0. Linhas de grade em `--color-border`. Eixos em 1.1rem `--color-text-subtle`. Séries extras: azul `#6f9ee0`, verde-água `#7cc4ac`, laranja `#e6b08d` (no claro: `#2f64b0`, `#2a7a62`, `#a65a24`). Legenda sempre em texto. Rosca com espessura 14 e trilho `--color-border-input`; o centro mostra o total do período; segmentos nas cores dos cadastros (categoria, banco ou cartão) e "Outras" em `--color-text-subtle`; legenda em texto com valor e %. **Barras** (receitas × despesas por mês): duas barras por mês, cantos superiores arredondados (4px), receitas em `--color-positive` e despesas em `--color-destructive`, sem grade vertical, mês abreviado no eixo, tooltip com o mês por extenso e os dois valores. Todo gráfico tem `role="img"` com `aria-label` resumindo os dados e uma alternativa em texto (legenda ou lista) com os mesmos números. Vermelho só para despesas.
 
+### Relatórios em PDF e Excel (usados a partir do módulo 10; revisado na correção 1)
+
+**Regras comuns (prévia, PDF e Excel):**
+- **Uma única formatação**, feita no servidor: o servidor entrega, para cada célula, o valor cru (para o Excel) e o texto pronto com o tom (para a prévia e o PDF). O navegador não formata dinheiro, percentual nem data dos relatórios.
+- **Despesas são valor positivo e neutro** em colunas que já dizem o que são (Despesas, Valor dos Gastos por categoria, Lançado, Previsto, Total). Vermelho e "−R$" só para o que é negativo de verdade: saldo negativo, variação negativa, resgate e despesa no Extrato (coluna Valor com sinal). Positivos não levam "+", exceto em colunas de variação. O Excel grava o mesmo sinal que a prévia mostra.
+- Zeros ("R$ 0,00") em cor secundária suave. Valores em peso normal; **só a linha de total em negrito**. Números alinhados à direita com algarismos tabulares; texto, data e situação à esquerda.
+- **Cabeçalho do documento:** título grande, o período com as datas exatas ("Ano de 2026 · 01/01/2026 a 31/12/2026"; "Todo o período · desde 05/03/2025"; mês: "Novembro de 2026 · 01/11/2026 a 30/11/2026") e os filtros como etiquetas, **só quando há filtro** (nunca "Sem filtros").
+- **Caixas de indicadores (KPIs):** os totais do Extrato e o topo do Resumo do período são quatro caixas lado a lado (Receitas, Despesas, Reservado, Saldo), com rótulo pequeno em cima e valor grande embaixo; o Saldo segue a cor do sinal.
+
+**PDF:** sempre tema claro, fundo branco, tokens do tema claro escritos uma vez numa folha de estilo do PDF: texto `#1a1726`, secundário `#5f5a72`, suave `#6f6a84`, destaque `#7c4fd6`, texto de destaque `#5a2fb0`, fundo de destaque `#ece4fb`, cabeçalho de tabela `#f4f0fb`, listra `#faf8fd`, positivo/ok `#2a7a62`, negativo `#c23b43`, borda `#e0daee`. Fonte DejaVu Sans (tem "−" e acentos), sem internet.
+- Faixa de cabeçalho: à esquerda o quadrado "F" em `#7c4fd6` com o nome Fintrack; à direita "Gerado em dd/mm/aaaa HH:mm" em texto suave; um filete `#e0daee` embaixo.
+- Título 20pt em negrito, período 10pt, etiquetas de filtro com fundo `#ece4fb` e texto `#5a2fb0`.
+- Tabela: cabeçalho com fundo `#f4f0fb`, rótulos 8pt em maiúsculas com leve espaçamento, repetido a cada página; listras `#faf8fd`; total com filete superior de 1,5pt e negrito.
+- Rodapé centralizado: "Fintrack · Página X de Y", numerado **sem** execução de PHP no HTML.
+
+**Excel:** uma aba por relatório (até 31 caracteres). Linhas iniciais: título em negrito tamanho 14, período (com as datas exatas), filtros (só se houver) e "Gerado em". Cabeçalho em negrito com a linha congelada. Dinheiro como número com o formato `"R$ "#,##0.00;-"R$ "#,##0.00` (o "R$" entre aspas), percentual `0.0%`, datas `dd/mm/aaaa`, inteiros como inteiro, total em negrito, larguras ajustadas. As caixas de indicadores viram duas colunas (Indicador, Valor). Sem gráficos nem cores.
+
+### Página de Relatórios (layout)
+
+- No topo, o filtro de período padrão (vale para tudo).
+- Acima de 1280px: duas colunas. **Esquerda (largura fixa por volta de 36rem): card "Configurar"** com abas "Modelos prontos | Montar o meu" no topo do card. Em Modelos prontos, os quatro modelos empilhados, cada um com ícone, nome e uma linha de descrição, e o selecionado com borda e fundo de destaque. Em Montar o meu, "O que incluir" em quatro blocos com ícone (2 × 2) e, abaixo, os campos do conjunto escolhido.
+- **Direita (o resto da largura): a prévia como documento.** Cabeçalho com título (2.4rem, 700), período com datas, etiquetas de filtro e, no canto direito, as ações: **"Baixar PDF"** (botão primário com ícone) e **"Baixar Excel"** (secundário com ícone). Abaixo, as caixas de indicadores (quando houver) e as tabelas. "Mostrando 50 de N" em texto pequeno abaixo da tabela.
+- Até 1280px: tudo empilhado (Configurar em cima, documento embaixo). Tabelas rolam na horizontal dentro do documento só quando não cabem.
+
 ## 7. Movimento
 
 - Transição padrão: `var(--transition)` (0.25s, `cubic-bezier(0.4, 0, 0.2, 1)`) em cor, borda, fundo e `transform`.
