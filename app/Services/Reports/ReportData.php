@@ -5,12 +5,14 @@ namespace App\Services\Reports;
 class ReportData
 {
     /**
+     * @param  array<int, array{label: string, value: string}>  $filters
      * @param  array<int, array<string, mixed>>  $sections
      */
     public function __construct(
         public readonly string $title,
         public readonly string $periodLabel,
-        public readonly string $filtersSummary,
+        public readonly string $periodDetail,
+        public readonly array $filters,
         public readonly string $generatedAt,
         public readonly array $sections,
         public readonly int $rowCount,
@@ -29,7 +31,8 @@ class ReportData
         return [
             'title' => $this->title,
             'period_label' => $this->periodLabel,
-            'filters_summary' => $this->filtersSummary,
+            'period_detail' => $this->periodDetail,
+            'filters' => $this->filters,
             'generated_at' => $this->generatedAt,
             'sections' => $this->sections,
             'row_count' => $this->rowCount,

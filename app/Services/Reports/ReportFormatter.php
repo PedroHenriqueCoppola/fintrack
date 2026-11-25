@@ -5,43 +5,28 @@ namespace App\Services\Reports;
 use App\Support\Money;
 
 /**
- * pt-BR labels for the PDF. Excel keeps real numbers and the preview
- * formats in the browser. Neither path recalculates a total.
+ * The only place that turns a raw report value into pt-BR text and a tone.
+ * Preview and PDF print the text. Excel stores the raw value.
  */
 class ReportFormatter
 {
     /**
      * @param  array<string, mixed>  $column
+     * @return array{raw: mixed, text: string, tone: string}
      */
-    public function cell(mixed $value, array $column): string
+    public function present(mixed $value, array $column): array
     {
         if ($value === null || $value === '') {
-            return '—';
+            return ['raw' => null, 'text' => '—', 'tone' => 'muted'];
         }
 
         return match ($column['type']) {
-            'money' => $this->money($value, $column),
-            'percent' => $this->percent($value, (bool) ($column['signed'] ?? false)),
-            'date' => $this->date((string) $value),
-            'integer' => (string) (int) $value,
-            default => (string) $value,
+            'money' => $this->money((string) $value, (bool) ($column['signed'] ?? false)),
+            'percent' => $this->percent((string) $value, (bool) ($column['signed'] ?? false)),
+            'date' => ['raw' => $value, 'text' => $this->date((string) $value), 'tone' => 'neutral'],
+            'integer' => $this->integer($value),
+            default => ['raw' => $value, 'text' => (string) $value, 'tone' => 'neutral'],
         };
-    }
-
-    /**
-     * @param  array<string, mixed>  $column
-     */
-    public function isNegative(mixed $value, array $column): bool
-    {
-        if ($column['type'] !== 'money' || $value === null || $value === '') {
-            return false;
-        }
-
-        if (($column['tone'] ?? null) === 'negative') {
-            return Money::compare($value, '0') !== 0;
-        }
-
-        return Money::compare($value, '0') === -1;
     }
 
     public function barWidth(mixed $value): string
@@ -69,40 +54,69 @@ class ReportFormatter
     }
 
     /**
-     * @param  array<string, mixed>  $column
+     * @return array{raw: string, text: string, tone: string}
      */
-    private function money(mixed $value, array $column): string
+    private function money(string $amount, bool $signed): array
     {
-        $amount = (string) $value;
+        $amount = Money::of($amount);
+        $compare = Money::compare($amount, '0');
 
-        if (($column['tone'] ?? null) === 'negative' && Money::compare($amount, '0') === 1) {
-            $amount = Money::sub('0', $amount);
+        if ($compare === 0) {
+            return ['raw' => $amount, 'text' => Money::label($amount), 'tone' => 'muted'];
         }
 
-        if (($column['signed'] ?? false) && Money::compare($amount, '0') === 1) {
-            return '+'.Money::label($amount);
+        if ($compare < 0) {
+            return ['raw' => $amount, 'text' => Money::label($amount), 'tone' => 'negative'];
         }
 
-        return Money::label($amount);
+        $label = Money::label($amount);
+
+        return [
+            'raw' => $amount,
+            'text' => $signed ? '+'.$label : $label,
+            'tone' => $signed ? 'positive' : 'neutral',
+        ];
     }
 
-    private function percent(mixed $value, bool $signed): string
+    /**
+     * @return array{raw: string, text: string, tone: string}
+     */
+    private function percent(string $value, bool $signed): array
     {
-        $scaled = bcmul((string) $value, '100', 8);
+        $scaled = bcmul($value, '100', 8);
         $rounded = Money::roundHalfUp($scaled, 1);
+        $compare = Money::compare($rounded, '0');
         $negative = str_starts_with($rounded, '-');
         $absolute = $negative ? substr($rounded, 1) : $rounded;
         $text = str_replace('.', ',', $absolute).'%';
 
-        if ($negative && Money::compare($rounded, '0') !== 0) {
-            return '−'.$text;
+        if ($compare === 0) {
+            return ['raw' => $value, 'text' => $text, 'tone' => 'muted'];
         }
 
-        if ($signed && Money::compare($rounded, '0') === 1) {
-            return '+'.$text;
+        if ($compare < 0) {
+            return ['raw' => $value, 'text' => '−'.$text, 'tone' => 'negative'];
         }
 
-        return $text;
+        return [
+            'raw' => $value,
+            'text' => $signed ? '+'.$text : $text,
+            'tone' => $signed ? 'positive' : 'neutral',
+        ];
+    }
+
+    /**
+     * @return array{raw: int, text: string, tone: string}
+     */
+    private function integer(mixed $value): array
+    {
+        $number = (int) $value;
+
+        return [
+            'raw' => $number,
+            'text' => (string) $number,
+            'tone' => $number === 0 ? 'muted' : 'neutral',
+        ];
     }
 
     private function date(string $value): string

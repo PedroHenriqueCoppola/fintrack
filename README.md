@@ -112,9 +112,9 @@ A página http://localhost:8000/ reúne o resumo do período. O filtro é o mesm
 
 A página http://localhost:8000/reports monta o relatório na hora. Nada é gravado: não há lista de relatórios gerados nem modelo salvo. O filtro de período é o mesmo do Dashboard (mês atual é o padrão) e fica só no endereço.
 
-**Modelos prontos:** Gastos por categoria (despesas pagas), Resumo do período (receitas, despesas, reservado e saldo, com o período anterior; em "Todo o período" não há comparação), Extrato de transações (pagas, da mais recente à mais antiga, com os totais das pagas) e Saldo mês a mês (todos os meses do intervalo, no máximo os últimos 60).
+**Modelos prontos:** Gastos por categoria (despesas pagas), Resumo do período (quatro caixas no topo e, quando há período anterior, a comparação embaixo; em "Todo o período" ficam só as caixas), Extrato de transações (pagas, da mais recente à mais antiga, com as caixas Totais das linhas listadas) e Saldo mês a mês (todos os meses do intervalo, no máximo os últimos 60).
 
-**Montar o meu:** um conjunto por vez — Transações (os filtros da Análise e agrupamento por dia, semana, mês, categoria ou banco), Faturas (fechamento dentro do período), Patrimônio ou Metas. A prévia mostra as primeiras 50 linhas e avisa "Mostrando 50 de N". PDF até 2.000 linhas e Excel até 20.000; acima disso o download é recusado. A prévia, o PDF e o Excel saem da mesma tabela calculada no servidor.
+**Montar o meu:** um conjunto por vez — Transações (os filtros da Análise e agrupamento por dia, semana, mês, categoria ou banco), Faturas (fechamento dentro do período), Patrimônio ou Metas. Nas transações do construtor, as somas e a quantidade seguem a situação escolhida (Paga, Pendente ou Todas). Os modelos prontos continuam só com pagas. A prévia mostra as primeiras 50 linhas e avisa "Mostrando 50 de N". PDF até 2.000 linhas e Excel até 20.000; acima disso o download é recusado. O servidor formata o texto uma vez; a prévia e o PDF usam esse texto, e o Excel grava o valor cru. O período no documento traz as datas exatas. Sem filtro, nenhuma etiqueta aparece.
 
 O PDF usa a biblioteca `barryvdh/laravel-dompdf` 3.1.2 (Dompdf 3.1.6), tema claro, fonte DejaVu Sans. O Excel usa `openspout/openspout` 5.15.3, com números e datas de verdade. Os dois são compatíveis com PHP 8.5 e Laravel 13. O arquivo não fica em disco.
 

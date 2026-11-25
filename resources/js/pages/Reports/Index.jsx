@@ -1,10 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Calendar, ChevronDown, FileSpreadsheet } from 'lucide-react';
+import {
+    ArrowLeftRight,
+    Calendar,
+    CalendarRange,
+    ChevronDown,
+    CreditCard,
+    FileDown,
+    FileSpreadsheet,
+    Landmark,
+    ListOrdered,
+    PieChart,
+    Scale,
+    Target,
+} from 'lucide-react';
 import Button from '../../components/Button/Button';
 import Card from '../../components/Card/Card';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import PageHeader from '../../components/PageHeader/PageHeader';
+import Tabs from '../../components/Tabs/Tabs';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
 import { formatDate } from '../../lib/format';
 import PeriodPopover from '../Analysis/PeriodPopover';
@@ -23,17 +37,17 @@ const PERIODS = [
 ];
 
 const MODELS = [
-    { key: 'spending', title: 'Gastos por categoria', text: 'Despesas pagas do período, por categoria.' },
-    { key: 'summary', title: 'Resumo do período', text: 'Receitas, despesas, reservado e saldo, com o período anterior.' },
-    { key: 'statement', title: 'Extrato de transações', text: 'Lançamentos pagos, do mais recente ao mais antigo.' },
-    { key: 'monthly', title: 'Saldo mês a mês', text: 'Um mês por linha, inclusive os meses sem movimento.' },
+    { key: 'spending', title: 'Gastos por categoria', text: 'Despesas pagas por categoria, com % do total', icon: PieChart },
+    { key: 'summary', title: 'Resumo do período', text: 'Receitas, despesas, reservado e saldo, com o período anterior', icon: Scale },
+    { key: 'statement', title: 'Extrato de transações', text: 'Transações pagas, da mais recente à mais antiga', icon: ListOrdered },
+    { key: 'monthly', title: 'Saldo mês a mês', text: 'Receitas, despesas e saldo de cada mês', icon: CalendarRange },
 ];
 
 const DATASETS = [
-    { key: 'transactions', label: 'Transações' },
-    { key: 'invoices', label: 'Faturas' },
-    { key: 'net_worth', label: 'Patrimônio' },
-    { key: 'goals', label: 'Metas' },
+    { key: 'transactions', label: 'Transações', icon: ArrowLeftRight },
+    { key: 'invoices', label: 'Faturas', icon: CreditCard },
+    { key: 'net_worth', label: 'Patrimônio', icon: Landmark },
+    { key: 'goals', label: 'Metas', icon: Target },
 ];
 
 function toQuery(definition) {
@@ -107,148 +121,33 @@ function errorMessages(errors) {
     return Object.values(errors ?? {}).flatMap((value) => (Array.isArray(value) ? value : [value])).filter(Boolean);
 }
 
-function isZero(raw) {
-    const unsigned = raw.startsWith('-') ? raw.slice(1) : raw;
-    const [whole, fraction = '00'] = unsigned.split('.');
-    const cents = `${fraction}00`.slice(0, 2);
-
-    return (whole === '0' || whole === '') && cents === '00';
+function numeric(type) {
+    return type === 'money' || type === 'percent' || type === 'integer';
 }
 
-function formatReportMoney(value, tone) {
-    if (value === null || value === undefined || value === '') {
-        return '—';
-    }
-
-    const raw = String(value).trim();
-    const negative = raw.startsWith('-');
-    const unsigned = negative ? raw.slice(1) : raw;
-    const [whole, fraction = '00'] = unsigned.split('.');
-    const cents = `${fraction}00`.slice(0, 2);
-    const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    const body = `R$ ${grouped},${cents}`;
-
-    if (isZero(raw)) {
-        return 'R$ 0,00';
-    }
-
-    if (tone === 'negative') {
-        return `−${body}`;
-    }
-
-    if (tone === 'signed' || tone === 'positive') {
-        return `${negative ? '−' : '+'}${body}`;
-    }
-
-    return negative ? `−${body}` : body;
+function ShareCell({ cell }) {
+    return (
+        <span className="reports-share">
+            <span className="reports-share__track" aria-hidden="true">
+                <span style={{ width: cell.bar }} />
+            </span>
+            <span className="reports-share__value">{cell.text}</span>
+        </span>
+    );
 }
 
-function moneyClass(value, tone) {
-    if (value === null || value === undefined || value === '') {
-        return 'money';
+function cellClass(column, cell) {
+    const classes = [];
+
+    if (numeric(column.type)) {
+        classes.push('num');
     }
 
-    const raw = String(value).trim();
-
-    if (isZero(raw)) {
-        return 'money';
+    if (cell?.tone && cell.tone !== 'neutral') {
+        classes.push(`tone-${cell.tone}`);
     }
 
-    if (tone === 'negative' || raw.startsWith('-')) {
-        return 'money money--negative';
-    }
-
-    if (tone === 'signed' || tone === 'positive') {
-        return 'money money--positive';
-    }
-
-    return 'money';
-}
-
-function formatPercent(value, signed) {
-    if (value === null || value === undefined || value === '') {
-        return '—';
-    }
-
-    const raw = String(value).trim();
-    const negative = raw.startsWith('-');
-    const unsigned = negative ? raw.slice(1) : raw;
-    const [whole, frac = ''] = unsigned.split('.');
-
-    if (!/^\d+$/.test(whole)) {
-        return '—';
-    }
-
-    const padded = `${frac}00000000`.slice(0, 8);
-    const head = `${whole}${padded.slice(0, 3)}`.replace(/^0+(?=\d)/, '') || '0';
-    let milli = BigInt(head);
-
-    if (padded[3] >= '5') {
-        milli += 1n;
-    }
-
-    const text = `${milli / 10n},${milli % 10n}%`;
-
-    if (milli === 0n) {
-        return '0,0%';
-    }
-
-    if (negative) {
-        return `−${text}`;
-    }
-
-    if (signed) {
-        return `+${text}`;
-    }
-
-    return text;
-}
-
-function formatReportDate(value) {
-    if (!value) {
-        return '—';
-    }
-
-    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
-
-    return match ? `${match[3]}/${match[2]}/${match[1]}` : String(value);
-}
-
-function barWidth(value) {
-    const match = /^(\d+)(?:\.(\d+))?$/.exec(String(value ?? ''));
-
-    if (!match) {
-        return '0%';
-    }
-
-    if (match[1] !== '0') {
-        return '100%';
-    }
-
-    const hundredths = (match[2] ?? '').padEnd(2, '0').slice(0, 2);
-    const digits = hundredths.replace(/^0+/, '');
-
-    return `${digits || '0'}%`;
-}
-
-function cellText(value, column) {
-    if (column.type === 'money') {
-        return formatReportMoney(value, column.tone || (column.signed ? 'signed' : 'plain'));
-    }
-
-    if (column.type === 'percent') {
-        return formatPercent(value, Boolean(column.signed));
-    }
-
-    if (column.type === 'date') {
-        return formatReportDate(value);
-    }
-
-    if (column.type === 'integer') {
-        return value === null || value === undefined || value === '' ? '—' : String(value);
-    }
-
-    return value === null || value === undefined || value === '' ? '—' : String(value);
+    return classes.join(' ');
 }
 
 function SelectField({ label, value, onChange, children, error }) {
@@ -274,6 +173,7 @@ export default function Index({ definition, period, report, options, limits }) {
     const dirty = useRef(false);
     const requestId = useRef(0);
     const timer = useRef(null);
+    const draftRef = useRef(definition);
     const messages = errorMessages(pageErrors);
     const activePeriod = calendarOpen ? 'custom' : (draft.period || 'current_month');
     const rangeFrom = draft.period === 'custom' ? (draft.from || period.from) : period.from;
@@ -290,9 +190,11 @@ export default function Index({ definition, period, report, options, limits }) {
         !report.empty && report.row_count > limits.pdf ? limits.pdf_message : '',
         !report.empty && report.row_count > limits.xlsx ? limits.xlsx_message : '',
     ].filter(Boolean);
+    const filters = report.filters ?? [];
 
     useEffect(() => {
         if (!dirty.current) {
+            draftRef.current = definition;
             setDraft(definition);
         }
     }, [definition]);
@@ -327,6 +229,7 @@ export default function Index({ definition, period, report, options, limits }) {
     }
 
     function commit(next) {
+        draftRef.current = next;
         setDraft(next);
         schedule(next);
     }
@@ -338,16 +241,14 @@ export default function Index({ definition, period, report, options, limits }) {
         }
 
         setCalendarOpen(false);
-        commit({ ...draft, period: key, from: null, to: null });
+        commit({ ...draftRef.current, period: key, from: null, to: null });
     }
 
     function setField(key, value) {
-        setDraft((current) => {
-            const next = { ...current, [key]: value === '' ? null : value };
-            schedule(next);
-
-            return next;
-        });
+        const next = { ...draftRef.current, [key]: value === '' ? null : value };
+        draftRef.current = next;
+        setDraft(next);
+        schedule(next);
     }
 
     const downloadQuery = new URLSearchParams(toQuery(definition)).toString();
@@ -357,6 +258,142 @@ export default function Index({ definition, period, report, options, limits }) {
 
         return `/reports/download?${query}`;
     }
+
+    function downloadButton(format, blocked, reason, variant, Icon, label) {
+        if (blocked) {
+            return (
+                <Button variant={variant} disabled title={reason}>
+                    <Icon aria-hidden="true" strokeWidth={1.75} />
+                    {label}
+                </Button>
+            );
+        }
+
+        return (
+            <a className={`button button--${variant}`} href={downloadHref(format)}>
+                <Icon aria-hidden="true" strokeWidth={1.75} />
+                {label}
+            </a>
+        );
+    }
+
+    const presetPanel = (
+        <div className="model-list">
+            {MODELS.map((model) => {
+                const Icon = model.icon;
+
+                return (
+                    <button
+                        key={model.key}
+                        type="button"
+                        className="model-card"
+                        aria-pressed={(draft.preset || 'spending') === model.key}
+                        onClick={() => commit({ ...draftRef.current, mode: 'presets', preset: model.key })}
+                    >
+                        <Icon aria-hidden="true" strokeWidth={1.75} />
+                        <span>
+                            <strong>{model.title}</strong>
+                            <small>{model.text}</small>
+                        </span>
+                    </button>
+                );
+            })}
+        </div>
+    );
+
+    const builderPanel = (
+        <div className="reports-form">
+            <p className="reports-label">O que incluir</p>
+            <div className="dataset-grid" role="group" aria-label="O que incluir">
+                {DATASETS.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                        <button
+                            key={item.key}
+                            type="button"
+                            className="dataset-card"
+                            aria-pressed={(draft.dataset || 'transactions') === item.key}
+                            onClick={() => setField('dataset', item.key)}
+                        >
+                            <Icon aria-hidden="true" strokeWidth={1.75} />
+                            <span>{item.label}</span>
+                        </button>
+                    );
+                })}
+            </div>
+            {(draft.dataset || 'transactions') === 'transactions' ? (
+                <div className="reports-fields">
+                    <SelectField label="Tipo" value={draft.type ?? ''} error={errorText(pageErrors, 'type')} onChange={(value) => setField('type', value)}>
+                        <option value="">Todos</option>
+                        <option value="income">Receita</option>
+                        <option value="expense">Despesa</option>
+                        <option value="reserve">Reserva</option>
+                    </SelectField>
+                    <SelectField label="Categoria" value={draft.category_id ?? ''} error={errorText(pageErrors, 'category_id')} onChange={(value) => setField('category_id', value)}>
+                        <option value="">Todas</option>
+                        {allCategories(options).map((item) => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                        ))}
+                    </SelectField>
+                    <SelectField label="Banco" value={draft.bank_id ?? ''} error={errorText(pageErrors, 'bank_id')} onChange={(value) => setField('bank_id', value)}>
+                        <option value="">Todos</option>
+                        {(options.banks ?? []).map((item) => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                        ))}
+                    </SelectField>
+                    <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} onChange={(value) => setField('card_id', value)}>
+                        <option value="">Todos</option>
+                        {(options.cards ?? []).map((item) => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                        ))}
+                    </SelectField>
+                    <SelectField label="Forma de pagamento" value={draft.payment_method_id ?? ''} error={errorText(pageErrors, 'payment_method_id')} onChange={(value) => setField('payment_method_id', value)}>
+                        <option value="">Todas</option>
+                        {(options.paymentMethods ?? []).map((item) => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                        ))}
+                    </SelectField>
+                    <SelectField label="Situação" value={draft.status ?? 'paid'} error={errorText(pageErrors, 'status')} onChange={(value) => setField('status', value)}>
+                        <option value="paid">Paga</option>
+                        <option value="pending">Pendente</option>
+                        <option value="all">Todas</option>
+                    </SelectField>
+                    <SelectField label="Agrupar por" value={draft.group_by ?? 'none'} error={errorText(pageErrors, 'group_by')} onChange={(value) => setField('group_by', value)}>
+                        <option value="none">Sem agrupamento</option>
+                        <option value="day">Dia</option>
+                        <option value="week">Semana</option>
+                        <option value="month">Mês</option>
+                        <option value="category">Categoria</option>
+                        <option value="bank">Banco</option>
+                    </SelectField>
+                </div>
+            ) : null}
+            {draft.dataset === 'invoices' ? (
+                <div className="reports-fields">
+                    <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} onChange={(value) => setField('card_id', value)}>
+                        <option value="">Todos</option>
+                        {(options.cards ?? []).map((item) => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                        ))}
+                    </SelectField>
+                </div>
+            ) : null}
+            {draft.dataset === 'goals' ? (
+                <div className="reports-fields">
+                    <SelectField label="Situação" value={draft.goal_status ?? 'all'} error={errorText(pageErrors, 'goal_status')} onChange={(value) => setField('goal_status', value)}>
+                        <option value="all">Todas</option>
+                        <option value="active">Ativas</option>
+                        <option value="completed">Concluídas</option>
+                        <option value="archived">Arquivadas</option>
+                    </SelectField>
+                </div>
+            ) : null}
+            {draft.dataset === 'net_worth' ? (
+                <p className="reports-hint">O patrimônio usa só o período, sem filtros.</p>
+            ) : null}
+        </div>
+    );
 
     return (
         <>
@@ -407,7 +444,7 @@ export default function Index({ definition, period, report, options, limits }) {
                             onClose={() => setCalendarOpen(false)}
                             onApply={(from, to) => {
                                 setCalendarOpen(false);
-                                commit({ ...draft, period: 'custom', from, to });
+                                commit({ ...draftRef.current, period: 'custom', from, to });
                             }}
                         />
                     </div>
@@ -418,227 +455,131 @@ export default function Index({ definition, period, report, options, limits }) {
                     </div>
                 ) : null}
                 <div className="reports-layout">
-                    <section className="reports-setup" aria-label="Definição do relatório">
-                        <div className="period-seg" role="group" aria-label="Tipo de relatório">
-                            <button
-                                type="button"
-                                aria-pressed={draft.mode !== 'builder'}
-                                onClick={() => commit({ ...draft, mode: 'presets' })}
-                            >
-                                Modelos prontos
-                            </button>
-                            <button
-                                type="button"
-                                aria-pressed={draft.mode === 'builder'}
-                                onClick={() => commit({ ...draft, mode: 'builder' })}
-                            >
-                                Montar o meu
-                            </button>
-                        </div>
-                        {draft.mode === 'builder' ? (
-                            <div className="reports-form">
-                                <p className="reports-label">O que incluir</p>
-                                <div className="period-seg reports-datasets" role="group" aria-label="O que incluir">
-                                    {DATASETS.map((item) => (
-                                        <button
-                                            key={item.key}
-                                            type="button"
-                                            aria-pressed={(draft.dataset || 'transactions') === item.key}
-                                            onClick={() => setField('dataset', item.key)}
-                                        >
-                                            {item.label}
-                                        </button>
-                                    ))}
-                                </div>
-                                {(draft.dataset || 'transactions') === 'transactions' ? (
-                                    <div className="reports-fields">
-                                        <SelectField label="Tipo" value={draft.type ?? ''} error={errorText(pageErrors, 'type')} onChange={(value) => setField('type', value)}>
-                                            <option value="">Todos</option>
-                                            <option value="income">Receita</option>
-                                            <option value="expense">Despesa</option>
-                                            <option value="reserve">Reserva</option>
-                                        </SelectField>
-                                        <SelectField label="Categoria" value={draft.category_id ?? ''} error={errorText(pageErrors, 'category_id')} onChange={(value) => setField('category_id', value)}>
-                                            <option value="">Todas</option>
-                                            {allCategories(options).map((item) => (
-                                                <option key={item.id} value={item.id}>{item.name}</option>
-                                            ))}
-                                        </SelectField>
-                                        <SelectField label="Banco" value={draft.bank_id ?? ''} error={errorText(pageErrors, 'bank_id')} onChange={(value) => setField('bank_id', value)}>
-                                            <option value="">Todos</option>
-                                            {(options.banks ?? []).map((item) => (
-                                                <option key={item.id} value={item.id}>{item.name}</option>
-                                            ))}
-                                        </SelectField>
-                                        <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} onChange={(value) => setField('card_id', value)}>
-                                            <option value="">Todos</option>
-                                            {(options.cards ?? []).map((item) => (
-                                                <option key={item.id} value={item.id}>{item.name}</option>
-                                            ))}
-                                        </SelectField>
-                                        <SelectField label="Forma de pagamento" value={draft.payment_method_id ?? ''} error={errorText(pageErrors, 'payment_method_id')} onChange={(value) => setField('payment_method_id', value)}>
-                                            <option value="">Todas</option>
-                                            {(options.paymentMethods ?? []).map((item) => (
-                                                <option key={item.id} value={item.id}>{item.name}</option>
-                                            ))}
-                                        </SelectField>
-                                        <SelectField label="Situação" value={draft.status ?? 'paid'} error={errorText(pageErrors, 'status')} onChange={(value) => setField('status', value)}>
-                                            <option value="paid">Paga</option>
-                                            <option value="pending">Pendente</option>
-                                            <option value="all">Todas</option>
-                                        </SelectField>
-                                        <SelectField label="Agrupar por" value={draft.group_by ?? 'none'} error={errorText(pageErrors, 'group_by')} onChange={(value) => setField('group_by', value)}>
-                                            <option value="none">Sem agrupamento</option>
-                                            <option value="day">Dia</option>
-                                            <option value="week">Semana</option>
-                                            <option value="month">Mês</option>
-                                            <option value="category">Categoria</option>
-                                            <option value="bank">Banco</option>
-                                        </SelectField>
-                                    </div>
-                                ) : null}
-                                {draft.dataset === 'invoices' ? (
-                                    <div className="reports-fields">
-                                        <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} onChange={(value) => setField('card_id', value)}>
-                                            <option value="">Todos</option>
-                                            {(options.cards ?? []).map((item) => (
-                                                <option key={item.id} value={item.id}>{item.name}</option>
-                                            ))}
-                                        </SelectField>
-                                    </div>
-                                ) : null}
-                                {draft.dataset === 'goals' ? (
-                                    <div className="reports-fields">
-                                        <SelectField label="Situação" value={draft.goal_status ?? 'all'} error={errorText(pageErrors, 'goal_status')} onChange={(value) => setField('goal_status', value)}>
-                                            <option value="all">Todas</option>
-                                            <option value="active">Ativas</option>
-                                            <option value="completed">Concluídas</option>
-                                            <option value="archived">Arquivadas</option>
-                                        </SelectField>
-                                    </div>
-                                ) : null}
-                                {draft.dataset === 'net_worth' ? (
-                                    <p className="reports-hint">O patrimônio usa só o período, sem filtros.</p>
-                                ) : null}
-                            </div>
-                        ) : (
-                            <div className="model-grid">
-                                {MODELS.map((model) => (
-                                    <button
-                                        key={model.key}
-                                        type="button"
-                                        className="model-card"
-                                        aria-pressed={(draft.preset || 'spending') === model.key}
-                                        onClick={() => commit({ ...draft, mode: 'presets', preset: model.key })}
-                                    >
-                                        <strong>{model.title}</strong>
-                                        <span>{model.text}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </section>
+                    <Card title="Configurar" className="reports-config">
+                        <Tabs
+                            label="Tipo de relatório"
+                            value={draft.mode === 'builder' ? 'builder' : 'presets'}
+                            onChange={(id) => commit({ ...draftRef.current, mode: id })}
+                            tabs={[
+                                { id: 'presets', label: 'Modelos prontos', panel: presetPanel },
+                                { id: 'builder', label: 'Montar o meu', panel: builderPanel },
+                            ]}
+                        />
+                    </Card>
                     <section className="reports-preview" aria-label="Prévia do relatório">
-                        <div className="reports-downloads">
-                            {pdfBlocked ? (
-                                <Button variant="secondary" disabled title={pdfReason}>Baixar PDF</Button>
-                            ) : (
-                                <a className="button button--secondary" href={downloadHref('pdf')}>Baixar PDF</a>
-                            )}
-                            {xlsxBlocked ? (
-                                <Button variant="secondary" disabled title={xlsxReason}>Baixar Excel</Button>
-                            ) : (
-                                <a className="button button--secondary" href={downloadHref('xlsx')}>Baixar Excel</a>
-                            )}
-                        </div>
-                        <p className="reports-live" aria-live="polite">
-                            {loading ? 'Atualizando a prévia…' : (report.shown_count < report.row_count ? `Mostrando ${report.shown_count} de ${report.row_count}` : '')}
-                        </p>
                         {limitMessages.map((message) => (
                             <p key={message} className="reports-limit">{message}</p>
                         ))}
-                        <Card>
+                        <Card className="reports-doc">
                             {report.empty ? (
-                                <EmptyState icon={FileSpreadsheet} message="Nenhum dado neste período." />
+                                <>
+                                    <header className="reports-doc__head">
+                                        <div>
+                                            <h2 className="reports-doc__title">{report.title}</h2>
+                                            <p className="reports-doc__period">{report.period_detail}</p>
+                                            <p className="reports-live" aria-live="polite">{loading ? 'Atualizando a prévia…' : ''}</p>
+                                        </div>
+                                        <div className="reports-downloads">
+                                            {downloadButton('pdf', true, pdfReason, 'primary', FileDown, 'Baixar PDF')}
+                                            {downloadButton('xlsx', true, xlsxReason, 'secondary', FileSpreadsheet, 'Baixar Excel')}
+                                        </div>
+                                    </header>
+                                    <EmptyState icon={FileSpreadsheet} message="Nenhum dado neste período." />
+                                </>
                             ) : (
                                 <div className={loading ? 'reports-sheet reports-sheet--loading' : 'reports-sheet'}>
-                                    <header className="reports-sheet__head">
-                                        <h2>{report.title}</h2>
-                                        <p>{report.period_label}</p>
-                                        <p>Filtros: {report.filters_summary}</p>
-                                        {report.note ? <p>{report.note}</p> : null}
+                                    <header className="reports-doc__head">
+                                        <div>
+                                            <h2 className="reports-doc__title">{report.title}</h2>
+                                            <p className="reports-doc__period">{report.period_detail}</p>
+                                            {filters.length > 0 ? (
+                                                <p className="reports-chips">
+                                                    {filters.map((filter) => (
+                                                        <span key={`${filter.label}-${filter.value}`} className="reports-chip">
+                                                            {filter.label}: {filter.value}
+                                                        </span>
+                                                    ))}
+                                                </p>
+                                            ) : null}
+                                            {report.note ? <p className="reports-note">{report.note}</p> : null}
+                                            <p className="reports-live" aria-live="polite">{loading ? 'Atualizando a prévia…' : ''}</p>
+                                        </div>
+                                        <div className="reports-downloads">
+                                            {downloadButton('pdf', pdfBlocked, pdfReason, 'primary', FileDown, 'Baixar PDF')}
+                                            {downloadButton('xlsx', xlsxBlocked, xlsxReason, 'secondary', FileSpreadsheet, 'Baixar Excel')}
+                                        </div>
                                     </header>
                                     {report.sections.map((section, index) => (
-                                        <div key={section.title || `section-${index}`} className="reports-section">
+                                        <div key={`${section.kind || 'table'}-${section.title || index}`} className="reports-section">
                                             {section.title ? <h3>{section.title}</h3> : null}
-                                            <div
-                                                className="reports-scroll"
-                                                tabIndex={0}
-                                                role="region"
-                                                aria-label={section.title || report.title}
-                                            >
-                                                <table>
-                                                    <thead>
-                                                        <tr>
-                                                            {section.columns.map((column) => (
-                                                                <th
-                                                                    key={column.key}
-                                                                    scope="col"
-                                                                    className={column.type === 'text' || column.type === 'status' ? '' : 'num'}
-                                                                >
-                                                                    {column.label}
-                                                                </th>
-                                                            ))}
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {section.rows.map((row, rowIndex) => (
-                                                            <tr key={`${section.title || index}-${rowIndex}`}>
-                                                                {section.columns.map((column) => (
-                                                                    <td
-                                                                        key={column.key}
-                                                                        className={column.type === 'text' || column.type === 'status' ? '' : 'num'}
-                                                                    >
-                                                                        {column.type === 'money' ? (
-                                                                            <span className={moneyClass(row[column.key], column.tone || (column.signed ? 'signed' : 'plain'))}>
-                                                                                {cellText(row[column.key], column)}
-                                                                            </span>
-                                                                        ) : section.bar_column === column.key ? (
-                                                                            <span className="reports-share">
-                                                                                <span className="reports-share__track" aria-hidden="true">
-                                                                                    <span style={{ width: barWidth(row[column.key]) }} />
-                                                                                </span>
-                                                                                {cellText(row[column.key], column)}
-                                                                            </span>
-                                                                        ) : cellText(row[column.key], column)}
-                                                                    </td>
-                                                                ))}
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                    {section.totals ? (
-                                                        <tfoot>
+                                            {section.kind === 'kpis' ? (
+                                                <div className="reports-kpis">
+                                                    {section.items.map((item) => (
+                                                        <div key={item.key} className="reports-kpi">
+                                                            <span>{item.label}</span>
+                                                            <strong className={item.tone && item.tone !== 'neutral' ? `tone-${item.tone}` : ''}>{item.text}</strong>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="reports-scroll"
+                                                    tabIndex={0}
+                                                    role="region"
+                                                    aria-label={section.title || report.title}
+                                                >
+                                                    <table>
+                                                        <thead>
                                                             <tr>
-                                                                {section.columns.map((column, columnIndex) => (
-                                                                    <th
-                                                                        key={column.key}
-                                                                        scope={columnIndex === 0 ? 'row' : 'col'}
-                                                                        className={column.type === 'text' || column.type === 'status' ? '' : 'num'}
-                                                                    >
-                                                                        {column.type === 'money' ? (
-                                                                            <span className={moneyClass(section.totals[column.key], column.tone || (column.signed ? 'signed' : 'plain'))}>
-                                                                                {cellText(section.totals[column.key], column)}
-                                                                            </span>
-                                                                        ) : cellText(section.totals[column.key], column)}
+                                                                {section.columns.map((column) => (
+                                                                    <th key={column.key} scope="col" className={numeric(column.type) ? 'num' : ''}>
+                                                                        {column.label}
                                                                     </th>
                                                                 ))}
                                                             </tr>
-                                                        </tfoot>
-                                                    ) : null}
-                                                </table>
-                                            </div>
+                                                        </thead>
+                                                        <tbody>
+                                                            {section.rows.map((row, rowIndex) => (
+                                                                <tr key={`${section.title || index}-${rowIndex}`}>
+                                                                    {section.columns.map((column) => {
+                                                                        const cell = row[column.key];
+
+                                                                        return (
+                                                                            <td key={column.key} className={cellClass(column, cell)}>
+                                                                                {cell.bar ? <ShareCell cell={cell} /> : cell.text}
+                                                                            </td>
+                                                                        );
+                                                                    })}
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                        {section.totals ? (
+                                                            <tfoot>
+                                                                <tr>
+                                                                    {section.columns.map((column, columnIndex) => {
+                                                                        const cell = section.totals[column.key];
+
+                                                                        if (columnIndex === 0) {
+                                                                            return <th key={column.key} scope="row">{cell.text}</th>;
+                                                                        }
+
+                                                                        return (
+                                                                            <td key={column.key} className={cellClass(column, cell)}>
+                                                                                {cell.bar ? <ShareCell cell={cell} /> : cell.text}
+                                                                            </td>
+                                                                        );
+                                                                    })}
+                                                                </tr>
+                                                            </tfoot>
+                                                        ) : null}
+                                                    </table>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
+                                    {report.shown_count < report.row_count ? (
+                                        <p className="reports-count">Mostrando {report.shown_count} de {report.row_count}</p>
+                                    ) : null}
                                 </div>
                             )}
                         </Card>

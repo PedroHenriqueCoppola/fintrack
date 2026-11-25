@@ -166,7 +166,8 @@ Uma página com duas áreas e **nada fica salvo**: o relatório é gerado na hor
 
 - **Modelos prontos:** Gastos por categoria, Resumo do período, Extrato de transações e Saldo mês a mês. A pessoa escolhe o modelo e o período (filtro de período padrão), vê a prévia e baixa.
 - **Montar o meu:** escolher o período, **o que incluir** (Transações, Faturas, Patrimônio ou Metas) e, para Transações, os filtros (tipo, categoria, banco, cartão, forma de pagamento e situação, os mesmos da Análise) e o agrupamento (sem agrupamento, dia, semana, mês, categoria ou banco). Prévia ao vivo.
-- **Baixar em PDF** (bem formatado, na identidade visual, sempre em tema claro, com a barra de percentual nos Gastos por categoria) **e em Excel** (uma planilha simples, valores como número e datas como data).
+- **Baixar em PDF** (bem formatado, na identidade visual, sempre em tema claro, com a barra de percentual nos Gastos por categoria e caixas de indicadores nos totais) **e em Excel** (uma planilha simples, valores como número e datas como data).
+- Despesas aparecem como valor positivo nas colunas que já dizem "Despesas"; vermelho só para o que é negativo de verdade. Filtros só aparecem quando existem.
 - Não há lista de relatórios gerados nem "salvar modelo". O que a pessoa monta vive só na URL da página.
 
 ## Cadastros e campos
@@ -362,4 +363,5 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Modelos prontos e construtor livre juntos**, sem histórico: o relatório é gerado na hora e nada é salvo (sem tabela nova, sem "Relatórios gerados", sem "Salvar modelo").
 - **Quatro modelos prontos:** Gastos por categoria, Resumo do período, Extrato de transações e Saldo mês a mês. Faturas, patrimônio e metas ficam no construtor.
 - **PDF e Excel**, os dois, gerados a partir da mesma tabela de dados que alimenta a prévia, para os três nunca discordarem. PDF sem gráficos desenhados: só a barra de percentual dentro da tabela dos Gastos por categoria.
-- **Mesma regra de números da Análise e do Dashboard:** valores por data da transação, só Pagas nos totais; filtros iguais aos da Análise.
+- **Mesma regra de números da Análise e do Dashboard:** valores por data da transação; filtros iguais aos da Análise. Os modelos prontos usam só Pagas. No construtor de Transações, as somas e os totais **seguem a situação escolhida** (Paga, Pendente ou Todas; padrão Paga) (ajuste da correção 1).
+- **Visual (correção 1):** formatação feita uma vez no servidor para prévia e PDF; despesas positivas e neutras; página com card "Configurar" à esquerda e a prévia como documento à direita, com os botões de download no próprio documento; PDF com cabeçalho Fintrack, caixas de indicadores e numeração de páginas sem execução de PHP.

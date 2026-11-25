@@ -269,7 +269,7 @@ class TransactionService
     /**
      * Paid income, expense, reserve and balance for the filter.
      * The status filter is ignored: the sums are always the paid rows,
-     * matching paidBreakdown. One query.
+     * matching paidBreakdown. One query. Used by Análise and the Dashboard.
      *
      * @param  array<string, mixed>  $filters
      * @return array{count: int, income: string, expense: string, reserved: string, balance: string, average_expense: string}
@@ -282,6 +282,29 @@ class TransactionService
     }
 
     /**
+     * Income, expense, reserve and balance of the rows the report filter
+     * already selected, including Paga, Pendente or Todas. One query.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{count: int, income: string, expense: string, reserved: string, balance: string}
+     */
+    public function reportSummary(array $filters): array
+    {
+        $row = $this->filteredForReport($filters)->selectRaw($this->totalsSelectSql(false))->first();
+        $income = Money::of($row->income_total ?? '0');
+        $expense = Money::of($row->spending_total ?? '0');
+        $reserved = Money::of($row->reserved_total ?? '0');
+
+        return [
+            'count' => (int) ($row->aggregate_count ?? 0),
+            'income' => $income,
+            'expense' => $expense,
+            'reserved' => $reserved,
+            'balance' => Money::sub($income, $expense),
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $filters
      */
     public function reportCount(array $filters): int
@@ -291,15 +314,14 @@ class TransactionService
 
     /**
      * Transactions of the filter, newest first. $limit null loads every row.
-     * The count is the whole filter, not the limited page.
+     * The caller counts once, before this load.
      *
      * @param  array<string, mixed>  $filters
-     * @return array{total: int, rows: Collection<int, Transaction>}
+     * @return Collection<int, Transaction>
      */
-    public function reportLines(array $filters, ?int $limit): array
+    public function reportLines(array $filters, ?int $limit): Collection
     {
         $query = $this->filteredForReport($filters);
-        $total = (clone $query)->count();
         $this->sort($query, 'date_desc');
         $query->with([
             'category:id,name',
@@ -312,14 +334,12 @@ class TransactionService
             $query->limit($limit);
         }
 
-        return [
-            'total' => $total,
-            'rows' => $query->get(),
-        ];
+        return $query->get();
     }
 
     /**
-     * Paid totals grouped like paidBreakdown. One query.
+     * Totals grouped like paidBreakdown. One query.
+     * The report filter decides the status; the sums do not force Paga.
      * Time groups come back oldest first. Category and bank come back
      * by expense descending, then name.
      *
@@ -334,25 +354,25 @@ class TransactionService
         if ($groupBy === 'category') {
             $query->join('categories', 'categories.id', '=', 'transactions.category_id')
                 ->groupByRaw('transactions.category_id::text, categories.name')
-                ->selectRaw('transactions.category_id::text as group_key, categories.name as group_name, '.$this->paidSelectSql());
+                ->selectRaw('transactions.category_id::text as group_key, categories.name as group_name, '.$this->totalsSelectSql(false));
         } elseif ($groupBy === 'bank') {
             $query->join('banks', 'banks.id', '=', 'transactions.bank_id')
                 ->groupByRaw('transactions.bank_id::text, banks.name')
-                ->selectRaw('transactions.bank_id::text as group_key, banks.name as group_name, '.$this->paidSelectSql());
+                ->selectRaw('transactions.bank_id::text as group_key, banks.name as group_name, '.$this->totalsSelectSql(false));
         } elseif ($groupBy === 'week') {
             $bucket = "to_char(date_trunc('week', transactions.date::timestamp), 'YYYY-MM-DD')";
             $query->groupByRaw($bucket)
-                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->paidSelectSql())
+                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->totalsSelectSql(false))
                 ->orderByRaw($bucket);
         } elseif ($groupBy === 'month') {
             $bucket = "to_char(transactions.date, 'YYYY-MM')";
             $query->groupByRaw($bucket)
-                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->paidSelectSql())
+                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->totalsSelectSql(false))
                 ->orderByRaw($bucket);
         } else {
             $bucket = "to_char(transactions.date, 'YYYY-MM-DD')";
             $query->groupByRaw($bucket)
-                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->paidSelectSql())
+                ->selectRaw($bucket." as group_key, '' as group_name, ".$this->totalsSelectSql(false))
                 ->orderByRaw($bucket);
         }
 
@@ -428,14 +448,25 @@ class TransactionService
 
     private function paidSelectSql(): string
     {
+        return $this->totalsSelectSql(true);
+    }
+
+    /**
+     * Shared totals. $paidOnly keeps Análise and the Dashboard on paid rows.
+     * Reports pass false and let the filter decide the status.
+     */
+    private function totalsSelectSql(bool $paidOnly): string
+    {
+        $status = $paidOnly ? "transactions.status = 'paid' and " : '';
+
         return "
             count(*) as aggregate_count,
-            coalesce(sum(transactions.amount) filter (where transactions.status = 'paid' and transactions.type = 'income'), 0) as income_total,
-            coalesce(sum(transactions.amount) filter (where transactions.status = 'paid' and transactions.type = 'expense'), 0) as spending_total,
-            coalesce(sum(transactions.amount) filter (where transactions.status = 'paid' and transactions.type = 'reserve' and transactions.reserve_action = 'deposit'), 0)
-            - coalesce(sum(transactions.amount) filter (where transactions.status = 'paid' and transactions.type = 'reserve' and transactions.reserve_action = 'withdraw'), 0) as reserved_total,
-            count(*) filter (where transactions.status = 'paid' and transactions.type = 'income') as income_count,
-            count(*) filter (where transactions.status = 'paid' and transactions.type = 'expense') as spending_count
+            coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'income'), 0) as income_total,
+            coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'expense'), 0) as spending_total,
+            coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'reserve' and transactions.reserve_action = 'deposit'), 0)
+            - coalesce(sum(transactions.amount) filter (where {$status}transactions.type = 'reserve' and transactions.reserve_action = 'withdraw'), 0) as reserved_total,
+            count(*) filter (where {$status}transactions.type = 'income') as income_count,
+            count(*) filter (where {$status}transactions.type = 'expense') as spending_count
         ";
     }
 

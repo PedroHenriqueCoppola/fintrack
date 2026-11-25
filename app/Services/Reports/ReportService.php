@@ -25,12 +25,16 @@ class ReportService
 
     public const MONTH_CAP = 60;
 
+    /** @var array{from: ?string, to: ?string}|null */
+    private ?array $span = null;
+
     public function __construct(
         private PeriodRange $periods,
         private TransactionService $transactions,
         private CardInvoiceService $invoices,
         private NetWorthService $netWorth,
         private GoalService $goals,
+        private ReportFormatter $formatter,
     ) {}
 
     /**
@@ -61,7 +65,7 @@ class ReportService
             ? $this->builder($definition, $range, $audience)
             : $this->preset($definition, $range, $audience);
 
-        return $this->finish($built, $range['label'], $audience);
+        return $this->finish($built, $definition, $range, $audience);
     }
 
     /**
@@ -73,7 +77,7 @@ class ReportService
     {
         return match ($definition['preset']) {
             'summary' => $this->periodSummary($definition, $range),
-            'statement' => $this->statement($this->forced($definition, null, 'paid'), $range, $audience, 'Extrato de transações', 'Situação: Paga'),
+            'statement' => $this->statement($this->forced($definition, null, 'paid'), $range, $audience, 'Extrato de transações', []),
             'monthly' => $this->monthlyBalance($definition, $range),
             default => $this->spendingByCategory($definition, $range),
         };
@@ -96,7 +100,7 @@ class ReportService
                     $range,
                     $audience,
                     'Extrato de transações',
-                    $this->transactionFiltersSummary($definition),
+                    $this->transactionTags($definition),
                 )
                 : $this->grouped($definition, $range, $audience),
         };
@@ -134,7 +138,7 @@ class ReportService
             'title' => null,
             'columns' => [
                 $this->column('category', 'Categoria', 'text'),
-                $this->column('amount', 'Valor', 'money', 'negative'),
+                $this->column('amount', 'Valor', 'money'),
                 $this->column('share', '% do total', 'percent'),
                 $this->column('count', 'Qtd.', 'integer'),
             ],
@@ -148,7 +152,7 @@ class ReportService
             'bar_column' => 'share',
         ];
 
-        return $this->pack('Gastos por categoria', 'Tipo: Despesa · Situação: Paga', [$section], count($rows));
+        return $this->pack('Gastos por categoria', [], [$section], count($rows));
     }
 
     /**
@@ -167,6 +171,7 @@ class ReportService
             $this->column('metric', 'Indicador', 'text'),
             $this->column('current', 'Período', 'money'),
         ];
+        $sections = [$this->kpiSection(null, $current)];
         $metrics = [
             ['Receitas', 'income'],
             ['Despesas', 'expense'],
@@ -193,17 +198,19 @@ class ReportService
 
         if ($previous !== null) {
             $columns[] = $this->column('previous', 'Período anterior', 'money');
-            $columns[] = $this->column('delta', 'Variação (R$)', 'money', null, true);
-            $columns[] = $this->column('share', 'Variação (%)', 'percent', null, true);
+            $columns[] = $this->column('delta', 'Variação (R$)', 'money', true);
+            $columns[] = $this->column('share', 'Variação (%)', 'percent', true);
+            $sections[] = [
+                'kind' => 'table',
+                'title' => null,
+                'columns' => $columns,
+                'rows' => $rows,
+                'totals' => null,
+                'bar_column' => null,
+            ];
         }
 
-        return $this->pack('Resumo do período', 'Sem filtros', [[
-            'title' => null,
-            'columns' => $columns,
-            'rows' => $rows,
-            'totals' => null,
-            'bar_column' => null,
-        ]], count($rows));
+        return $this->pack('Resumo do período', [], $sections, count($rows));
     }
 
     /**
@@ -211,48 +218,41 @@ class ReportService
      * @param  array{from: ?string, to: ?string, label: string}  $range
      * @return array<string, mixed>
      */
-    private function statement(array $definition, array $range, string $audience, string $title, string $filters): array
+    /**
+     * @param  array<int, array{label: string, value: string}>  $filters
+     */
+    private function statement(array $definition, array $range, string $audience, string $title, array $filters): array
     {
         $total = $this->transactions->reportCount($definition);
         $this->guard($audience, $total);
+
+        if ($total === 0) {
+            return $this->pack($title, $filters, [], 0);
+        }
+
         $lines = $this->transactions->reportLines(
             $definition,
             $audience === 'preview' ? self::PREVIEW_ROWS : null,
         );
         $rows = [];
 
-        foreach ($lines['rows'] as $transaction) {
+        foreach ($lines as $transaction) {
             $rows[] = $this->statementRow($transaction);
         }
 
-        if ($total === 0) {
-            return $this->pack($title, $filters, [], 0);
-        }
+        $totals = $this->transactions->reportSummary($definition);
 
-        $paid = $this->transactions->paidSummary($definition);
-        $sections = [[
-            'title' => null,
-            'columns' => $this->statementColumns(),
-            'rows' => $rows,
-            'totals' => null,
-            'bar_column' => null,
-        ], [
-            'title' => 'Totais das transações pagas',
-            'columns' => [
-                $this->column('metric', 'Indicador', 'text'),
-                $this->column('amount', 'Valor', 'money'),
+        return $this->pack($title, $filters, [
+            $this->kpiSection('Totais', $totals),
+            [
+                'kind' => 'table',
+                'title' => null,
+                'columns' => $this->statementColumns(),
+                'rows' => $rows,
+                'totals' => null,
+                'bar_column' => null,
             ],
-            'rows' => [
-                ['metric' => 'Receitas', 'amount' => $paid['income']],
-                ['metric' => 'Despesas', 'amount' => $paid['expense']],
-                ['metric' => 'Reservado', 'amount' => $paid['reserved']],
-                ['metric' => 'Saldo', 'amount' => $paid['balance']],
-            ],
-            'totals' => null,
-            'bar_column' => null,
-        ]];
-
-        return $this->pack($title, $filters, $sections, $total);
+        ], $total);
     }
 
     /**
@@ -265,7 +265,7 @@ class ReportService
         $window = $this->monthWindow($definition, $range);
 
         if ($window['keys'] === []) {
-            return $this->pack('Saldo mês a mês', 'Sem filtros', [], 0);
+            return $this->pack('Saldo mês a mês', [], [], 0);
         }
 
         $groups = $this->transactions->groupedPaidTotals($definition, 'month');
@@ -290,7 +290,7 @@ class ReportService
             $totals = $this->addGroup($totals, $group);
         }
 
-        return $this->pack('Saldo mês a mês', 'Sem filtros', [[
+        return $this->pack('Saldo mês a mês', [], [[
             'title' => null,
             'columns' => $this->flowColumns('Mês', 'month'),
             'rows' => $rows,
@@ -338,14 +338,14 @@ class ReportService
             'bank' => 'Transações por banco',
         ];
 
-        return $this->pack($titles[$groupBy] ?? 'Transações', $this->transactionFiltersSummary($definition), [[
+        return $this->pack($titles[$groupBy] ?? 'Transações', $this->transactionTags($definition), [[
             'title' => null,
             'columns' => [
                 $this->column('group', 'Grupo', 'text'),
-                $this->column('income', 'Receitas', 'money', 'positive'),
-                $this->column('expense', 'Despesas', 'money', 'negative'),
-                $this->column('reserved', 'Reservado', 'money', 'signed'),
-                $this->column('balance', 'Saldo', 'money', 'signed'),
+                $this->column('income', 'Receitas', 'money'),
+                $this->column('expense', 'Despesas', 'money'),
+                $this->column('reserved', 'Reservado', 'money'),
+                $this->column('balance', 'Saldo', 'money'),
                 $this->column('count', 'Qtd.', 'integer'),
             ],
             'rows' => $rows,
@@ -374,11 +374,11 @@ class ReportService
             $range['to'],
         );
         $this->guard($audience, count($rows));
-        $filters = 'Sem filtros';
+        $filters = [];
 
         if ($definition['card_id'] !== null) {
             $name = Card::query()->whereKey($definition['card_id'])->value('name');
-            $filters = 'Cartão: '.($name ?: '—');
+            $filters[] = ['label' => 'Cartão', 'value' => $name ?: '—'];
         }
 
         $table = [];
@@ -426,7 +426,7 @@ class ReportService
         $this->guard($audience, count($records));
 
         if ($records === []) {
-            return $this->pack('Patrimônio', 'Sem filtros', [], 0);
+            return $this->pack('Patrimônio', [], [], 0);
         }
 
         $rows = [];
@@ -449,12 +449,12 @@ class ReportService
             ];
         }
 
-        return $this->pack('Patrimônio', 'Sem filtros', [[
+        return $this->pack('Patrimônio', [], [[
             'title' => null,
             'columns' => [
                 $this->column('month', 'Mês', 'text'),
                 $this->column('total', 'Total', 'money'),
-                $this->column('variation', 'Variação (R$)', 'money', 'signed'),
+                $this->column('variation', 'Variação (R$)', 'money', true),
             ],
             'rows' => $rows,
             'totals' => null,
@@ -509,12 +509,15 @@ class ReportService
         }
 
         $labels = [
-            'active' => 'Situação: Ativas',
-            'completed' => 'Situação: Concluídas',
-            'archived' => 'Situação: Arquivadas',
+            'active' => 'Ativas',
+            'completed' => 'Concluídas',
+            'archived' => 'Arquivadas',
         ];
+        $filters = isset($labels[$definition['goal_status']])
+            ? [['label' => 'Situação', 'value' => $labels[$definition['goal_status']]]]
+            : [];
 
-        return $this->pack('Metas', $labels[$definition['goal_status']] ?? 'Sem filtros', $rows === [] ? [] : [[
+        return $this->pack('Metas', $filters, $rows === [] ? [] : [[
             'title' => null,
             'columns' => [
                 $this->column('name', 'Meta', 'text'),
@@ -534,10 +537,11 @@ class ReportService
     }
 
     /**
+     * @param  array<int, array{label: string, value: string}>  $filters
      * @param  array<int, array<string, mixed>>  $sections
      * @return array<string, mixed>
      */
-    private function pack(string $title, string $filters, array $sections, int $rowCount, ?string $note = null, bool $truncated = false): array
+    private function pack(string $title, array $filters, array $sections, int $rowCount, ?string $note = null, bool $truncated = false): array
     {
         return [
             'title' => $title,
@@ -551,24 +555,33 @@ class ReportService
 
     /**
      * @param  array<string, mixed>  $built
+     * @param  array<string, mixed>  $definition
+     * @param  array{from: ?string, to: ?string, label: string}  $range
      */
-    private function finish(array $built, string $periodLabel, string $audience): ReportData
+    private function finish(array $built, array $definition, array $range, string $audience): ReportData
     {
-        $sections = $built['sections'];
+        $sections = $this->presentSections($built['sections']);
         $rowCount = $built['row_count'];
         $shown = $rowCount;
         $truncated = $built['truncated'];
 
-        if ($audience === 'preview' && $rowCount > self::PREVIEW_ROWS && isset($sections[0]['rows'])) {
-            $sections[0]['rows'] = array_slice($sections[0]['rows'], 0, self::PREVIEW_ROWS);
-            $shown = self::PREVIEW_ROWS;
-            $truncated = true;
+        if ($audience === 'preview' && $rowCount > self::PREVIEW_ROWS) {
+            foreach ($sections as &$section) {
+                if (($section['kind'] ?? '') === 'table' && isset($section['rows'])) {
+                    $section['rows'] = array_slice($section['rows'], 0, self::PREVIEW_ROWS);
+                    $shown = self::PREVIEW_ROWS;
+                    $truncated = true;
+                    break;
+                }
+            }
+            unset($section);
         }
 
         return new ReportData(
             title: $built['title'],
-            periodLabel: $periodLabel,
-            filtersSummary: $built['filters'],
+            periodLabel: $range['label'],
+            periodDetail: $this->periodDetail($definition, $range),
+            filters: $built['filters'],
             generatedAt: now('America/Sao_Paulo')->format('Y-m-d H:i'),
             sections: $sections,
             rowCount: $rowCount,
@@ -582,11 +595,125 @@ class ReportService
 
     /**
      * @param  array<int, array<string, mixed>>  $sections
+     * @return array<int, array<string, mixed>>
+     */
+    private function presentSections(array $sections): array
+    {
+        foreach ($sections as &$section) {
+            $section['kind'] = $section['kind'] ?? 'table';
+
+            if ($section['kind'] === 'kpis') {
+                foreach ($section['items'] as &$item) {
+                    $cell = $this->formatter->present($item['raw'], ['type' => 'money']);
+                    $item['raw'] = $cell['raw'];
+                    $item['text'] = $cell['text'];
+                    $item['tone'] = $cell['tone'];
+                }
+                unset($item);
+
+                continue;
+            }
+
+            $bar = $section['bar_column'] ?? null;
+
+            foreach ($section['rows'] as &$row) {
+                $row = $this->presentRow($row, $section['columns'], $bar);
+            }
+            unset($row);
+
+            if (! empty($section['totals'])) {
+                $section['totals'] = $this->presentRow($section['totals'], $section['columns'], $bar);
+            }
+        }
+        unset($section);
+
+        return $sections;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @param  array<int, array<string, mixed>>  $columns
+     * @return array<string, array{raw: mixed, text: string, tone: string, bar?: string}>
+     */
+    private function presentRow(array $row, array $columns, ?string $bar): array
+    {
+        $presented = [];
+
+        foreach ($columns as $column) {
+            $cell = $this->formatter->present($row[$column['key']] ?? null, $column);
+
+            if ($bar === $column['key']) {
+                $cell['bar'] = $this->formatter->barWidth($cell['raw']);
+            }
+
+            $presented[$column['key']] = $cell;
+        }
+
+        return $presented;
+    }
+
+    /**
+     * @param  array{from: ?string, to: ?string, label: string}  $range
+     */
+    private function periodDetail(array $definition, array $range): string
+    {
+        if ($definition['period'] === 'all' || $range['from'] === null || $range['to'] === null) {
+            $first = $this->span()['from'];
+
+            return $first === null ? 'Todo o período' : 'Todo o período · desde '.$this->brDate($first);
+        }
+
+        $dates = $this->brDate($range['from']).' a '.$this->brDate($range['to']);
+
+        return match ($definition['period']) {
+            'quarter' => 'Trimestre · '.$dates,
+            'semester' => 'Semestre · '.$dates,
+            'year' => 'Ano de '.substr($range['from'], 0, 4).' · '.$dates,
+            'custom' => $dates,
+            default => $this->monthPhrase($range['from']).' · '.$dates,
+        };
+    }
+
+    private function monthPhrase(string $date): string
+    {
+        $label = Month::label(substr($date, 0, 7));
+
+        return preg_replace('/\s(?=\d{4}$)/', ' de ', $label) ?? $label;
+    }
+
+    /**
+     * @return array{from: ?string, to: ?string}
+     */
+    private function span(): array
+    {
+        return $this->span ??= $this->transactions->dateSpan();
+    }
+
+    /**
+     * @param  array<string, mixed>  $summary
+     * @return array<string, mixed>
+     */
+    private function kpiSection(?string $title, array $summary): array
+    {
+        return [
+            'kind' => 'kpis',
+            'title' => $title,
+            'items' => [
+                ['key' => 'income', 'label' => 'Receitas', 'raw' => $summary['income']],
+                ['key' => 'expense', 'label' => 'Despesas', 'raw' => $summary['expense']],
+                ['key' => 'reserved', 'label' => 'Reservado', 'raw' => $summary['reserved']],
+                ['key' => 'balance', 'label' => 'Saldo', 'raw' => $summary['balance']],
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $sections
      */
     private function landscape(array $sections): bool
     {
         foreach ($sections as $section) {
-            if (count($section['columns']) >= 7) {
+            if (($section['kind'] ?? 'table') === 'table' && count($section['columns'] ?? []) >= 7) {
                 return true;
             }
         }
@@ -637,7 +764,7 @@ class ReportService
             $this->column('payment', 'Forma de pagamento', 'text'),
             $this->column('type', 'Tipo', 'text'),
             $this->column('situation', 'Situação', 'status'),
-            $this->column('amount', 'Valor', 'money', 'signed'),
+            $this->column('amount', 'Valor', 'money'),
         ];
     }
 
@@ -677,10 +804,10 @@ class ReportService
     {
         return [
             $this->column($key, $label, 'text'),
-            $this->column('income', 'Receitas', 'money', 'positive'),
-            $this->column('expense', 'Despesas', 'money', 'negative'),
-            $this->column('reserved', 'Reservado', 'money', 'signed'),
-            $this->column('balance', 'Saldo', 'money', 'signed'),
+            $this->column('income', 'Receitas', 'money'),
+            $this->column('expense', 'Despesas', 'money'),
+            $this->column('reserved', 'Reservado', 'money'),
+            $this->column('balance', 'Saldo', 'money'),
         ];
     }
 
@@ -705,7 +832,7 @@ class ReportService
     private function monthWindow(array $definition, array $range): array
     {
         if ($range['from'] === null || $range['to'] === null) {
-            $span = $this->transactions->dateSpan();
+            $span = $this->span();
 
             if ($span['from'] === null || $span['to'] === null) {
                 return ['keys' => [], 'truncated' => false];
@@ -753,36 +880,59 @@ class ReportService
     }
 
     /**
+     * Tags for choices the person made. Paid is the default and stays off the list.
+     *
      * @param  array<string, mixed>  $definition
+     * @return array<int, array{label: string, value: string}>
      */
-    private function transactionFiltersSummary(array $definition): string
+    private function transactionTags(array $definition): array
     {
-        $parts = [];
+        $tags = [];
         $types = ['income' => 'Receita', 'expense' => 'Despesa', 'reserve' => 'Reserva'];
-        $statuses = ['paid' => 'Paga', 'pending' => 'Pendente', 'all' => 'Todas'];
+        $groups = [
+            'day' => 'Dia',
+            'week' => 'Semana',
+            'month' => 'Mês',
+            'category' => 'Categoria',
+            'bank' => 'Banco',
+        ];
 
         if ($definition['type'] !== null) {
-            $parts[] = 'Tipo: '.($types[$definition['type']] ?? $definition['type']);
+            $tags[] = ['label' => 'Tipo', 'value' => $types[$definition['type']] ?? $definition['type']];
         }
 
-        $parts[] = $this->named(Category::class, $definition['category_id'], 'Categoria');
-        $parts[] = $this->named(Bank::class, $definition['bank_id'], 'Banco');
-        $parts[] = $this->named(Card::class, $definition['card_id'], 'Cartão');
-        $parts[] = $this->named(PaymentMethod::class, $definition['payment_method_id'], 'Pagamento');
+        foreach ([
+            [Category::class, $definition['category_id'], 'Categoria'],
+            [Bank::class, $definition['bank_id'], 'Banco'],
+            [Card::class, $definition['card_id'], 'Cartão'],
+            [PaymentMethod::class, $definition['payment_method_id'], 'Forma de pagamento'],
+        ] as [$model, $id, $label]) {
+            $tag = $this->named($model, $id, $label);
 
-        if ($definition['status'] !== null) {
-            $parts[] = 'Situação: '.($statuses[$definition['status']] ?? $definition['status']);
+            if ($tag !== null) {
+                $tags[] = $tag;
+            }
         }
 
-        $parts = array_values(array_filter($parts));
+        if ($definition['status'] !== null && $definition['status'] !== 'paid') {
+            $tags[] = [
+                'label' => 'Situação',
+                'value' => $definition['status'] === 'pending' ? 'Pendente' : 'Todas',
+            ];
+        }
 
-        return $parts === [] ? 'Sem filtros' : implode(' · ', $parts);
+        if (($definition['group_by'] ?? 'none') !== 'none') {
+            $tags[] = ['label' => 'Agrupar por', 'value' => $groups[$definition['group_by']] ?? $definition['group_by']];
+        }
+
+        return $tags;
     }
 
     /**
      * @param  class-string  $model
+     * @return array{label: string, value: string}|null
      */
-    private function named(string $model, ?int $id, string $prefix): ?string
+    private function named(string $model, ?int $id, string $label): ?array
     {
         if ($id === null) {
             return null;
@@ -790,7 +940,7 @@ class ReportService
 
         $name = $model::query()->whereKey($id)->value('name');
 
-        return $prefix.': '.($name ?: '—');
+        return ['label' => $label, 'value' => $name ?: '—'];
     }
 
     /**
@@ -847,19 +997,15 @@ class ReportService
     }
 
     /**
-     * @return array{key: string, label: string, type: string, tone?: string, signed?: bool}
+     * @return array{key: string, label: string, type: string, signed?: bool}
      */
-    private function column(string $key, string $label, string $type, ?string $tone = null, bool $signed = false): array
+    private function column(string $key, string $label, string $type, bool $signed = false): array
     {
         $column = [
             'key' => $key,
             'label' => $label,
             'type' => $type,
         ];
-
-        if ($tone !== null) {
-            $column['tone'] = $tone;
-        }
 
         if ($signed) {
             $column['signed'] = true;
