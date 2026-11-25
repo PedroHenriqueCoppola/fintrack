@@ -3,11 +3,15 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import DatePicker from '../../components/DatePicker/DatePicker';
 import FormField from '../../components/FormField/FormField';
+import IntegerInput from '../../components/IntegerInput/IntegerInput';
 import Modal from '../../components/Modal/Modal';
+import MoneyInput from '../../components/MoneyInput/MoneyInput';
 import MonthField from '../../components/MonthField/MonthField';
+import Select from '../../components/Select/Select';
+import { bankOption, cardOption, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { formatPlainMoney } from '../../lib/format';
 import { useFieldSetter } from '../../lib/fields';
-import { datePayload, formatDate, moneyPayload, moneyText, monthPayload, monthText } from './fields';
+import { datePayload, formatDate, moneyPayload, monthPayload, monthText } from './fields';
 
 function PaymentFields({ form, setField, options }) {
     const method = options.payment_methods.find((item) => String(item.id) === String(form.data.payment_method_id));
@@ -20,56 +24,50 @@ function PaymentFields({ form, setField, options }) {
     return (
         <>
             <FormField label="Forma de pagamento" error={form.errors.payment_method_id}>
-                <select
+                <Select
                     value={form.data.payment_method_id}
-                    onChange={(event) => {
-                        const next = options.payment_methods.find((item) => String(item.id) === event.target.value);
+                    placeholder="Escolha"
+                    emptyOption="Escolha"
+                    options={options.payment_methods.map((item) => namedOption(item))}
+                    onChange={(value) => {
+                        const next = options.payment_methods.find((item) => String(item.id) === value);
                         setField((data) => ({
                             ...data,
-                            payment_method_id: event.target.value,
+                            payment_method_id: value,
                             card_id: next?.requires_card ? data.card_id : '',
                         }), 'payment_method_id', 'card_id', 'bank_id');
                     }}
-                >
-                    <option value="">Escolha</option>
-                    {options.payment_methods.map((item) => (
-                        <option key={item.id} value={item.id}>{item.name}</option>
-                    ))}
-                </select>
+                />
             </FormField>
             {requiresCard ? (
                 <FormField label="Cartão" error={form.errors.card_id}>
-                    <select
+                    <Select
                         value={form.data.card_id}
-                        onChange={(event) => {
-                            const next = options.cards.find((item) => String(item.id) === event.target.value);
+                        placeholder="Escolha"
+                        emptyOption="Escolha"
+                        options={options.cards.map((item) => cardOption(item, options.banks))}
+                        onChange={(value) => {
+                            const next = options.cards.find((item) => String(item.id) === value);
                             setField((data) => ({
                                 ...data,
-                                card_id: event.target.value,
+                                card_id: value,
                                 bank_id: next ? String(next.bank_id) : data.bank_id,
                             }), 'card_id', 'bank_id');
                         }}
-                    >
-                        <option value="">Escolha</option>
-                        {options.cards.map((item) => (
-                            <option key={item.id} value={item.id}>{item.name}</option>
-                        ))}
-                    </select>
+                    />
                 </FormField>
             ) : null}
             <FormField label="Banco" error={form.errors.bank_id}>
                 {requiresCard && card ? (
                     <input type="text" value={bankName ? `${bankName} · do cartão` : 'Do cartão'} disabled readOnly />
                 ) : (
-                    <select
+                    <Select
                         value={form.data.bank_id}
-                        onChange={(event) => setField('bank_id', event.target.value)}
-                    >
-                        <option value="">Escolha</option>
-                        {options.banks.map((item) => (
-                            <option key={item.id} value={item.id}>{item.name}</option>
-                        ))}
-                    </select>
+                        placeholder="Escolha"
+                        emptyOption="Escolha"
+                        options={options.banks.map((item) => bankOption(item))}
+                        onChange={(value) => setField('bank_id', value)}
+                    />
                 )}
             </FormField>
         </>
@@ -101,7 +99,7 @@ export function FixedExpenseModal({ item, options, onClose }) {
     const form = useForm({
         name: item?.name ?? '',
         category_id: item?.category?.id ? String(item.category.id) : '',
-        amount: item ? moneyText(item.amount) : '',
+        amount: item?.amount == null ? '' : String(item.amount),
         due_day: item?.due_day ? String(item.due_day) : '',
         start_month: item ? monthText(item.start_month) : '',
         end_month: item?.end_month ? monthText(item.end_month) : '',
@@ -152,30 +150,27 @@ export function FixedExpenseModal({ item, options, onClose }) {
                     <input value={form.data.name} autoComplete="off" onChange={(event) => setField('name', event.target.value)} />
                 </FormField>
                 <FormField label="Categoria" error={form.errors.category_id}>
-                    <select value={form.data.category_id} onChange={(event) => setField('category_id', event.target.value)}>
-                        <option value="">Escolha</option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                                {category.archived ? `${category.name} (arquivado)` : category.name}
-                            </option>
-                        ))}
-                    </select>
+                    <Select
+                        value={form.data.category_id}
+                        placeholder="Escolha"
+                        emptyOption="Escolha"
+                        options={categories.map((category) => categoryOption(category))}
+                        onChange={(value) => setField('category_id', value)}
+                    />
                 </FormField>
                 <div className="plan-form__row">
                     <FormField label="Valor padrão" error={form.errors.amount}>
-                        <input
-                            inputMode="decimal"
-                            autoComplete="off"
+                        <MoneyInput
                             value={form.data.amount}
-                            onChange={(event) => setField('amount', event.target.value)}
+                            onChange={(value) => setField('amount', value)}
                         />
                     </FormField>
                     <FormField label="Dia do vencimento" error={form.errors.due_day}>
-                        <input
-                            inputMode="numeric"
-                            autoComplete="off"
+                        <IntegerInput
+                            min={1}
+                            max={31}
                             value={form.data.due_day}
-                            onChange={(event) => setField('due_day', event.target.value.replace(/\D/g, '').slice(0, 2))}
+                            onChange={(value) => setField('due_day', value)}
                         />
                     </FormField>
                 </div>
@@ -215,7 +210,7 @@ export function InstallmentModal({ item, options, onClose }) {
     const form = useForm({
         name: item?.name ?? '',
         category_id: item?.category?.id ? String(item.category.id) : '',
-        total_amount: item ? moneyText(item.total_amount) : '',
+        total_amount: item?.total_amount == null ? '' : String(item.total_amount),
         installments_count: item ? String(item.installments_count) : '',
         first_date: item?.first_date ? formatDate(item.first_date) : '',
         bank_id: item?.bank?.id ? String(item.bank.id) : '',
@@ -298,31 +293,30 @@ export function InstallmentModal({ item, options, onClose }) {
                     <input value={form.data.name} autoComplete="off" onChange={(event) => setField('name', event.target.value)} />
                 </FormField>
                 <FormField label="Categoria" error={form.errors.category_id}>
-                    <select value={form.data.category_id} onChange={(event) => setField('category_id', event.target.value)}>
-                        <option value="">Escolha</option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                                {category.archived ? `${category.name} (arquivado)` : category.name}
-                            </option>
-                        ))}
-                    </select>
+                    <Select
+                        value={form.data.category_id}
+                        placeholder="Escolha"
+                        emptyOption="Escolha"
+                        options={categories.map((category) => categoryOption(category))}
+                        onChange={(value) => setField('category_id', value)}
+                    />
                 </FormField>
                 <fieldset className="plan-fieldset" disabled={locked}>
                     <div className="plan-form__row">
                         <FormField label="Valor total" error={form.errors.total_amount || page.props.errors?.total_amount}>
-                            <input
-                                inputMode="decimal"
-                                autoComplete="off"
+                            <MoneyInput
                                 value={form.data.total_amount}
-                                onChange={(event) => setField('total_amount', event.target.value)}
+                                disabled={locked}
+                                onChange={(value) => setField('total_amount', value)}
                             />
                         </FormField>
                         <FormField label="Número de parcelas" error={form.errors.installments_count}>
-                            <input
-                                inputMode="numeric"
-                                autoComplete="off"
+                            <IntegerInput
+                                min={2}
+                                max={120}
+                                disabled={locked}
                                 value={form.data.installments_count}
-                                onChange={(event) => setField('installments_count', event.target.value.replace(/\D/g, '').slice(0, 3))}
+                                onChange={(value) => setField('installments_count', value)}
                             />
                         </FormField>
                     </div>

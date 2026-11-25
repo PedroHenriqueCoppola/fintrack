@@ -2,9 +2,12 @@ import { useForm } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
+import MoneyInput from '../../components/MoneyInput/MoneyInput';
 import MonthField from '../../components/MonthField/MonthField';
+import Select from '../../components/Select/Select';
+import { categoryOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
-import { blurMoneyInput, formatMoneyInput, useToday } from '../../lib/format';
+import { useToday } from '../../lib/format';
 import { moneyPayload } from '../Planning/fields';
 
 function categoryNote(category) {
@@ -45,7 +48,7 @@ export default function GoalModal({ goal = null, categories, onClose }) {
     const lockedHint = 'Meta concluída: só o nome e a observação podem mudar.';
     const form = useForm({
         name: goal?.name ?? '',
-        target_amount: goal ? formatMoneyInput(goal.target_amount) : '',
+        target_amount: goal?.target_amount == null ? '' : String(goal.target_amount),
         category_id: goal ? String(goal.category_id) : '',
         deadline: goal?.deadline ? monthText(goal.deadline) : '',
         notes: goal?.notes ?? '',
@@ -102,34 +105,21 @@ export default function GoalModal({ goal = null, categories, onClose }) {
                     />
                 </FormField>
                 <FormField label="Valor alvo" error={form.errors.target_amount}>
-                    <input
-                        className="goal-money"
-                        inputMode="decimal"
-                        autoComplete="off"
-                        disabled={frozen}
+                    <MoneyInput
                         value={form.data.target_amount}
-                        onChange={(event) => setField('target_amount', event.target.value)}
-                        onBlur={() => {
-                            const formatted = blurMoneyInput(form.data.target_amount);
-                            if (formatted !== null) {
-                                setField('target_amount', formatted);
-                            }
-                        }}
+                        disabled={frozen}
+                        onChange={(value) => setField('target_amount', value)}
                     />
                 </FormField>
                 <FormField label="Categoria de Reserva" error={form.errors.category_id} hint={categoryHint}>
-                    <select
+                    <Select
                         value={form.data.category_id}
                         disabled={editing || frozen}
-                        onChange={(event) => setField('category_id', event.target.value)}
-                    >
-                        <option value="">Escolha</option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                                {category.archived ? `${category.name} (arquivada)` : category.name}
-                            </option>
-                        ))}
-                    </select>
+                        placeholder="Escolha"
+                        emptyOption="Escolha"
+                        options={categories.map((category) => categoryOption(category))}
+                        onChange={(value) => setField('category_id', value)}
+                    />
                 </FormField>
                 <MonthField
                     label="Prazo (opcional)"

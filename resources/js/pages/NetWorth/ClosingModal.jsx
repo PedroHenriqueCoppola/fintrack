@@ -5,15 +5,14 @@ import Button from '../../components/Button/Button';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import FormField from '../../components/FormField/FormField';
 import Modal from '../../components/Modal/Modal';
+import MoneyInput from '../../components/MoneyInput/MoneyInput';
 import MonthField from '../../components/MonthField/MonthField';
 import { useFieldSetter } from '../../lib/fields';
 import {
-    blurMoneyInput,
     formatMoney,
-    formatMoneyInput,
     formatPlainMoney,
-    parseMoneyInput,
 } from '../../lib/format';
+import { moneyPayload } from '../../lib/moneyField';
 import { decimalFromCents, sumCents, toCents } from '../../lib/cents';
 import './ClosingModal.css';
 
@@ -70,13 +69,7 @@ function message(errors, key) {
 }
 
 function payloadBalance(value) {
-    const parsed = parseMoneyInput(String(value ?? '').replace(/\s/g, '').replace(/^R\$/i, ''));
-
-    if (/^\d+(\.\d{1,2})?$/.test(parsed)) {
-        return parsed;
-    }
-
-    return String(value ?? '');
+    return moneyPayload(value);
 }
 
 export default function ClosingModal({ month, maxMonth, onClose }) {
@@ -152,7 +145,7 @@ export default function ClosingModal({ month, maxMonth, onClose }) {
                             bank_id: bank.bank_id,
                             name: bank.name,
                             color: bank.color,
-                            balance: formatMoneyInput(bank.balance),
+                            balance: bank.balance == null ? '' : String(bank.balance),
                             reference_balance: bank.reference_balance,
                         })),
                     });
@@ -331,19 +324,9 @@ export default function ClosingModal({ month, maxMonth, onClose }) {
                                 </span>
                             </div>
                             <FormField label="Saldo" error={message(form.errors, `items.${index}.balance`)}>
-                                <input
-                                    className="closing-balance"
-                                    inputMode="decimal"
-                                    autoComplete="off"
+                                <MoneyInput
                                     value={item.balance}
-                                    onChange={(event) => changeBalance(index, event.target.value)}
-                                    onBlur={() => {
-                                        const formatted = blurMoneyInput(item.balance);
-
-                                        if (formatted !== null) {
-                                            changeBalance(index, formatted);
-                                        }
-                                    }}
+                                    onChange={(value) => changeBalance(index, value)}
                                 />
                             </FormField>
                         </div>

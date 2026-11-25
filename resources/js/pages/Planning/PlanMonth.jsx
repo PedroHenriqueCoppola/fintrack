@@ -6,11 +6,12 @@ import Card from '../../components/Card/Card';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import FormField from '../../components/FormField/FormField';
+import MoneyInput from '../../components/MoneyInput/MoneyInput';
 import UsageBar from '../../components/UsageBar/UsageBar';
 import { formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import { useFieldSetter } from '../../lib/fields';
 import CatalogIcon from '../Manage/icons';
-import { moneyPayload, moneyText } from './fields';
+import { moneyPayload } from './fields';
 
 function plain(value) {
     const negative = String(value ?? '').trim().startsWith('-');
@@ -49,10 +50,8 @@ function AmountField({ label, value, error, onChange, onBlur, onFocus }) {
         <div className={error ? 'form-field form-field--error' : 'form-field'}>
             <label className="visually-hidden" htmlFor={id}>{label}</label>
             <div className="form-field__control">
-                <input
+                <MoneyInput
                     id={id}
-                    inputMode="decimal"
-                    autoComplete="off"
                     aria-invalid={error ? 'true' : undefined}
                     aria-describedby={errorId}
                     value={value}
@@ -82,12 +81,20 @@ function MoneyText({ value, tone = 'text' }) {
     return <span className={className}>{plain(value)}</span>;
 }
 
+function storedMoney(value) {
+    if (value == null || value === '') {
+        return '';
+    }
+
+    return String(value);
+}
+
 function buildForm(plan) {
     const rows = [...plan.spending, ...plan.reserves];
 
     return {
-        expected_income: moneyText(plan.expected_income),
-        amounts: Object.fromEntries(rows.map((row) => [row.category_id, moneyText(row.planned)])),
+        expected_income: storedMoney(plan.expected_income),
+        amounts: Object.fromEntries(rows.map((row) => [row.category_id, storedMoney(row.planned)])),
     };
 }
 
@@ -185,7 +192,7 @@ export default function PlanMonth({ month, plan, navigation }) {
 
     function blurIncome() {
         const next = moneyPayload(form.data.expected_income, '0');
-        const saved = moneyPayload(moneyText(plan.expected_income), '0');
+        const saved = moneyPayload(plan.expected_income, '0');
 
         if (next === saved) {
             return;
@@ -197,7 +204,7 @@ export default function PlanMonth({ month, plan, navigation }) {
     function blurAmount(categoryId) {
         const row = rows.find((item) => item.category_id === categoryId);
         const next = moneyPayload(form.data.amounts[categoryId], '0');
-        const saved = moneyPayload(moneyText(row?.planned), '0');
+        const saved = moneyPayload(row?.planned, '0');
 
         if (next === saved) {
             return;
@@ -250,16 +257,14 @@ export default function PlanMonth({ month, plan, navigation }) {
                         <div className="plan-toolbar__income">
                             <div className="plan-income">
                                 <FormField label="Renda esperada" error={form.errors.expected_income}>
-                                    <input
-                                        inputMode="decimal"
-                                        autoComplete="off"
+                                    <MoneyInput
                                         value={form.data.expected_income}
                                         onFocus={() => {
                                             focusedRef.current = 'income';
                                         }}
-                                        onChange={(event) => {
+                                        onChange={(value) => {
                                             setNotice('');
-                                            setField('expected_income', event.target.value);
+                                            setField('expected_income', value);
                                         }}
                                         onBlur={blurIncome}
                                     />
@@ -312,13 +317,13 @@ export default function PlanMonth({ month, plan, navigation }) {
                                                     onFocus={() => {
                                                         focusedRef.current = row.category_id;
                                                     }}
-                                                    onChange={(event) => {
+                                                    onChange={(value) => {
                                                         setNotice('');
                                                         setField((data) => ({
                                                             ...data,
                                                             amounts: {
                                                                 ...data.amounts,
-                                                                [row.category_id]: event.target.value,
+                                                                [row.category_id]: value,
                                                             },
                                                         }), `items.${index}.amount`, `items.${index}.category_id`);
                                                     }}
@@ -373,13 +378,13 @@ export default function PlanMonth({ month, plan, navigation }) {
                                                         onFocus={() => {
                                                             focusedRef.current = row.category_id;
                                                         }}
-                                                        onChange={(event) => {
+                                                        onChange={(value) => {
                                                             setNotice('');
                                                             setField((data) => ({
                                                                 ...data,
                                                                 amounts: {
                                                                     ...data.amounts,
-                                                                    [row.category_id]: event.target.value,
+                                                                    [row.category_id]: value,
                                                                 },
                                                             }), `items.${index}.amount`, `items.${index}.category_id`);
                                                         }}

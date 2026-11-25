@@ -6,19 +6,20 @@ import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import DatePicker from '../DatePicker/DatePicker';
 import FormField from '../FormField/FormField';
 import Modal from '../Modal/Modal';
+import MoneyInput from '../MoneyInput/MoneyInput';
 import ReferenceSeal from '../ReferenceSeal/ReferenceSeal';
+import Select from '../Select/Select';
+import { bankOption, cardOption, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
 import {
-    blurMoneyInput,
     formatDate,
-    formatMoneyInput,
     formatNeutralMoney,
     formatPlainMoney,
     isoFromDate,
     parseBrDate,
-    parseMoneyInput,
     useToday,
 } from '../../lib/format';
+import { moneyPayload } from '../../lib/moneyField';
 import './TransactionModal.css';
 
 const FUTURE_PAID_ERROR = 'Transação paga não pode ter data futura.';
@@ -65,10 +66,6 @@ export function NewTransactionButton({ onClick }) {
             Nova transação
         </Button>
     );
-}
-
-function moneyPayload(value) {
-    return parseMoneyInput(String(value ?? '').replace(/\s/g, '').replace(/^R\$/i, ''));
 }
 
 function datePayload(value) {
@@ -121,10 +118,6 @@ function reserveSupport(balances, data, transaction) {
     return '0.00';
 }
 
-function optionLabel(item) {
-    return item.archived ? `${item.name} (arquivado)` : item.name;
-}
-
 function buildInitial(mode, transaction, options, today, preset) {
     if (preset && (!transaction || mode === 'create')) {
         return {
@@ -169,7 +162,7 @@ function buildInitial(mode, transaction, options, today, preset) {
         type: transaction.type,
         reserve_action: transaction.reserve_action || 'deposit',
         status: duplicate ? 'paid' : transaction.status,
-        amount: formatMoneyInput(transaction.amount),
+        amount: transaction.amount == null ? '' : String(transaction.amount),
         date: formatDate(duplicate ? today : transaction.date),
         description: transaction.description ?? '',
         category_id: duplicate ? known(categories, transaction.category?.id) : String(transaction.category?.id ?? ''),
@@ -261,17 +254,6 @@ function Segment({ label, value, options, onChange }) {
                     </button>
                 );
             })}
-        </div>
-    );
-}
-
-function SelectField({ value, onChange, children, disabled = false }) {
-    return (
-        <div className="tx-select">
-            <select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
-                {children}
-            </select>
-            <ChevronDown aria-hidden="true" strokeWidth={1.75} />
         </div>
     );
 }
@@ -575,18 +557,9 @@ export default function TransactionModal({
                 {form.errors.reserve_action ? <p className="tx-inline-error" role="alert">{form.errors.reserve_action}</p> : null}
                 <div className="tx-grid">
                     <FormField label="Valor" error={form.errors.amount}>
-                        <input
-                            className="tx-money"
-                            inputMode="decimal"
-                            autoComplete="off"
+                        <MoneyInput
                             value={form.data.amount}
-                            onChange={(event) => setField('amount', event.target.value)}
-                            onBlur={() => {
-                                const formatted = blurMoneyInput(form.data.amount);
-                                if (formatted !== null) {
-                                    setField('amount', formatted);
-                                }
-                            }}
+                            onChange={(value) => setField('amount', value)}
                         />
                     </FormField>
                     <DatePicker
@@ -632,54 +605,50 @@ export default function TransactionModal({
                                 ? `Guardado nesta categoria: ${formatNeutralMoney(supportBalance)}`
                                 : null)}
                     >
-                        <SelectField
+                        <Select
                             value={form.data.category_id}
                             disabled={lockCategory}
+                            placeholder="Escolha"
+                            emptyOption="Escolha"
+                            options={categories.map((item) => categoryOption(item))}
                             onChange={(value) => setField('category_id', value)}
-                        >
-                            <option value="">Escolha</option>
-                            {categories.map((item) => (
-                                <option key={item.id} value={item.id}>{optionLabel(item)}</option>
-                            ))}
-                        </SelectField>
+                        />
                     </FormField>
                     <div className={lockedBank ? 'tx-locked' : undefined}>
                         <FormField label="Banco" error={form.errors.bank_id}>
                             {lockedBank ? (
                                 <input type="text" value={`${bankName} · do cartão`} disabled readOnly />
                             ) : (
-                                <SelectField
+                                <Select
                                     value={form.data.bank_id}
+                                    placeholder="Escolha"
+                                    emptyOption="Escolha"
+                                    options={banks.map((item) => bankOption(item))}
                                     onChange={(value) => setField('bank_id', value)}
-                                >
-                                    <option value="">Escolha</option>
-                                    {banks.map((item) => (
-                                        <option key={item.id} value={item.id}>{optionLabel(item)}</option>
-                                    ))}
-                                </SelectField>
+                                />
                             )}
                         </FormField>
                     </div>
                 </div>
                 <div className={requiresCard ? 'tx-grid' : undefined}>
                     <FormField label="Forma de pagamento" error={form.errors.payment_method_id}>
-                        <SelectField value={form.data.payment_method_id} onChange={changeMethod}>
-                            <option value="">Escolha</option>
-                            {paymentMethods.map((item) => (
-                                <option key={item.id} value={item.id}>{optionLabel(item)}</option>
-                            ))}
-                        </SelectField>
+                        <Select
+                            value={form.data.payment_method_id}
+                            placeholder="Escolha"
+                            emptyOption="Escolha"
+                            options={paymentMethods.map((item) => namedOption(item))}
+                            onChange={changeMethod}
+                        />
                     </FormField>
                     {requiresCard ? (
                         <FormField label="Cartão" error={form.errors.card_id}>
-                            <SelectField value={form.data.card_id} onChange={changeCard}>
-                                <option value="">Escolha</option>
-                                {cards.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {`${optionLabel(item)} · fecha dia ${item.closing_day}`}
-                                    </option>
-                                ))}
-                            </SelectField>
+                            <Select
+                                value={form.data.card_id}
+                                placeholder="Escolha"
+                                emptyOption="Escolha"
+                                options={cards.map((item) => cardOption(item, banks))}
+                                onChange={changeCard}
+                            />
                         </FormField>
                     ) : null}
                 </div>

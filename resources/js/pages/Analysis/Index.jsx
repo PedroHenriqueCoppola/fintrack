@@ -8,7 +8,9 @@ import EmptyState from '../../components/EmptyState/EmptyState';
 import Money from '../../components/Money/Money';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import TransactionModal, { NewTransactionButton } from '../../components/TransactionModal/TransactionModal';
+import Select from '../../components/Select/Select';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
+import { bankOption, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { formatDate, formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import MoreFilters from './MoreFilters';
 import PeriodPopover from './PeriodPopover';
@@ -290,48 +292,33 @@ export default function Index({
                             </label>
                             <label className="filter-field">
                                 <span>Categoria</span>
-                                <div className="tx-select">
-                                    <select
-                                        value={filters.category_id ?? ''}
-                                        onChange={(event) => setFilter('category_id', event.target.value)}
-                                    >
-                                        <option value="">Todas</option>
-                                        {categoriesOf(options).map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-                                </div>
+                                <Select
+                                    value={filters.category_id ?? ''}
+                                    emptyOption="Todas"
+                                    placeholder="Todas"
+                                    options={categoriesOf(options).map((item) => categoryOption(item))}
+                                    onChange={(value) => setFilter('category_id', value)}
+                                />
                             </label>
                             <label className="filter-field">
                                 <span>Banco</span>
-                                <div className="tx-select">
-                                    <select
-                                        value={filters.bank_id ?? ''}
-                                        onChange={(event) => setFilter('bank_id', event.target.value)}
-                                    >
-                                        <option value="">Todos</option>
-                                        {(options.banks ?? []).map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-                                </div>
+                                <Select
+                                    value={filters.bank_id ?? ''}
+                                    emptyOption="Todos"
+                                    placeholder="Todos"
+                                    options={(options.banks ?? []).map((item) => bankOption(item))}
+                                    onChange={(value) => setFilter('bank_id', value)}
+                                />
                             </label>
                             <label className="filter-field">
                                 <span>Pagamento</span>
-                                <div className="tx-select">
-                                    <select
-                                        value={filters.payment_method_id ?? ''}
-                                        onChange={(event) => setFilter('payment_method_id', event.target.value)}
-                                    >
-                                        <option value="">Todas</option>
-                                        {(options.paymentMethods ?? []).map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-                                </div>
+                                <Select
+                                    value={filters.payment_method_id ?? ''}
+                                    emptyOption="Todas"
+                                    placeholder="Todas"
+                                    options={(options.paymentMethods ?? []).map((item) => namedOption(item))}
+                                    onChange={(value) => setFilter('payment_method_id', value)}
+                                />
                             </label>
                             <label className="filter-field">
                                 <span>Valor</span>

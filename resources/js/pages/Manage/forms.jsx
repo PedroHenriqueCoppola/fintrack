@@ -1,7 +1,10 @@
 import { useForm } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import FormField from '../../components/FormField/FormField';
+import IntegerInput from '../../components/IntegerInput/IntegerInput';
 import Modal from '../../components/Modal/Modal';
+import Select from '../../components/Select/Select';
+import { bankOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
 import ChoiceGroup from './ChoiceGroup';
 
@@ -226,6 +229,15 @@ export function CardForm({ item, banks, colors, onClose }) {
     const activeBanks = banks.filter((bank) => !bank.archived);
     const bankMissing = Boolean(form.data.bank_id)
         && !activeBanks.some((bank) => String(bank.id) === form.data.bank_id);
+    const archivedBank = banks.find((bank) => String(bank.id) === form.data.bank_id);
+    const bankOptions = [
+        ...(bankMissing ? [bankOption(archivedBank ?? {
+            id: form.data.bank_id,
+            name: item?.bank_name ?? 'Banco',
+            archived: true,
+        })] : []),
+        ...activeBanks.map((bank) => bankOption(bank)),
+    ];
 
     function submit(event) {
         event.preventDefault();
@@ -262,40 +274,30 @@ export function CardForm({ item, banks, colors, onClose }) {
                         ? 'Cadastre um banco ativo antes.'
                         : (bankMissing ? 'O banco atual está arquivado. Escolha um banco ativo.' : undefined)}
                 >
-                    <select
-                        name="bank_id"
+                    <Select
                         value={form.data.bank_id}
-                        onChange={(event) => setField('bank_id', event.target.value)}
-                    >
-                        <option value="">Selecione</option>
-                        {bankMissing ? (
-                            <option value={form.data.bank_id}>{item?.bank_name} (arquivado)</option>
-                        ) : null}
-                        {activeBanks.map((bank) => (
-                            <option key={bank.id} value={String(bank.id)}>{bank.name}</option>
-                        ))}
-                    </select>
+                        placeholder="Selecione"
+                        emptyOption="Selecione"
+                        options={bankOptions}
+                        onChange={(value) => setField('bank_id', value)}
+                    />
                 </FormField>
                 <FormField label="Dia de fechamento" error={form.errors.closing_day}>
-                    <input
-                        type="number"
+                    <IntegerInput
                         name="closing_day"
-                        min="1"
-                        max="31"
-                        inputMode="numeric"
+                        min={1}
+                        max={31}
                         value={form.data.closing_day}
-                        onChange={(event) => setField('closing_day', event.target.value)}
+                        onChange={(value) => setField('closing_day', value)}
                     />
                 </FormField>
                 <FormField label="Dia de vencimento" hint="Opcional." error={form.errors.due_day}>
-                    <input
-                        type="number"
+                    <IntegerInput
                         name="due_day"
-                        min="1"
-                        max="31"
-                        inputMode="numeric"
+                        min={1}
+                        max={31}
                         value={form.data.due_day}
-                        onChange={(event) => setField('due_day', event.target.value)}
+                        onChange={(value) => setField('due_day', value)}
                     />
                 </FormField>
                 <ChoiceGroup

@@ -1,0 +1,208 @@
+.select {
+    width: 100%;
+}
+
+.select__button {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    width: 100%;
+    min-height: 4.2rem;
+    padding: 1rem 1.2rem 1rem 1.4rem;
+    border: 1px solid var(--color-border-input);
+    border-radius: 1.3rem;
+    background: var(--color-card-inset);
+    color: var(--color-text);
+    font-size: 1.4rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition);
+}
+
+.select__button:focus-visible {
+    border-color: var(--color-primary-soft);
+    outline: 2px solid var(--color-primary-soft);
+    outline-offset: 2px;
+}
+
+.select__button:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.form-field--error .select__button,
+.select__button[aria-invalid='true'] {
+    border-color: var(--color-negative-text);
+}
+
+.select__value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.select__value--placeholder {
+    color: var(--color-text-subtle);
+}
+
+.select__archived {
+    color: var(--color-text-subtle);
+    font-weight: 500;
+}
+
+.select__chevron {
+    width: 1.8rem;
+    height: 1.8rem;
+    flex: none;
+    color: var(--color-text-muted);
+    transition: transform var(--transition);
+}
+
+.select__chevron--open {
+    transform: rotate(180deg);
+}
+
+.select__popover {
+    position: fixed;
+    z-index: 100;
+    padding: 0.6rem;
+    border: 1px solid var(--color-modal-border);
+    border-radius: var(--radius-md);
+    background: var(--color-modal);
+    box-shadow: var(--shadow-modal);
+}
+
+.select__search {
+    width: 100%;
+    margin-bottom: 0.6rem;
+    padding: 0.8rem 1.2rem;
+    border: 1px solid var(--color-border-input);
+    border-radius: 1rem;
+    background: var(--color-card-inset);
+    color: var(--color-text);
+    font-size: 1.4rem;
+}
+
+.select__search:focus-visible {
+    border-color: var(--color-primary-soft);
+    outline: 2px solid var(--color-primary-soft);
+    outline-offset: 2px;
+}
+
+.select__list {
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+}
+
+.select__list ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.select__group {
+    margin: 0.6rem 0 0.2rem;
+    padding: 0.4rem 1rem;
+    color: var(--color-text-subtle);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.select__option {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    width: 100%;
+    min-height: 3.6rem;
+    padding: 0.6rem 1rem;
+    border: 0;
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 1.4rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+}
+
+.select__option svg {
+    width: 1.6rem;
+    height: 1.6rem;
+    flex: none;
+    margin-left: auto;
+}
+
+.select__option--active,
+.select__option:hover {
+    background: var(--color-accent);
+    color: var(--color-accent-text);
+}
+
+.select__option:disabled {
+    cursor: default;
+    opacity: 0.45;
+}
+
+.select__copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.select__label,
+.select__hint {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.select__hint {
+    color: var(--color-text-subtle);
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+
+.select__empty {
+    padding: 1rem;
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+}
+
+.select__tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    flex: none;
+    border-radius: 0.6rem;
+    background: color-mix(in srgb, var(--item-color) 16%, var(--color-card));
+    color: color-mix(in srgb, var(--item-color) 70%, var(--color-text));
+}
+
+.select__tile svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    margin: 0;
+}
+
+.select__tile--plain {
+    background: var(--color-card-inset);
+    color: var(--color-text-muted);
+}
+
+.select__dot {
+    width: 0.8rem;
+    height: 0.8rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--color-text-subtle);
+}

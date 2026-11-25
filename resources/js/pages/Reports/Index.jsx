@@ -4,7 +4,6 @@ import {
     ArrowLeftRight,
     Calendar,
     CalendarRange,
-    ChevronDown,
     CreditCard,
     FileDown,
     FileSpreadsheet,
@@ -18,8 +17,10 @@ import Button from '../../components/Button/Button';
 import Card from '../../components/Card/Card';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import PageHeader from '../../components/PageHeader/PageHeader';
+import Select from '../../components/Select/Select';
 import Tabs from '../../components/Tabs/Tabs';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
+import { bankOption, cardOption, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { formatDate } from '../../lib/format';
 import PeriodPopover from '../Analysis/PeriodPopover';
 import '../../components/DatePicker/DatePicker.css';
@@ -150,16 +151,18 @@ function cellClass(column, cell) {
     return classes.join(' ');
 }
 
-function SelectField({ label, value, onChange, children, error }) {
+function SelectField({ label, value, onChange, error, options, emptyOption }) {
     return (
         <label className="reports-field">
             <span>{label}</span>
-            <div className="reports-select">
-                <select value={value ?? ''} onChange={(event) => onChange(event.target.value)} aria-invalid={error ? 'true' : undefined}>
-                    {children}
-                </select>
-                <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-            </div>
+            <Select
+                value={value ?? ''}
+                onChange={onChange}
+                options={options}
+                emptyOption={emptyOption}
+                placeholder={emptyOption || 'Escolha'}
+                aria-invalid={error ? 'true' : undefined}
+            />
             {error ? <small>{error}</small> : null}
         </label>
     );
@@ -324,69 +327,43 @@ export default function Index({ definition, period, report, options, limits }) {
             </div>
             {(draft.dataset || 'transactions') === 'transactions' ? (
                 <div className="reports-fields">
-                    <SelectField label="Tipo" value={draft.type ?? ''} error={errorText(pageErrors, 'type')} onChange={(value) => setField('type', value)}>
-                        <option value="">Todos</option>
-                        <option value="income">Receita</option>
-                        <option value="expense">Despesa</option>
-                        <option value="reserve">Reserva</option>
-                    </SelectField>
-                    <SelectField label="Categoria" value={draft.category_id ?? ''} error={errorText(pageErrors, 'category_id')} onChange={(value) => setField('category_id', value)}>
-                        <option value="">Todas</option>
-                        {allCategories(options).map((item) => (
-                            <option key={item.id} value={item.id}>{item.name}</option>
-                        ))}
-                    </SelectField>
-                    <SelectField label="Banco" value={draft.bank_id ?? ''} error={errorText(pageErrors, 'bank_id')} onChange={(value) => setField('bank_id', value)}>
-                        <option value="">Todos</option>
-                        {(options.banks ?? []).map((item) => (
-                            <option key={item.id} value={item.id}>{item.name}</option>
-                        ))}
-                    </SelectField>
-                    <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} onChange={(value) => setField('card_id', value)}>
-                        <option value="">Todos</option>
-                        {(options.cards ?? []).map((item) => (
-                            <option key={item.id} value={item.id}>{item.name}</option>
-                        ))}
-                    </SelectField>
-                    <SelectField label="Forma de pagamento" value={draft.payment_method_id ?? ''} error={errorText(pageErrors, 'payment_method_id')} onChange={(value) => setField('payment_method_id', value)}>
-                        <option value="">Todas</option>
-                        {(options.paymentMethods ?? []).map((item) => (
-                            <option key={item.id} value={item.id}>{item.name}</option>
-                        ))}
-                    </SelectField>
-                    <SelectField label="Situação" value={draft.status ?? 'paid'} error={errorText(pageErrors, 'status')} onChange={(value) => setField('status', value)}>
-                        <option value="paid">Paga</option>
-                        <option value="pending">Pendente</option>
-                        <option value="all">Todas</option>
-                    </SelectField>
-                    <SelectField label="Agrupar por" value={draft.group_by ?? 'none'} error={errorText(pageErrors, 'group_by')} onChange={(value) => setField('group_by', value)}>
-                        <option value="none">Sem agrupamento</option>
-                        <option value="day">Dia</option>
-                        <option value="week">Semana</option>
-                        <option value="month">Mês</option>
-                        <option value="category">Categoria</option>
-                        <option value="bank">Banco</option>
-                    </SelectField>
+                    <SelectField label="Tipo" value={draft.type ?? ''} error={errorText(pageErrors, 'type')} emptyOption="Todos" options={[
+                        { value: 'income', label: 'Receita' },
+                        { value: 'expense', label: 'Despesa' },
+                        { value: 'reserve', label: 'Reserva' },
+                    ]} onChange={(value) => setField('type', value)} />
+                    <SelectField label="Categoria" value={draft.category_id ?? ''} error={errorText(pageErrors, 'category_id')} emptyOption="Todas" options={allCategories(options).map((item) => categoryOption(item))} onChange={(value) => setField('category_id', value)} />
+                    <SelectField label="Banco" value={draft.bank_id ?? ''} error={errorText(pageErrors, 'bank_id')} emptyOption="Todos" options={(options.banks ?? []).map((item) => bankOption(item))} onChange={(value) => setField('bank_id', value)} />
+                    <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} emptyOption="Todos" options={(options.cards ?? []).map((item) => cardOption(item, options.banks))} onChange={(value) => setField('card_id', value)} />
+                    <SelectField label="Forma de pagamento" value={draft.payment_method_id ?? ''} error={errorText(pageErrors, 'payment_method_id')} emptyOption="Todas" options={(options.paymentMethods ?? []).map((item) => namedOption(item))} onChange={(value) => setField('payment_method_id', value)} />
+                    <SelectField label="Situação" value={draft.status ?? 'paid'} error={errorText(pageErrors, 'status')} options={[
+                        { value: 'paid', label: 'Paga' },
+                        { value: 'pending', label: 'Pendente' },
+                        { value: 'all', label: 'Todas' },
+                    ]} onChange={(value) => setField('status', value)} />
+                    <SelectField label="Agrupar por" value={draft.group_by ?? 'none'} error={errorText(pageErrors, 'group_by')} options={[
+                        { value: 'none', label: 'Sem agrupamento' },
+                        { value: 'day', label: 'Dia' },
+                        { value: 'week', label: 'Semana' },
+                        { value: 'month', label: 'Mês' },
+                        { value: 'category', label: 'Categoria' },
+                        { value: 'bank', label: 'Banco' },
+                    ]} onChange={(value) => setField('group_by', value)} />
                 </div>
             ) : null}
             {draft.dataset === 'invoices' ? (
                 <div className="reports-fields">
-                    <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} onChange={(value) => setField('card_id', value)}>
-                        <option value="">Todos</option>
-                        {(options.cards ?? []).map((item) => (
-                            <option key={item.id} value={item.id}>{item.name}</option>
-                        ))}
-                    </SelectField>
+                    <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} emptyOption="Todos" options={(options.cards ?? []).map((item) => cardOption(item, options.banks))} onChange={(value) => setField('card_id', value)} />
                 </div>
             ) : null}
             {draft.dataset === 'goals' ? (
                 <div className="reports-fields">
-                    <SelectField label="Situação" value={draft.goal_status ?? 'all'} error={errorText(pageErrors, 'goal_status')} onChange={(value) => setField('goal_status', value)}>
-                        <option value="all">Todas</option>
-                        <option value="active">Ativas</option>
-                        <option value="completed">Concluídas</option>
-                        <option value="archived">Arquivadas</option>
-                    </SelectField>
+                    <SelectField label="Situação" value={draft.goal_status ?? 'all'} error={errorText(pageErrors, 'goal_status')} options={[
+                        { value: 'all', label: 'Todas' },
+                        { value: 'active', label: 'Ativas' },
+                        { value: 'completed', label: 'Concluídas' },
+                        { value: 'archived', label: 'Arquivadas' },
+                    ]} onChange={(value) => setField('goal_status', value)} />
                 </div>
             ) : null}
             {draft.dataset === 'net_worth' ? (

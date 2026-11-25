@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 import Button from '../../components/Button/Button';
-import { blurMoneyInput, formatMoneyInput, parseMoneyInput } from '../../lib/format';
+import MoneyInput from '../../components/MoneyInput/MoneyInput';
+import Select from '../../components/Select/Select';
+import { cardOption } from '../../lib/catalogOptions';
+import { moneyPayload } from '../../lib/moneyField';
 import { useFocusTrap } from '../../lib/dialog';
 
 const SORTS = [
@@ -12,19 +14,34 @@ const SORTS = [
 ];
 
 function readAmount(value) {
-    const raw = String(value ?? '').trim();
+    const raw = moneyPayload(value);
 
     if (raw === '') {
         return { ok: true, value: '' };
     }
 
-    const parsed = parseMoneyInput(raw.replace(/\s/g, '').replace(/^R\$/i, ''));
-
-    if (!/^\d+(\.\d{1,2})?$/.test(parsed) || Number(parsed) <= 0) {
-        return { ok: false, value: parsed };
+    if (!/^\d+(\.\d{1,2})?$/.test(raw) || raw === '0' || raw === '0.0' || raw === '0.00') {
+        return { ok: false, value: raw };
     }
 
-    return { ok: true, value: parsed };
+    return { ok: true, value: raw };
+}
+
+function amountAbove(left, right) {
+    const [leftWhole, leftFraction = ''] = left.split('.');
+    const [rightWhole, rightFraction = ''] = right.split('.');
+    const leftInt = leftWhole.replace(/^0+/, '') || '0';
+    const rightInt = rightWhole.replace(/^0+/, '') || '0';
+
+    if (leftInt.length !== rightInt.length) {
+        return leftInt.length > rightInt.length;
+    }
+
+    if (leftInt !== rightInt) {
+        return leftInt > rightInt;
+    }
+
+    return leftFraction.padEnd(2, '0') > rightFraction.padEnd(2, '0');
 }
 
 export default function MoreFilters({ open, filters, cards, onClose, onApply, onClear }) {
@@ -44,8 +61,8 @@ export default function MoreFilters({ open, filters, cards, onClose, onApply, on
         setDraft({
             type: current.type ?? '',
             status: current.status ?? '',
-            min_amount: current.min_amount ? formatMoneyInput(current.min_amount) : '',
-            max_amount: current.max_amount ? formatMoneyInput(current.max_amount) : '',
+            min_amount: current.min_amount ? String(current.min_amount) : '',
+            max_amount: current.max_amount ? String(current.max_amount) : '',
             card_id: current.card_id ? String(current.card_id) : '',
             sort: current.sort ?? 'date_desc',
         });
@@ -70,7 +87,7 @@ export default function MoreFilters({ open, filters, cards, onClose, onApply, on
             return;
         }
 
-        if (min.value && max.value && Number(min.value) > Number(max.value)) {
+        if (min.value && max.value && amountAbove(min.value, max.value)) {
             setError('O valor máximo não pode ser menor que o mínimo.');
             return;
         }
@@ -135,65 +152,36 @@ export default function MoreFilters({ open, filters, cards, onClose, onApply, on
                 <div className="popover__dates">
                     <label className="filter-field">
                         <span>Valor mínimo</span>
-                        <input
-                            className="filter-money"
-                            inputMode="decimal"
-                            autoComplete="off"
+                        <MoneyInput
                             value={draft.min_amount}
-                            onChange={(event) => setDraft((current) => ({ ...current, min_amount: event.target.value }))}
-                            onBlur={() => {
-                                const formatted = blurMoneyInput(draft.min_amount);
-                                if (formatted !== null) {
-                                    setDraft((current) => ({ ...current, min_amount: formatted }));
-                                }
-                            }}
+                            onChange={(value) => setDraft((current) => ({ ...current, min_amount: value }))}
                         />
                     </label>
                     <label className="filter-field">
                         <span>Valor máximo</span>
-                        <input
-                            className="filter-money"
-                            inputMode="decimal"
-                            autoComplete="off"
+                        <MoneyInput
                             value={draft.max_amount}
-                            onChange={(event) => setDraft((current) => ({ ...current, max_amount: event.target.value }))}
-                            onBlur={() => {
-                                const formatted = blurMoneyInput(draft.max_amount);
-                                if (formatted !== null) {
-                                    setDraft((current) => ({ ...current, max_amount: formatted }));
-                                }
-                            }}
+                            onChange={(value) => setDraft((current) => ({ ...current, max_amount: value }))}
                         />
                     </label>
                 </div>
                 <label className="filter-field">
                     <span>Cartão</span>
-                    <div className="tx-select">
-                        <select
-                            value={draft.card_id}
-                            onChange={(event) => setDraft((current) => ({ ...current, card_id: event.target.value }))}
-                        >
-                            <option value="">Todos</option>
-                            {cards.map((card) => (
-                                <option key={card.id} value={card.id}>{card.name}</option>
-                            ))}
-                        </select>
-                        <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-                    </div>
+                    <Select
+                        value={draft.card_id}
+                        emptyOption="Todos"
+                        placeholder="Todos"
+                        options={cards.map((card) => cardOption(card))}
+                        onChange={(value) => setDraft((current) => ({ ...current, card_id: value }))}
+                    />
                 </label>
                 <label className="filter-field">
                     <span>Ordenar por</span>
-                    <div className="tx-select">
-                        <select
-                            value={draft.sort}
-                            onChange={(event) => setDraft((current) => ({ ...current, sort: event.target.value }))}
-                        >
-                            {SORTS.map((option) => (
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                            ))}
-                        </select>
-                        <ChevronDown aria-hidden="true" strokeWidth={1.75} />
-                    </div>
+                    <Select
+                        value={draft.sort}
+                        options={SORTS}
+                        onChange={(value) => setDraft((current) => ({ ...current, sort: value }))}
+                    />
                 </label>
             </div>
             {error ? <p className="popover__error" role="alert">{error}</p> : null}
