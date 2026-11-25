@@ -38,8 +38,8 @@ As páginas internas exigem login. Quem não está logado é enviado para `/logi
 | POST | `/saved-filters` | `saved-filters.store` | Logado | Salva o filtro atual. Nome obrigatório, até 40 caracteres, único por usuário sem diferenciar maiúsculas nem acentos, no máximo 20 por usuário. O JSON só guarda chaves de filtro que o servidor valida |
 | DELETE | `/saved-filters/{savedFilter}` | `saved-filters.destroy` | Logado | Apaga o filtro salvo. Id de outro usuário responde 404 |
 | GET | `/manage` | `manage` | Logado | Página Gerenciar, com bancos, categorias, cartões, formas de pagamento e tags (nome e quantidade de transações), `can_delete` e `usage_summary` de cada cadastro, e as opções de cor, ícone, tipo e natureza |
-| POST | `/manage/banks` | `banks.store` | Logado | Cria um banco e volta para Gerenciar. Erros de validação em português |
-| PUT | `/manage/banks/{bank}` | `banks.update` | Logado | Atualiza o banco do usuário. Id de outro usuário responde 404 |
+| POST | `/manage/banks` | `banks.store` | Logado | Cria um banco e volta para Gerenciar. `kind` é `account` (conta) ou `investment` (investimento). Erros de validação em português |
+| PUT | `/manage/banks/{bank}` | `banks.update` | Logado | Atualiza o banco do usuário. Virar investimento só é permitido sem transação, cartão, fixo ou parcelado: "Um banco com transações, cartões, fixos ou parcelados não pode virar investimento." Investimento pode voltar a ser conta. Id de outro usuário responde 404 |
 | POST | `/manage/banks/{bank}/archive` | `banks.archive` | Logado | Arquiva o banco. Se ainda houver cartão ativo, devolve o erro "Arquive antes os cartões deste banco." Id de outro usuário responde 404 |
 | POST | `/manage/banks/{bank}/restore` | `banks.restore` | Logado | Desarquiva o banco. Nome repetido entre os ativos devolve erro de validação. Id de outro usuário responde 404 |
 | DELETE | `/manage/banks/{bank}` | `banks.destroy` | Logado | Apaga o banco só quando não há uso (transação, cartão, fixo, parcelado ou fechamento). Com uso: "Esse cadastro está em uso e só pode ser arquivado." Tira `bank_id` dos filtros salvos que apontavam para ele. Id de outro usuário responde 404 |

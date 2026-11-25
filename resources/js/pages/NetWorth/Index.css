@@ -239,6 +239,25 @@
     font-weight: 500;
 }
 
+.net-worth-split,
+.net-worth-group__title,
+.net-worth-group__total {
+    margin: 0.4rem 0 0;
+    color: var(--color-text-subtle);
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.net-worth-group__title {
+    margin-top: 1.2rem;
+}
+
+.net-worth-group__total {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
 .is-positive {
     color: var(--color-positive);
 }

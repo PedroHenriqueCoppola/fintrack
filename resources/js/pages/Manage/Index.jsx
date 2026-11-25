@@ -158,6 +158,10 @@ export default function Index({ banks, categories, cards, paymentMethods, tags =
                                     deletePath={(item) => `/manage/banks/${item.id}`}
                                     detail={(item) => bankDetail(item, options)}
                                     fallbackIcon="Landmark"
+                                    groups={[
+                                        { title: 'Contas', match: (item) => item.kind !== 'investment' },
+                                        { title: 'Investimentos', match: (item) => item.kind === 'investment' },
+                                    ]}
                                 />
                             ),
                         },

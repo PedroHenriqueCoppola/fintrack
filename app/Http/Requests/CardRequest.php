@@ -31,7 +31,7 @@ class CardRequest extends FormRequest
                 'required',
                 'integer',
                 Rule::exists('banks', 'id')->where(function ($query) {
-                    $query->where('user_id', $this->user()->id)->whereNull('archived_at');
+                    $query->where('user_id', $this->user()->id)->whereNull('archived_at')->where('kind', 'account');
                 }),
             ],
             'closing_day' => ['required', 'integer', 'between:1,31'],

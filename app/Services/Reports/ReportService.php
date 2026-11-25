@@ -441,14 +441,37 @@ class ReportService
         }
 
         $latest = $presented['records'][0];
-        $banks = [];
+        $accounts = [];
+        $investments = [];
 
         foreach ($latest['banks'] as $bank) {
-            $banks[] = [
+            $row = [
                 'bank' => $bank['name'],
+                'kind' => ($bank['kind'] ?? 'account') === 'investment' ? 'Investimento' : 'Conta',
                 'balance' => $bank['balance'],
             ];
+
+            if (($bank['kind'] ?? 'account') === 'investment') {
+                $investments[] = $row;
+            } else {
+                $accounts[] = $row;
+            }
         }
+
+        $banks = [
+            ...$accounts,
+            [
+                'bank' => 'Contas',
+                'kind' => 'Subtotal',
+                'balance' => $this->moneySum(array_column($accounts, 'balance')),
+            ],
+            ...$investments,
+            [
+                'bank' => 'Investimentos',
+                'kind' => 'Subtotal',
+                'balance' => $this->moneySum(array_column($investments, 'balance')),
+            ],
+        ];
 
         return $this->pack('Patrimônio', [], [[
             'title' => null,
@@ -464,6 +487,7 @@ class ReportService
             'title' => 'Por banco no último fechamento do período',
             'columns' => [
                 $this->column('bank', 'Banco', 'text'),
+                $this->column('kind', 'Tipo', 'text'),
                 $this->column('balance', 'Saldo', 'money'),
             ],
             'rows' => $banks,
@@ -1027,6 +1051,20 @@ class ReportService
         }
 
         return $column;
+    }
+
+    /**
+     * @param  array<int, string>  $amounts
+     */
+    private function moneySum(array $amounts): string
+    {
+        $total = '0.00';
+
+        foreach ($amounts as $amount) {
+            $total = Money::add($total, $amount);
+        }
+
+        return $total;
     }
 
     private function brDate(string $date): string

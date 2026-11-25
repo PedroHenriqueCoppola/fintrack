@@ -66,6 +66,7 @@ export function BankForm({ item, colors, onClose }) {
     const form = useForm({
         name: item?.name ?? '',
         color: item?.color ?? '',
+        kind: item?.kind ?? 'account',
     });
     const setField = useFieldSetter(form);
 
@@ -74,6 +75,7 @@ export function BankForm({ item, colors, onClose }) {
         visit(form, item, '/manage/banks', {
             name: form.data.name,
             color: form.data.color || null,
+            kind: form.data.kind,
         }, onClose);
     }
 
@@ -93,6 +95,17 @@ export function BankForm({ item, colors, onClose }) {
                         onChange={(value) => setField('name', value)}
                     />
                 </FormField>
+                <ChoiceGroup
+                    legend="Tipo"
+                    name="bank-kind"
+                    value={form.data.kind}
+                    options={[
+                        { value: 'account', label: 'Conta' },
+                        { value: 'investment', label: 'Investimento' },
+                    ]}
+                    onChange={(value) => setField('kind', value)}
+                    error={form.errors.kind}
+                />
                 <ChoiceGroup
                     legend="Cor"
                     name="bank-color"
@@ -225,7 +238,7 @@ export function CardForm({ item, banks, colors, onClose }) {
         color: item?.color ?? '',
     });
     const setField = useFieldSetter(form);
-    const activeBanks = banks.filter((bank) => !bank.archived);
+    const activeBanks = banks.filter((bank) => !bank.archived && bank.kind !== 'investment');
     const bankMissing = Boolean(form.data.bank_id)
         && !activeBanks.some((bank) => String(bank.id) === form.data.bank_id);
     const archivedBank = banks.find((bank) => String(bank.id) === form.data.bank_id);

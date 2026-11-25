@@ -983,7 +983,7 @@ class PlanningService
                 'id' => $category->id,
                 'name' => $category->archived_at === null ? $category->name : $category->name.' (arquivado)',
             ])->all(),
-            'banks' => Bank::query()->whereNull('archived_at')->orderBy('name')->get(['id', 'name'])
+            'banks' => Bank::query()->account()->whereNull('archived_at')->orderBy('name')->get(['id', 'name'])
                 ->map(fn ($bank) => ['id' => $bank->id, 'name' => $bank->name])->all(),
             'cards' => Card::query()->with('bank:id,name')->whereNull('archived_at')->orderBy('name')->get()
                 ->map(fn ($card) => [

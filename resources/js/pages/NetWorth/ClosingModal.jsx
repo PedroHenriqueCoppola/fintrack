@@ -308,30 +308,49 @@ export default function ClosingModal({ month, maxMonth, onClose }) {
                     <p className="closing-notice">Não há banco para este fechamento.</p>
                 ) : null}
                 <div className="closing-banks">
-                    {items.map((item, index) => (
-                        <div className="closing-bank" key={item.bank_id}>
-                            <span
-                                className={item.color ? 'closing-tile' : 'closing-tile closing-tile--plain'}
-                                style={item.color ? { '--item-color': item.color } : undefined}
-                            >
-                                <Landmark aria-hidden="true" strokeWidth={1.75} />
-                            </span>
-                            <div className="closing-bank__name">
-                                <strong>{item.name}</strong>
-                                <span>
-                                    {!reference
-                                        ? 'Sem fechamento anterior'
-                                        : `${reference.name}: ${formatPlainMoney(item.reference_balance ?? '0.00')}`}
-                                </span>
+                    {['account', 'investment'].map((kind) => {
+                        const rows = items
+                            .map((item, index) => ({ item, index }))
+                            .filter(({ item }) => (kind === 'investment' ? item.kind === 'investment' : item.kind !== 'investment'));
+
+                        if (rows.length === 0) {
+                            return null;
+                        }
+
+                        return (
+                            <div key={kind}>
+                                <p className="closing-group__title">{kind === 'investment' ? 'Investimentos' : 'Contas'}</p>
+                                {rows.map(({ item, index }) => (
+                                    <div className="closing-bank" key={item.bank_id}>
+                                        <span
+                                            className={item.color ? 'closing-tile' : 'closing-tile closing-tile--plain'}
+                                            style={item.color ? { '--item-color': item.color } : undefined}
+                                        >
+                                            <Landmark aria-hidden="true" strokeWidth={1.75} />
+                                        </span>
+                                        <div className="closing-bank__name">
+                                            <strong>{item.name}</strong>
+                                            <span>
+                                                {!reference
+                                                    ? 'Sem fechamento anterior'
+                                                    : `${reference.name}: ${formatPlainMoney(item.reference_balance ?? '0.00')}`}
+                                            </span>
+                                        </div>
+                                        <FormField label="Saldo" error={message(form.errors, `items.${index}.balance`)}>
+                                            <MoneyInput
+                                                value={item.balance}
+                                                onChange={(value) => changeBalance(index, value)}
+                                            />
+                                        </FormField>
+                                    </div>
+                                ))}
+                                <p className="closing-group__total">
+                                    <span>Subtotal</span>
+                                    <strong>{formatPlainMoney(decimalFromCents(sumCents(rows.map(({ item }) => item.balance))))}</strong>
+                                </p>
                             </div>
-                            <FormField label="Saldo" error={message(form.errors, `items.${index}.balance`)}>
-                                <MoneyInput
-                                    value={item.balance}
-                                    onChange={(value) => changeBalance(index, value)}
-                                />
-                            </FormField>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
                 {ready ? (
                     <div className="closing-summary">

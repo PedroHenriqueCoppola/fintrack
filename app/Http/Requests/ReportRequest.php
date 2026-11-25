@@ -135,6 +135,7 @@ class ReportRequest extends FormRequest
             $this->owned($validator, Bank::class, $this->input('bank_id'), 'bank_id', 'Escolha um banco.');
             $this->owned($validator, Card::class, $this->input('card_id'), 'card_id', 'Escolha um cartão.');
             CatalogGuard::cardBelongsToBank($validator, $this->input('bank_id'), $this->input('card_id'));
+            CatalogGuard::accountBank($validator, $this->input('bank_id'));
             $this->owned($validator, PaymentMethod::class, $this->input('payment_method_id'), 'payment_method_id', 'Escolha uma forma de pagamento.');
             foreach ((array) $this->input('tags', []) as $tagId) {
                 $this->owned($validator, Tag::class, $tagId, 'tags', 'Escolha uma tag.');

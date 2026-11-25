@@ -149,6 +149,20 @@
     font-weight: 500;
 }
 
+.closing-group__title,
+.closing-group__total {
+    margin: 0.8rem 0 0.4rem;
+    color: var(--color-text-subtle);
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.closing-group__total {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
 .closing-total strong {
     color: var(--color-positive);
     font-size: 2rem;

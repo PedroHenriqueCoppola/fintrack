@@ -137,6 +137,7 @@ class SavedFilterRequest extends FormRequest
             $this->owned($validator, Bank::class, $filters['bank_id'] ?? null, 'filters.bank_id', 'Escolha um banco.');
             $this->owned($validator, Card::class, $filters['card_id'] ?? null, 'filters.card_id', 'Escolha um cartão.');
             CatalogGuard::cardBelongsToBank($validator, $filters['bank_id'] ?? null, $filters['card_id'] ?? null, 'filters.card_id');
+            CatalogGuard::accountBank($validator, $filters['bank_id'] ?? null, 'filters.bank_id');
             $this->owned($validator, PaymentMethod::class, $filters['payment_method_id'] ?? null, 'filters.payment_method_id', 'Escolha uma forma de pagamento.');
             foreach ((array) ($filters['tags'] ?? []) as $tagId) {
                 $this->owned($validator, Tag::class, $tagId, 'filters.tags', 'Escolha uma tag.');

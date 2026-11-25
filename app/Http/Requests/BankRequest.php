@@ -28,6 +28,7 @@ class BankRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', new PlainText],
             'color' => ['nullable', 'string', Rule::in(array_column(config('fintrack.colors'), 'value'))],
+            'kind' => ['required', 'string', Rule::in(['account', 'investment'])],
             'user_id' => ['missing'],
         ];
     }
@@ -41,6 +42,8 @@ class BankRequest extends FormRequest
             'name.required' => 'Informe o nome.',
             'name.string' => 'Informe o nome.',
             'name.max' => 'O nome pode ter no máximo 255 caracteres.',
+            'kind.required' => 'Escolha o tipo do banco.',
+            'kind.in' => 'Escolha Conta ou Investimento.',
             'color.string' => 'Escolha uma cor da lista.',
             'color.in' => 'Escolha uma cor da lista.',
             'user_id.missing' => 'O usuário não pode ser informado.',

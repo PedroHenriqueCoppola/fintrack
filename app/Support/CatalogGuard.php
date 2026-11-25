@@ -68,6 +68,12 @@ class CatalogGuard
 
         if (! $bank instanceof Bank || ! self::usable($bank, $currentBankId)) {
             $validator->errors()->add('bank_id', 'Escolha um banco ativo.');
+
+            return;
+        }
+
+        if ($bank->kind === 'investment') {
+            $validator->errors()->add('bank_id', 'Escolha um banco de conta.');
         }
     }
 
@@ -81,6 +87,19 @@ class CatalogGuard
 
         if ($card instanceof Card && (int) $card->bank_id !== (int) $bankId) {
             $validator->errors()->add($field, 'Esse cartão não é desse banco.');
+        }
+    }
+
+    public static function accountBank(Validator $validator, mixed $bankId, string $field = 'bank_id'): void
+    {
+        if ($bankId === null || $bankId === '') {
+            return;
+        }
+
+        $bank = Bank::query()->find($bankId);
+
+        if ($bank instanceof Bank && $bank->kind === 'investment') {
+            $validator->errors()->add($field, 'Escolha um banco de conta.');
         }
     }
 

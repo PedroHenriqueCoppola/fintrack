@@ -13,6 +13,7 @@ class Bank extends Model
     protected $fillable = [
         'name',
         'color',
+        'kind',
     ];
 
     protected function casts(): array
@@ -25,5 +26,10 @@ class Bank extends Model
     public function cards(): HasMany
     {
         return $this->hasMany(Card::class);
+    }
+
+    public function scopeAccount($query)
+    {
+        return $query->where('kind', 'account');
     }
 }

@@ -70,7 +70,7 @@ class TransactionOptionsService
                 )->resolve(),
             ],
             'banks' => BankResource::collection(
-                Bank::query()->whereNull('archived_at')->orderBy('name')->get()
+                Bank::query()->account()->whereNull('archived_at')->orderBy('name')->get()
             )->resolve(),
             'cards' => CardResource::collection(
                 Card::query()
