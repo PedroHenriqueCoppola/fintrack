@@ -7,6 +7,7 @@ use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
 use App\Support\AnalysisFilters;
+use App\Support\CatalogGuard;
 use App\Rules\PlainText;
 use App\Support\Money;
 use Illuminate\Foundation\Http\FormRequest;
@@ -132,6 +133,7 @@ class SavedFilterRequest extends FormRequest
             $this->owned($validator, Category::class, $filters['category_id'] ?? null, 'filters.category_id', 'Escolha uma categoria.');
             $this->owned($validator, Bank::class, $filters['bank_id'] ?? null, 'filters.bank_id', 'Escolha um banco.');
             $this->owned($validator, Card::class, $filters['card_id'] ?? null, 'filters.card_id', 'Escolha um cartão.');
+            CatalogGuard::cardBelongsToBank($validator, $filters['bank_id'] ?? null, $filters['card_id'] ?? null, 'filters.card_id');
             $this->owned($validator, PaymentMethod::class, $filters['payment_method_id'] ?? null, 'filters.payment_method_id', 'Escolha uma forma de pagamento.');
 
             if ($validator->errors()->isNotEmpty()) {

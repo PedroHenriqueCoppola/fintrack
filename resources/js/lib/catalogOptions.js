@@ -41,9 +41,10 @@ export function namedOption(item) {
     };
 }
 
-export function choiceOptions(items) {
-    return items.map((item) => ({
-        value: String(item.value),
-        label: item.label,
-    }));
+export function cardsForBank(cards, bankId) {
+    if (!bankId) {
+        return cards ?? [];
+    }
+
+    return (cards ?? []).filter((card) => String(card.bank_id) === String(bankId));
 }

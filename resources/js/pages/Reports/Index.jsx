@@ -20,7 +20,7 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import Select from '../../components/Select/Select';
 import Tabs from '../../components/Tabs/Tabs';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
-import { bankOption, cardOption, categoryOption, namedOption } from '../../lib/catalogOptions';
+import { bankOption, cardOption, cardsForBank, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { formatDate } from '../../lib/format';
 import PeriodPopover from '../Analysis/PeriodPopover';
 import '../../components/DatePicker/DatePicker.css';
@@ -249,6 +249,25 @@ export default function Index({ definition, period, report, options, limits }) {
 
     function setField(key, value) {
         const next = { ...draftRef.current, [key]: value === '' ? null : value };
+
+        const onTransactions = (draftRef.current.dataset || 'transactions') === 'transactions';
+
+        if (onTransactions && key === 'bank_id') {
+            const card = (options.cards ?? []).find((item) => String(item.id) === String(next.card_id));
+
+            if (value && card && String(card.bank_id) !== String(value)) {
+                next.card_id = null;
+            }
+        }
+
+        if (onTransactions && key === 'card_id' && value) {
+            const card = (options.cards ?? []).find((item) => String(item.id) === String(value));
+
+            if (card?.bank_id) {
+                next.bank_id = String(card.bank_id);
+            }
+        }
+
         draftRef.current = next;
         setDraft(next);
         schedule(next);
@@ -334,7 +353,7 @@ export default function Index({ definition, period, report, options, limits }) {
                     ]} onChange={(value) => setField('type', value)} />
                     <SelectField label="Categoria" value={draft.category_id ?? ''} error={errorText(pageErrors, 'category_id')} emptyOption="Todas" options={allCategories(options).map((item) => categoryOption(item))} onChange={(value) => setField('category_id', value)} />
                     <SelectField label="Banco" value={draft.bank_id ?? ''} error={errorText(pageErrors, 'bank_id')} emptyOption="Todos" options={(options.banks ?? []).map((item) => bankOption(item))} onChange={(value) => setField('bank_id', value)} />
-                    <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} emptyOption="Todos" options={(options.cards ?? []).map((item) => cardOption(item, options.banks))} onChange={(value) => setField('card_id', value)} />
+                    <SelectField label="Cartão" value={draft.card_id ?? ''} error={errorText(pageErrors, 'card_id')} emptyOption="Todos" options={cardsForBank(options.cards, draft.bank_id).map((item) => cardOption(item, options.banks))} onChange={(value) => setField('card_id', value)} />
                     <SelectField label="Forma de pagamento" value={draft.payment_method_id ?? ''} error={errorText(pageErrors, 'payment_method_id')} emptyOption="Todas" options={(options.paymentMethods ?? []).map((item) => namedOption(item))} onChange={(value) => setField('payment_method_id', value)} />
                     <SelectField label="Situação" value={draft.status ?? 'paid'} error={errorText(pageErrors, 'status')} options={[
                         { value: 'paid', label: 'Paga' },

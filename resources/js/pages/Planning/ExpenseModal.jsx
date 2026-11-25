@@ -9,18 +9,15 @@ import MoneyInput from '../../components/MoneyInput/MoneyInput';
 import MonthField from '../../components/MonthField/MonthField';
 import Select from '../../components/Select/Select';
 import TextInput from '../../components/TextInput/TextInput';
-import { bankOption, cardOption, categoryOption, namedOption } from '../../lib/catalogOptions';
+import { bankOption, cardOption, cardsForBank, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { formatPlainMoney } from '../../lib/format';
 import { useFieldSetter } from '../../lib/fields';
 import { datePayload, formatDate, moneyPayload, monthPayload, monthText } from './fields';
 
 function PaymentFields({ form, setField, options }) {
     const method = options.payment_methods.find((item) => String(item.id) === String(form.data.payment_method_id));
-    const card = options.cards.find((item) => String(item.id) === String(form.data.card_id));
     const requiresCard = Boolean(method?.requires_card);
-    const bankName = card?.bank_name
-        || options.banks.find((item) => String(item.id) === String(card?.bank_id))?.name
-        || '';
+    const visibleCards = cardsForBank(options.cards, form.data.bank_id);
 
     return (
         <>
@@ -32,12 +29,37 @@ function PaymentFields({ form, setField, options }) {
                     options={options.payment_methods.map((item) => namedOption(item))}
                     onChange={(value) => {
                         const next = options.payment_methods.find((item) => String(item.id) === value);
-                        setField((data) => ({
-                            ...data,
-                            payment_method_id: value,
-                            card_id: next?.requires_card ? data.card_id : '',
-                        }), 'payment_method_id', 'card_id', 'bank_id');
+                        setField((data) => {
+                            const current = options.cards.find((item) => String(item.id) === String(data.card_id));
+                            const keep = Boolean(next?.requires_card)
+                                && current
+                                && (!data.bank_id || String(current.bank_id) === String(data.bank_id));
+
+                            return {
+                                ...data,
+                                payment_method_id: value,
+                                card_id: keep ? data.card_id : '',
+                            };
+                        }, 'payment_method_id', 'card_id', 'bank_id');
                     }}
+                />
+            </FormField>
+            <FormField label="Banco" error={form.errors.bank_id}>
+                <Select
+                    value={form.data.bank_id}
+                    placeholder="Escolha"
+                    emptyOption="Escolha"
+                    options={options.banks.map((item) => bankOption(item))}
+                    onChange={(value) => setField((data) => {
+                        const current = options.cards.find((item) => String(item.id) === String(data.card_id));
+                        const keep = !value || (current && String(current.bank_id) === String(value));
+
+                        return {
+                            ...data,
+                            bank_id: value,
+                            card_id: keep ? data.card_id : '',
+                        };
+                    }, 'bank_id', 'card_id')}
                 />
             </FormField>
             {requiresCard ? (
@@ -46,7 +68,7 @@ function PaymentFields({ form, setField, options }) {
                         value={form.data.card_id}
                         placeholder="Escolha"
                         emptyOption="Escolha"
-                        options={options.cards.map((item) => cardOption(item, options.banks))}
+                        options={visibleCards.map((item) => cardOption(item, options.banks))}
                         onChange={(value) => {
                             const next = options.cards.find((item) => String(item.id) === value);
                             setField((data) => ({
@@ -58,19 +80,6 @@ function PaymentFields({ form, setField, options }) {
                     />
                 </FormField>
             ) : null}
-            <FormField label="Banco" error={form.errors.bank_id}>
-                {requiresCard && card ? (
-                    <input type="text" value={bankName ? `${bankName} · do cartão` : 'Do cartão'} disabled readOnly />
-                ) : (
-                    <Select
-                        value={form.data.bank_id}
-                        placeholder="Escolha"
-                        emptyOption="Escolha"
-                        options={options.banks.map((item) => bankOption(item))}
-                        onChange={(value) => setField('bank_id', value)}
-                    />
-                )}
-            </FormField>
         </>
     );
 }

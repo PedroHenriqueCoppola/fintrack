@@ -7,6 +7,7 @@ use App\Models\Card;
 use App\Models\Category;
 use App\Models\PaymentMethod;
 use App\Support\AnalysisFilters;
+use App\Support\CatalogGuard;
 use App\Support\Money;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -116,6 +117,7 @@ class AnalysisRequest extends FormRequest
             $this->owned($validator, Category::class, $this->input('category_id'), 'category_id', 'Escolha uma categoria.');
             $this->owned($validator, Bank::class, $this->input('bank_id'), 'bank_id', 'Escolha um banco.');
             $this->owned($validator, Card::class, $this->input('card_id'), 'card_id', 'Escolha um cartão.');
+            CatalogGuard::cardBelongsToBank($validator, $this->input('bank_id'), $this->input('card_id'));
             $this->owned($validator, PaymentMethod::class, $this->input('payment_method_id'), 'payment_method_id', 'Escolha uma forma de pagamento.');
         });
     }

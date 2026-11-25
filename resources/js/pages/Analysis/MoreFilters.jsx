@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../../components/Button/Button';
 import MoneyInput from '../../components/MoneyInput/MoneyInput';
 import Select from '../../components/Select/Select';
-import { cardOption } from '../../lib/catalogOptions';
+import { cardOption, cardsForBank } from '../../lib/catalogOptions';
 import { moneyPayload } from '../../lib/moneyField';
 import { useFocusTrap } from '../../lib/dialog';
 
@@ -92,12 +92,16 @@ export default function MoreFilters({ open, filters, cards, onClose, onApply, on
             return;
         }
 
+        const visible = cardsForBank(cards, filters.bank_id);
+        const chosen = visible.find((card) => String(card.id) === String(draft.card_id));
+
         onApply({
             type: draft.type,
             status: draft.status,
             min_amount: min.value,
             max_amount: max.value,
-            card_id: draft.card_id,
+            card_id: chosen ? draft.card_id : '',
+            ...(chosen && !filters.bank_id ? { bank_id: String(chosen.bank_id) } : {}),
             sort: draft.sort,
         });
     }
@@ -171,7 +175,7 @@ export default function MoreFilters({ open, filters, cards, onClose, onApply, on
                         value={draft.card_id}
                         emptyOption="Todos"
                         placeholder="Todos"
-                        options={cards.map((card) => cardOption(card))}
+                        options={cardsForBank(cards, filters.bank_id).map((card) => cardOption(card))}
                         onChange={(value) => setDraft((current) => ({ ...current, card_id: value }))}
                     />
                 </label>

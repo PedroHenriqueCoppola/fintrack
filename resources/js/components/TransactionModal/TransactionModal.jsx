@@ -10,7 +10,7 @@ import MoneyInput from '../MoneyInput/MoneyInput';
 import ReferenceSeal from '../ReferenceSeal/ReferenceSeal';
 import Select from '../Select/Select';
 import TextInput from '../TextInput/TextInput';
-import { bankOption, cardOption, categoryOption, namedOption } from '../../lib/catalogOptions';
+import { bankOption, cardOption, cardsForBank, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { useFieldSetter } from '../../lib/fields';
 import {
     formatDate,
@@ -305,10 +305,7 @@ export default function TransactionModal({
     const method = paymentMethods.find((item) => String(item.id) === String(form.data.payment_method_id));
     const card = cards.find((item) => String(item.id) === String(form.data.card_id));
     const requiresCard = Boolean(method?.requires_card);
-    const lockedBank = requiresCard && card;
-    const bankName = card?.bank_name
-        || banks.find((item) => String(item.id) === String(card?.bank_id))?.name
-        || '';
+    const visibleCards = cardsForBank(cards, form.data.bank_id);
     const dateLimit = form.data.status === 'pending' ? plusYears(today, 5) : today;
     const missing = [];
 
@@ -372,11 +369,31 @@ export default function TransactionModal({
 
     function changeMethod(id) {
         const next = paymentMethods.find((item) => String(item.id) === id);
-        setField((data) => ({
-            ...data,
-            payment_method_id: id,
-            card_id: next?.requires_card ? data.card_id : '',
-        }), 'payment_method_id', 'card_id', 'bank_id');
+        setField((data) => {
+            const current = cards.find((item) => String(item.id) === String(data.card_id));
+            const keep = Boolean(next?.requires_card)
+                && current
+                && (!data.bank_id || String(current.bank_id) === String(data.bank_id));
+
+            return {
+                ...data,
+                payment_method_id: id,
+                card_id: keep ? data.card_id : '',
+            };
+        }, 'payment_method_id', 'card_id', 'bank_id');
+    }
+
+    function changeBank(id) {
+        setField((data) => {
+            const current = cards.find((item) => String(item.id) === String(data.card_id));
+            const keep = !id || (current && String(current.bank_id) === String(id));
+
+            return {
+                ...data,
+                bank_id: id,
+                card_id: keep ? data.card_id : '',
+            };
+        }, 'bank_id', 'card_id');
     }
 
     function changeCard(id) {
@@ -613,21 +630,15 @@ export default function TransactionModal({
                             onChange={(value) => setField('category_id', value)}
                         />
                     </FormField>
-                    <div className={lockedBank ? 'tx-locked' : undefined}>
-                        <FormField label="Banco" error={form.errors.bank_id}>
-                            {lockedBank ? (
-                                <input type="text" value={`${bankName} · do cartão`} disabled readOnly />
-                            ) : (
-                                <Select
-                                    value={form.data.bank_id}
-                                    placeholder="Escolha"
-                                    emptyOption="Escolha"
-                                    options={banks.map((item) => bankOption(item))}
-                                    onChange={(value) => setField('bank_id', value)}
-                                />
-                            )}
-                        </FormField>
-                    </div>
+                    <FormField label="Banco" error={form.errors.bank_id}>
+                        <Select
+                            value={form.data.bank_id}
+                            placeholder="Escolha"
+                            emptyOption="Escolha"
+                            options={banks.map((item) => bankOption(item))}
+                            onChange={changeBank}
+                        />
+                    </FormField>
                 </div>
                 <div className={requiresCard ? 'tx-grid' : undefined}>
                     <FormField label="Forma de pagamento" error={form.errors.payment_method_id}>
@@ -645,7 +656,7 @@ export default function TransactionModal({
                                 value={form.data.card_id}
                                 placeholder="Escolha"
                                 emptyOption="Escolha"
-                                options={cards.map((item) => cardOption(item, banks))}
+                                options={visibleCards.map((item) => cardOption(item, banks))}
                                 onChange={changeCard}
                             />
                         </FormField>

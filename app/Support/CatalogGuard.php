@@ -50,6 +50,12 @@ class CatalogGuard
             }
         }
 
+        if ($card instanceof Card && $bankId && (int) $card->bank_id !== (int) $bankId) {
+            self::cardBelongsToBank($validator, $bankId, $card->id);
+
+            return;
+        }
+
         $resolvedBankId = $card instanceof Card ? $card->bank_id : $bankId;
 
         if (! $resolvedBankId) {
@@ -62,6 +68,19 @@ class CatalogGuard
 
         if (! $bank instanceof Bank || ! self::usable($bank, $currentBankId)) {
             $validator->errors()->add('bank_id', 'Escolha um banco ativo.');
+        }
+    }
+
+    public static function cardBelongsToBank(Validator $validator, mixed $bankId, mixed $cardId, string $field = 'card_id'): void
+    {
+        if ($bankId === null || $bankId === '' || $cardId === null || $cardId === '') {
+            return;
+        }
+
+        $card = Card::query()->find($cardId);
+
+        if ($card instanceof Card && (int) $card->bank_id !== (int) $bankId) {
+            $validator->errors()->add($field, 'Esse cartão não é desse banco.');
         }
     }
 

@@ -10,7 +10,7 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import TransactionModal, { NewTransactionButton } from '../../components/TransactionModal/TransactionModal';
 import Select from '../../components/Select/Select';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
-import { bankOption, categoryOption, namedOption } from '../../lib/catalogOptions';
+import { bankOption, cardOption, cardsForBank, categoryOption, namedOption } from '../../lib/catalogOptions';
 import { formatDate, formatNeutralMoney, formatPlainMoney } from '../../lib/format';
 import MoreFilters from './MoreFilters';
 import PeriodPopover from './PeriodPopover';
@@ -307,7 +307,15 @@ export default function Index({
                                     emptyOption="Todos"
                                     placeholder="Todos"
                                     options={(options.banks ?? []).map((item) => bankOption(item))}
-                                    onChange={(value) => setFilter('bank_id', value)}
+                                    onChange={(value) => {
+                                        const card = (options.cards ?? []).find((item) => String(item.id) === String(filters.card_id));
+                                        const clearCard = value && card && String(card.bank_id) !== String(value);
+                                        visitAnalysis({
+                                            ...currentQuery(),
+                                            bank_id: value,
+                                            ...(clearCard ? { card_id: '' } : {}),
+                                        });
+                                    }}
                                 />
                             </label>
                             <label className="filter-field">
