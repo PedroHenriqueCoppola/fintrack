@@ -122,6 +122,7 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                                     onEdit={(item) => setDialog({ kind: 'categories', item })}
                                     archivePath={(item) => `/manage/categories/${item.id}/archive`}
                                     restorePath={(item) => `/manage/categories/${item.id}/restore`}
+                                    deletePath={(item) => `/manage/categories/${item.id}`}
                                     detail={(item) => categoryDetail(item, options)}
                                     groups={[
                                         {
@@ -149,6 +150,7 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                                     onEdit={(item) => setDialog({ kind: 'banks', item })}
                                     archivePath={(item) => `/manage/banks/${item.id}/archive`}
                                     restorePath={(item) => `/manage/banks/${item.id}/restore`}
+                                    deletePath={(item) => `/manage/banks/${item.id}`}
                                     detail={(item) => bankDetail(item, options)}
                                     fallbackIcon="Landmark"
                                 />
@@ -167,6 +169,7 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                                     onEdit={(item) => setDialog({ kind: 'cards', item })}
                                     archivePath={(item) => `/manage/cards/${item.id}/archive`}
                                     restorePath={(item) => `/manage/cards/${item.id}/restore`}
+                                    deletePath={(item) => `/manage/cards/${item.id}`}
                                     detail={cardDetail}
                                     fallbackIcon="CreditCard"
                                 />
@@ -185,6 +188,7 @@ export default function Index({ banks, categories, cards, paymentMethods, option
                                     onEdit={(item) => setDialog({ kind: 'payment-methods', item })}
                                     archivePath={(item) => `/manage/payment-methods/${item.id}/archive`}
                                     restorePath={(item) => `/manage/payment-methods/${item.id}/restore`}
+                                    deletePath={(item) => `/manage/payment-methods/${item.id}`}
                                     detail={(item) => (item.requires_card ? 'Exige cartão' : 'Não exige cartão')}
                                     fallbackIcon={(item) => (item.requires_card ? 'CreditCard' : 'Wallet')}
                                 />

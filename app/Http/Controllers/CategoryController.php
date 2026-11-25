@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
+use App\Services\CatalogUsage;
 use App\Services\CategoryService;
 use Illuminate\Http\RedirectResponse;
 
@@ -33,6 +34,13 @@ class CategoryController extends Controller
     public function restore(Category $category, CategoryService $categories): RedirectResponse
     {
         $categories->restore($category);
+
+        return back();
+    }
+
+    public function destroy(Category $category, CatalogUsage $usage): RedirectResponse
+    {
+        $usage->delete($category, 'category', 'category_id');
 
         return back();
     }

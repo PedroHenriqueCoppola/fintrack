@@ -21,6 +21,8 @@ class CategoryResource extends JsonResource
             'color' => $this->color,
             'initial_month' => $this->initial_month?->toDateString(),
             'archived' => $this->archived_at !== null,
+            'can_delete' => (bool) ($this->can_delete ?? false),
+            'usage_summary' => $this->usage_summary,
             'usage' => null,
         ];
     }

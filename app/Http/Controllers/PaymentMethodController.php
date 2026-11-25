@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PaymentMethodRequest;
 use App\Models\PaymentMethod;
+use App\Services\CatalogUsage;
 use App\Services\PaymentMethodService;
 use Illuminate\Http\RedirectResponse;
 
@@ -33,6 +34,13 @@ class PaymentMethodController extends Controller
     public function restore(PaymentMethod $paymentMethod, PaymentMethodService $paymentMethods): RedirectResponse
     {
         $paymentMethods->restore($paymentMethod);
+
+        return back();
+    }
+
+    public function destroy(PaymentMethod $paymentMethod, CatalogUsage $usage): RedirectResponse
+    {
+        $usage->delete($paymentMethod, 'payment_method', 'payment_method_id');
 
         return back();
     }

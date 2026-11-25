@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BankRequest;
 use App\Models\Bank;
 use App\Services\BankService;
+use App\Services\CatalogUsage;
 use Illuminate\Http\RedirectResponse;
 
 class BankController extends Controller
@@ -33,6 +34,13 @@ class BankController extends Controller
     public function restore(Bank $bank, BankService $banks): RedirectResponse
     {
         $banks->restore($bank);
+
+        return back();
+    }
+
+    public function destroy(Bank $bank, CatalogUsage $usage): RedirectResponse
+    {
+        $usage->delete($bank, 'bank', 'bank_id');
 
         return back();
     }

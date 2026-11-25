@@ -105,7 +105,8 @@
     overflow-wrap: anywhere;
 }
 
-.manage-card__detail {
+.manage-card__detail,
+.manage-card__usage {
     margin: 0.2rem 0 0;
     color: var(--color-text-subtle);
     font-size: 1.25rem;

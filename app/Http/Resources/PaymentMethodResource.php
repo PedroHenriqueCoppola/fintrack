@@ -17,6 +17,8 @@ class PaymentMethodResource extends JsonResource
             'name' => $this->name,
             'requires_card' => $this->requires_card,
             'archived' => $this->archived_at !== null,
+            'can_delete' => (bool) ($this->can_delete ?? false),
+            'usage_summary' => $this->usage_summary,
             'usage' => null,
         ];
     }

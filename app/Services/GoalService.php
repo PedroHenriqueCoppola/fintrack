@@ -100,6 +100,11 @@ class GoalService
         $goal->save();
     }
 
+    public function delete(Goal $goal): void
+    {
+        $goal->delete();
+    }
+
     public function restore(Goal $goal): void
     {
         if ($goal->archived_at === null) {

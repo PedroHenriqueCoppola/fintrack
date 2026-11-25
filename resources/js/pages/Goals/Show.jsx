@@ -49,7 +49,9 @@ export default function Show({
     const banner = firstError(errors);
     const [editing, setEditing] = useState(false);
     const [confirming, setConfirming] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const [archiving, setArchiving] = useState(false);
+    const [removing, setRemoving] = useState(false);
     const [preset, setPreset] = useState(null);
     const archived = goal.state === 'archived';
     const categoryArchived = Boolean(goal.category?.archived);
@@ -125,6 +127,7 @@ export default function Show({
                             ) : (
                                 <Button variant="quiet" onClick={() => setConfirming(true)}>Arquivar</Button>
                             )}
+                            <Button variant="quiet" onClick={() => setConfirmDelete(true)}>Excluir</Button>
                         </>
                     )}
                 />
@@ -230,6 +233,23 @@ export default function Show({
                     onCancel={() => setConfirming(false)}
                 >
                     {`${goal.name} sai das listas. O total guardado e o gráfico geral continuam contando a categoria. Você pode restaurar depois.`}
+                </ConfirmDialog>
+            ) : null}
+            {confirmDelete ? (
+                <ConfirmDialog
+                    open
+                    title={`Excluir a meta ${goal.name}?`}
+                    confirmLabel="Excluir"
+                    busy={removing}
+                    onConfirm={() => {
+                        setRemoving(true);
+                        router.delete(`/goals/${goal.id}${window.location.search}`, {
+                            onFinish: () => setRemoving(false),
+                        });
+                    }}
+                    onCancel={() => setConfirmDelete(false)}
+                >
+                    As transações da categoria não mudam. Essa ação não pode ser desfeita.
                 </ConfirmDialog>
             ) : null}
         </>
