@@ -104,7 +104,7 @@
 .popover--calendar {
     top: calc(100% + 0.8rem);
     left: 0;
-    width: 36rem;
+    width: min(36rem, 100%);
 }
 
 .popover__title-row {
@@ -450,7 +450,23 @@
     font-size: 1.4rem;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1099px) {
+    .period-bar {
+        align-items: flex-start;
+    }
+
+    .period-bar > .period-seg {
+        flex: 1 1 100%;
+        flex-wrap: nowrap;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .period-bar > .period-seg button {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
     .net-worth-span-4,
     .net-worth-span-5,
     .net-worth-span-7,

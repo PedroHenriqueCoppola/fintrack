@@ -392,27 +392,27 @@ export default function Index({
                 </div>
                 <div className="summary">
                     <Card className="summary-card">
-                        <p className="summary-card__label">Transações</p>
+                        <h2 className="summary-card__label">Transações</h2>
                         <p className="summary-card__value">{summary.count}</p>
                     </Card>
                     <Card className="summary-card">
-                        <p className="summary-card__label">Receitas</p>
+                        <h2 className="summary-card__label">Receitas</h2>
                         <p className="summary-card__value"><Money value={summary.income} /></p>
                     </Card>
                     <Card className="summary-card">
-                        <p className="summary-card__label">Despesas</p>
+                        <h2 className="summary-card__label">Despesas</h2>
                         <p className="summary-card__value"><Money value={signedExpense(summary.expense)} /></p>
                     </Card>
                     <Card className="summary-card">
-                        <p className="summary-card__label">Reservado</p>
+                        <h2 className="summary-card__label">Reservado</h2>
                         <p className="summary-card__value summary-card__value--plain">{formatNeutralMoney(summary.reserved)}</p>
                     </Card>
                     <Card className="summary-card">
-                        <p className="summary-card__label">Saldo</p>
+                        <h2 className="summary-card__label">Saldo</h2>
                         <p className="summary-card__value"><Money value={summary.balance} /></p>
                     </Card>
                     <Card className="summary-card">
-                        <p className="summary-card__label">Média por despesa</p>
+                        <h2 className="summary-card__label">Média por despesa</h2>
                         <p className="summary-card__value">{formatPlainMoney(summary.average_expense)}</p>
                     </Card>
                 </div>

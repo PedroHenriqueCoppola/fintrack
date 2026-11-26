@@ -92,7 +92,7 @@
 }
 
 .period-seg button:disabled {
-    opacity: 0.4;
+    color: var(--color-text-subtle);
     cursor: default;
 }
 
@@ -138,7 +138,7 @@
 .popover--calendar {
     top: calc(100% + 0.8rem);
     left: 0;
-    width: 36rem;
+    width: min(36rem, 100%);
 }
 
 .popover__title-row {
@@ -372,6 +372,8 @@
 
 .goal-movements {
     max-height: 42rem;
+    max-width: 100%;
+    min-width: 0;
     overflow: auto;
 }
 
@@ -421,15 +423,42 @@
     font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 1100px) {
-    .goal-stats,
-    .goal-grid,
+@media (max-width: 1279px) {
+    .goal-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1099px) {
+    .period-bar {
+        align-items: flex-start;
+    }
+
+    .period-bar > .period-seg {
+        flex: 1 1 100%;
+        flex-wrap: nowrap;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .period-bar > .period-seg button {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .goal-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .goal-detail {
         grid-template-columns: 1fr;
     }
+}
 
-    .popover--calendar {
-        width: min(36rem, calc(100vw - 4.8rem));
+@media (max-width: 699px) {
+    .goal-progress,
+    .popover__dates {
+        grid-template-columns: 1fr;
     }
 }
 

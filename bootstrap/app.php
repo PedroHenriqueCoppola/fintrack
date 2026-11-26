@@ -8,7 +8,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery as FrameworkPreventRequestForgery;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use Inertia\Inertia;
 use Inertia\Support\Header;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -44,5 +46,39 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()->withErrors([
                 'session' => 'Sua sessão expirou. Tente de novo.',
             ]);
+        });
+
+        $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return $response;
+            }
+
+            $status = $response->getStatusCode();
+            $show = in_array($status, [403, 404], true);
+
+            if ($status === 419 && ! $request->header(Header::INERTIA)) {
+                $show = true;
+            }
+
+            if (in_array($status, [500, 503], true) && ! config('app.debug')) {
+                $show = true;
+            }
+
+            if (! $show) {
+                return $response;
+            }
+
+            $authenticated = false;
+
+            try {
+                $authenticated = $request->user() !== null;
+            } catch (\Throwable) {
+                $authenticated = false;
+            }
+
+            return Inertia::render('Error/Index', [
+                'code' => $status,
+                'authenticated' => $authenticated,
+            ])->toResponse($request)->setStatusCode($status);
         });
     })->create();

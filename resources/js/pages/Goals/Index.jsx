@@ -51,7 +51,7 @@ function StatusBar({ status, onChoose }) {
 function Stat({ label, value }) {
     return (
         <Card>
-            <p className="goal-stat__label">{label}</p>
+            <h2 className="goal-stat__label">{label}</h2>
             <p className="goal-stat__value">{value}</p>
         </Card>
     );

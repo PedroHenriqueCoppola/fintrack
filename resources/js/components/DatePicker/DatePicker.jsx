@@ -28,7 +28,7 @@ export default function DatePicker({
     const rootRef = useRef(null);
     const restoreFocus = useRef(true);
     const [open, setOpen] = useState(false);
-    const [dropUp, setDropUp] = useState(false);
+    const [place, setPlace] = useState(null);
     const parsed = parseBrDate(value);
     const selected = parsed ? isoFromDate(parsed) : '';
     const anchor = parseIsoDate(selected) || parseIsoDate(max || today) || parseIsoDate(today);
@@ -43,15 +43,39 @@ export default function DatePicker({
     });
 
     useLayoutEffect(() => {
-        if (!open || !rootRef.current) {
-            return;
+        if (!open || !rootRef.current || !popoverRef.current) {
+            return undefined;
         }
 
-        const rect = rootRef.current.getBoundingClientRect();
-        const height = popoverRef.current?.offsetHeight ?? 320;
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
-        setDropUp(spaceBelow < height + 12 && spaceAbove > spaceBelow);
+        function measure() {
+            const rect = rootRef.current.getBoundingClientRect();
+            const pop = popoverRef.current;
+
+            if (!pop) {
+                return;
+            }
+
+            const margin = 8;
+            const width = Math.min(pop.offsetWidth || 360, window.innerWidth - margin * 2);
+            const height = pop.offsetHeight || 320;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            const openUp = spaceBelow < height + 12 && spaceAbove > spaceBelow;
+            let top = openUp ? rect.top - height - 6 : rect.bottom + 6;
+            let left = rect.right - width;
+            left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+            top = Math.max(margin, Math.min(top, window.innerHeight - height - margin));
+            setPlace({ top, left, width });
+        }
+
+        measure();
+        window.addEventListener('resize', measure);
+        window.addEventListener('scroll', measure, true);
+
+        return () => {
+            window.removeEventListener('resize', measure);
+            window.removeEventListener('scroll', measure, true);
+        };
     }, [open, month, popoverRef]);
 
     function close(restore) {
@@ -80,12 +104,14 @@ export default function DatePicker({
             return undefined;
         }
 
-        function onMouseDown(event) {
+        function onPointerDown(event) {
             if (rootRef.current?.contains(event.target)) {
                 return;
             }
 
-            const backdrop = event.target instanceof Element && event.target.classList.contains('modal-backdrop');
+            const backdrop = event.target instanceof Element
+                && event.target.classList.contains('modal-backdrop');
+
             close(backdrop);
 
             if (!backdrop) {
@@ -101,9 +127,9 @@ export default function DatePicker({
             document.addEventListener('click', stopClick, true);
         }
 
-        document.addEventListener('mousedown', onMouseDown);
+        document.addEventListener('pointerdown', onPointerDown);
 
-        return () => document.removeEventListener('mousedown', onMouseDown);
+        return () => document.removeEventListener('pointerdown', onPointerDown);
     }, [open]);
 
     return (
@@ -134,7 +160,10 @@ export default function DatePicker({
                 </button>
                 {open ? (
                     <div
-                        className={dropUp ? 'date-picker__popover date-picker__popover--up' : 'date-picker__popover date-picker__popover--down'}
+                        className="date-picker__popover"
+                        style={place
+                            ? { top: place.top, left: place.left, width: place.width }
+                            : { top: -9999, left: 0 }}
                         role="dialog"
                         aria-label={label}
                         ref={popoverRef}

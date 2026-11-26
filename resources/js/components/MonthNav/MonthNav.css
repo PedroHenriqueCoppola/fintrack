@@ -32,7 +32,7 @@
 }
 
 .month-nav button:disabled {
-    opacity: 0.4;
+    color: var(--color-text-subtle);
     cursor: not-allowed;
 }
 

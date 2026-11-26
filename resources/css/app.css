@@ -70,7 +70,7 @@
     --color-chip-bg: #ece4fb;
     --color-chip-text: #5a2fb0;
     --color-chip-ok-bg: #e0f2ec;
-    --color-chip-ok-text: #2a7a62;
+    --color-chip-ok-text: #267258;
     --color-positive: #6d3fc4;
     --color-negative-text: #c23b43;
     --color-destructive: #c23b43;
@@ -147,6 +147,7 @@ body {
 
 h1,
 h2,
+h3,
 p {
     margin: 0;
 }

@@ -33,7 +33,7 @@
 .popover--calendar {
     top: calc(100% + 0.8rem);
     left: 0;
-    width: 36rem;
+    width: min(36rem, 100%);
 }
 
 .popover__title-row {
@@ -436,6 +436,7 @@
 .reports-scroll {
     overflow-x: auto;
     max-width: 100%;
+    min-width: 0;
 }
 
 .reports-scroll table {
@@ -526,9 +527,33 @@
     background: var(--color-primary-fill);
 }
 
+@media (max-width: 1279px) {
+    .reports-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 1280px) {
     .reports-layout {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1099px) {
+    .reports-page .period-bar {
+        align-items: flex-start;
+    }
+
+    .reports-page .period-bar > .period-seg {
+        flex: 1 1 100%;
+        flex-wrap: nowrap;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .reports-page .period-seg button {
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 }
 

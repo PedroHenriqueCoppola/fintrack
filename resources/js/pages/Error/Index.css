@@ -1,0 +1,112 @@
+.error-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 2.4rem 3.2rem 4.8rem;
+}
+
+.error-page__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    align-self: flex-start;
+    color: var(--color-text);
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+.error-page__brand .logo {
+    width: 3.2rem;
+    height: 3.2rem;
+}
+
+.error-page__center {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: min(44rem, 100%);
+    margin-inline: auto;
+    text-align: center;
+}
+
+.error-page__stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: 22rem;
+    margin-bottom: 0.8rem;
+}
+
+.error-page__code {
+    position: absolute;
+    margin: 0;
+    color: color-mix(in srgb, var(--color-accent-text) 18%, var(--color-bg));
+    font-size: 16rem;
+    font-weight: 800;
+    line-height: 0.8;
+    letter-spacing: -0.04em;
+    user-select: none;
+    pointer-events: none;
+}
+
+.error-page__ghost {
+    position: relative;
+    height: 18rem;
+    width: auto;
+    animation: error-float 3s ease-in-out infinite;
+}
+
+.error-page h1 {
+    margin: 0;
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+.error-page__text {
+    max-width: 44rem;
+    margin: 1rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.error-page__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2.4rem;
+}
+
+@keyframes error-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-0.8rem);
+    }
+}
+
+@media (max-width: 767px) {
+    .error-page {
+        padding-inline: 1.6rem;
+    }
+
+    .error-page__code {
+        font-size: 10rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .error-page__ghost {
+        animation: none;
+    }
+}
