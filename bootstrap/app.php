@@ -10,26 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use Inertia\Inertia;
 use Inertia\Support\Header;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-
-if (! function_exists('error_page_authenticated')) {
-    function error_page_authenticated(Request $request): bool
-    {
-        try {
-            if (! $request->hasSession()) {
-                $session = app('session')->driver();
-                $session->setRequestOnHandler($request);
-                $session->start();
-                $request->setLaravelSession($session);
-            }
-
-            return $request->user() !== null;
-        } catch (\Throwable) {
-            return false;
-        }
-    }
-}
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -66,21 +48,15 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
         });
 
-        $exceptions->render(function (\Throwable $exception, Request $request) {
+        $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
-                return null;
+                return $response;
             }
 
-            if ($exception instanceof HttpException && $exception->getStatusCode() === 419 && $request->header(Header::INERTIA)) {
-                return null;
-            }
-
-            $status = $exception instanceof HttpExceptionInterface
-                ? $exception->getStatusCode()
-                : null;
+            $status = $response->getStatusCode();
             $show = in_array($status, [403, 404], true);
 
-            if ($status === 419) {
+            if ($status === 419 && ! $request->header(Header::INERTIA)) {
                 $show = true;
             }
 
@@ -88,18 +64,21 @@ return Application::configure(basePath: dirname(__DIR__))
                 $show = true;
             }
 
-            if ($status === null && ! config('app.debug')) {
-                $status = 500;
-                $show = true;
+            if (! $show) {
+                return $response;
             }
 
-            if (! $show || $status === null) {
-                return null;
+            $authenticated = false;
+
+            try {
+                $authenticated = $request->user() !== null;
+            } catch (\Throwable) {
+                $authenticated = false;
             }
 
             return Inertia::render('Error/Index', [
                 'code' => $status,
-                'authenticated' => error_page_authenticated($request),
+                'authenticated' => $authenticated,
             ])->toResponse($request)->setStatusCode($status);
         });
     })->create();

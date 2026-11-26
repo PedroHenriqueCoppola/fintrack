@@ -129,3 +129,5 @@ Route::middleware(['auth', 'inertia.encrypt', SyncCurrentPendings::class])->grou
         Route::get('/styleguide', fn () => Inertia::render('Styleguide/Index'))->name('styleguide');
     }
 });
+
+Route::fallback(fn () => abort(404));

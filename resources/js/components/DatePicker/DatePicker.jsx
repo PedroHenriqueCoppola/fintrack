@@ -109,7 +109,22 @@ export default function DatePicker({
                 return;
             }
 
-            close(false);
+            const backdrop = event.target instanceof Element
+                && event.target.classList.contains('modal-backdrop');
+
+            close(backdrop);
+
+            if (!backdrop) {
+                return;
+            }
+
+            function stopClick(clickEvent) {
+                clickEvent.preventDefault();
+                clickEvent.stopPropagation();
+                document.removeEventListener('click', stopClick, true);
+            }
+
+            document.addEventListener('click', stopClick, true);
         }
 
         document.addEventListener('pointerdown', onPointerDown);

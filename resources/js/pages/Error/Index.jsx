@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import Button from '../../components/Button/Button';
 import Logo from '../../components/Logo/Logo';
 import './Index.css';
@@ -44,10 +44,10 @@ export default function Index({ code = 500, authenticated = false }) {
         <>
             <Head title={copy.title} />
             <div className="error-page">
-                <Link href={home} className="error-page__brand">
+                <a href={home} className="error-page__brand">
                     <Logo />
                     <span>Fintrack</span>
-                </Link>
+                </a>
                 <div className="error-page__center">
                     <div className="error-page__stage">
                         <p className="error-page__code" aria-hidden="true">{status}</p>
@@ -56,9 +56,9 @@ export default function Index({ code = 500, authenticated = false }) {
                     <h1>{copy.title}</h1>
                     <p className="error-page__text">{copy.text}</p>
                     <div className="error-page__actions">
-                        <Link className="button button--primary" href={home}>
+                        <a className="button button--primary" href={home}>
                             {signedIn ? 'Voltar ao Dashboard' : 'Ir para o login'}
-                        </Link>
+                        </a>
                         {status === 419 ? (
                             <Button variant="secondary" onClick={reload}>Recarregar</Button>
                         ) : (
