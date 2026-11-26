@@ -225,9 +225,22 @@ The files that guided the agents are `docs/product-vision.md`, `docs/design-syst
 
 The written spec kept the modules consistent. Invoice cycles and goal restarts needed more correction rounds than the simpler screens.
 
+## Deploying
+
+Before pointing a public address at the app:
+
+- Set `APP_ENV=production`, `APP_DEBUG=false` and `APP_URL` to the `https` address.
+- Set `SESSION_SECURE_COOKIE=true`.
+- Set `REGISTRATION_ENABLED` to `true` only while open sign-up should exist. With `false`, `/register` answers 404 and the login screen hides "Criar conta".
+- Replace every default password: the database user and pgAdmin. Do not publish pgAdmin.
+- Run `php artisan migrate --force`, then `php artisan config:cache`, `php artisan route:cache` and `php artisan view:cache`.
+- Run `npm run build`.
+
+`php artisan fintrack:demo --force` works in production and recreates the demo account. That account stays public with the password printed in this README. Do not run it on a public server unless that is intentional.
+
 ## Limitations and next steps
 
-There is no automated test suite. Testing was done with manual scripts. There is no dedicated phone layout. There is no automatic backup. Investment accounts are balances recorded at each closing, with no yield.
+There is no automated test suite. Testing was done with manual scripts. There is no dedicated phone layout. There is no automatic backup. Investment accounts are balances recorded at each closing, with no yield. There is no password reset by email.
 
 ## License
 

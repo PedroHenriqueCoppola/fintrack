@@ -43,6 +43,9 @@
     --shadow-sidebar: 0 1rem 3rem rgb(0 0 0 / 0.35);
     --shadow-modal: 0 3rem 8rem rgb(0 0 0 / 0.55);
     --shadow-button: 0 0.6rem 1.6rem rgb(124 79 214 / 0.3);
+    --z-dropdown: 50;
+    --z-modal: 80;
+    --z-popover: 100;
     --font: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
     color-scheme: dark;
 }

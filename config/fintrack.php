@@ -71,4 +71,6 @@ return [
         ['value' => 'reserve', 'label' => 'Reserva'],
     ],
 
+    'registration_enabled' => filter_var(env('REGISTRATION_ENABLED', true), FILTER_VALIDATE_BOOL),
+
 ];

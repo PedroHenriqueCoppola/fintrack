@@ -17,9 +17,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SavedFilterController;
-use App\Http\Controllers\TagController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Middleware\EnsureRegistrationEnabled;
 use App\Http\Middleware\SyncCurrentPendings;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -39,8 +40,10 @@ if (app()->isLocal()) {
 Route::middleware('guest')->group(function () {
     Route::get('/login', [SessionController::class, 'create'])->name('login');
     Route::post('/login', [SessionController::class, 'store']);
-    Route::get('/register', [RegistrationController::class, 'create'])->name('register');
-    Route::post('/register', [RegistrationController::class, 'store']);
+    Route::middleware(EnsureRegistrationEnabled::class)->group(function () {
+        Route::get('/register', [RegistrationController::class, 'create'])->name('register');
+        Route::post('/register', [RegistrationController::class, 'store']);
+    });
 });
 
 Route::post('/logout', [SessionController::class, 'destroy'])

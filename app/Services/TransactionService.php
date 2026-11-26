@@ -7,7 +7,6 @@ use App\Models\Category;
 use App\Models\FixedExpense;
 use App\Models\GeneratedSkip;
 use App\Models\Transaction;
-use App\Services\TagService;
 use App\Support\Money;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -664,7 +663,15 @@ class TransactionService
             return ($left === $afterId ? 0 : 1) <=> ($right === $afterId ? 0 : 1);
         });
 
-        foreach (array_values(array_unique($categories)) as $categoryId) {
+        $ids = array_values(array_unique($categories));
+
+        if ($ids !== []) {
+            $locked = $ids;
+            sort($locked);
+            Category::query()->whereKey($locked)->orderBy('id')->lockForUpdate()->get();
+        }
+
+        foreach ($ids as $categoryId) {
             $shortfall = $this->reserves->firstShortfall($categoryId);
 
             if ($shortfall === null) {

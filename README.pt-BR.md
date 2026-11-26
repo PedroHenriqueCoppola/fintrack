@@ -225,9 +225,22 @@ Os arquivos que guiaram os agentes são `docs/product-vision.md`, `docs/design-s
 
 A especificação escrita manteve os módulos consistentes. O ciclo da fatura e o recomeço das metas pediram mais rodadas de correção do que as telas mais simples.
 
+## Publicação
+
+Antes de apontar um endereço público para o app:
+
+- Defina `APP_ENV=production`, `APP_DEBUG=false` e `APP_URL` com o endereço `https`.
+- Defina `SESSION_SECURE_COOKIE=true`.
+- Defina `REGISTRATION_ENABLED` como `true` só enquanto o cadastro aberto deve existir. Com `false`, `/register` responde 404 e a tela de entrada esconde "Criar conta".
+- Troque todas as senhas padrão: a do banco e a do pgAdmin. Não publique o pgAdmin.
+- Rode `php artisan migrate --force`, depois `php artisan config:cache`, `php artisan route:cache` e `php artisan view:cache`.
+- Rode `npm run build`.
+
+`php artisan fintrack:demo --force` funciona em produção e recria a conta demo. Essa conta fica pública com a senha impressa neste README. Não rode o comando num servidor público, a menos que isso seja de propósito.
+
 ## Limitações e próximos passos
 
-Não há suíte de testes automatizados. Os testes foram roteiros manuais. Não há um layout de celular dedicado. Não há backup automático. As contas de investimento são saldos registrados em cada fechamento, sem rentabilidade.
+Não há suíte de testes automatizados. Os testes foram roteiros manuais. Não há um layout de celular dedicado. Não há backup automático. As contas de investimento são saldos registrados em cada fechamento, sem rentabilidade. Não há recuperação de senha por e-mail.
 
 ## Licença
 

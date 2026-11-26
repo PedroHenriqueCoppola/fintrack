@@ -23,6 +23,8 @@ class LoginRequest extends FormRequest
 
     private const IP_LOCK_SECONDS = 900;
 
+    private const PAIR_FAILURE_SECONDS = 900;
+
     public function authorize(): bool
     {
         return true;
@@ -171,7 +173,7 @@ class LoginRequest extends FormRequest
             return $this->startLock($this->pairLockKey(), self::PAIR_LOCK_SECONDS);
         }
 
-        Cache::forever($key, $count);
+        Cache::put($key, $count, self::PAIR_FAILURE_SECONDS);
 
         return null;
     }

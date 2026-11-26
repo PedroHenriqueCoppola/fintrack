@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PreventRequestForgery;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,7 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [
+        $middleware->web(prepend: [
+            SecurityHeaders::class,
+        ], append: [
             HandleInertiaRequests::class,
         ], replace: [
             FrameworkPreventRequestForgery::class => PreventRequestForgery::class,
@@ -48,7 +51,9 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
         });
 
-        $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
+            $response = app(SecurityHeaders::class)->apply($response);
+
             if ($request->expectsJson() || $request->is('api/*')) {
                 return $response;
             }
@@ -72,13 +77,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
             try {
                 $authenticated = $request->user() !== null;
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 $authenticated = false;
             }
 
-            return Inertia::render('Error/Index', [
-                'code' => $status,
-                'authenticated' => $authenticated,
-            ])->toResponse($request)->setStatusCode($status);
+            return app(SecurityHeaders::class)->apply(
+                Inertia::render('Error/Index', [
+                    'code' => $status,
+                    'authenticated' => $authenticated,
+                ])->toResponse($request)->setStatusCode($status),
+            );
         });
     })->create();

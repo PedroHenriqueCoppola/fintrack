@@ -67,7 +67,7 @@
 
 .select__popover {
     position: fixed;
-    z-index: 100;
+    z-index: var(--z-popover);
     padding: 0.6rem;
     border: 1px solid var(--color-modal-border);
     border-radius: var(--radius-md);
