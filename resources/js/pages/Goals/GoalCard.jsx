@@ -58,7 +58,7 @@ export default function GoalCard({ goal, showState = false }) {
 
     return (
         <Link href={goal.href} className="card card--interactive goal-card">
-            <span className="goal-card__top">
+            <div className="goal-card__top">
                 <span
                     className={category?.color ? 'goal-tile' : 'goal-tile goal-tile--plain'}
                     style={category?.color ? { '--item-color': category.color } : undefined}
@@ -66,12 +66,12 @@ export default function GoalCard({ goal, showState = false }) {
                 >
                     <CatalogIcon name={category?.icon} />
                 </span>
-                <span className="goal-card__copy">
-                    <span className="goal-card__name">{goal.name}</span>
+                <div className="goal-card__copy">
+                    <h2 className="goal-card__name">{goal.name}</h2>
                     <span className="goal-card__category">{category?.name}</span>
-                </span>
+                </div>
                 <GoalChip goal={goal} showState={showState} />
-            </span>
+            </div>
             <UsageBar
                 variant="meter"
                 percent={goal.percent}

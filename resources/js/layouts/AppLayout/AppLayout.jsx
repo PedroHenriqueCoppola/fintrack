@@ -7,6 +7,7 @@ import {
     FileBarChart,
     Landmark,
     LayoutDashboard,
+    Menu,
     Moon,
     PanelLeftClose,
     PanelLeftOpen,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import CursorGlow from '../../components/CursorGlow/CursorGlow';
 import Logo from '../../components/Logo/Logo';
+import { useFocusTrap } from '../../lib/dialog';
 import { toggleTheme, useTheme } from '../../lib/theme';
 import './AppLayout.css';
 
@@ -55,14 +57,50 @@ function storeCollapsed(collapsed) {
     }
 }
 
+function useMaxWidth(pixels) {
+    const query = `(max-width: ${pixels}px)`;
+    const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+
+    useEffect(() => {
+        const media = window.matchMedia(query);
+        const onChange = () => setMatches(media.matches);
+
+        onChange();
+        media.addEventListener('change', onChange);
+
+        return () => media.removeEventListener('change', onChange);
+    }, [query]);
+
+    return matches;
+}
+
 export default function AppLayout({ children }) {
     const page = usePage();
     const path = page.url.split('?')[0];
     const user = page.props.auth?.user ?? null;
     const profileRef = useRef(null);
+    const profileButtonRef = useRef(null);
+    const menuItems = useRef([]);
+    const focusMenu = useRef(false);
     const [collapsed, setCollapsed] = useState(readCollapsed);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [overlayOpen, setOverlayOpen] = useState(false);
     const theme = useTheme();
+    const phone = useMaxWidth(767);
+    const compact = useMaxWidth(1099);
+    const tablet = compact && !phone;
+    const iconOnly = !overlayOpen && (tablet || (!compact && collapsed));
+    const sidebarRef = useFocusTrap(overlayOpen, () => setOverlayOpen(false));
+
+    useEffect(() => {
+        setOverlayOpen(false);
+    }, [path]);
+
+    useEffect(() => {
+        if (!compact) {
+            setOverlayOpen(false);
+        }
+    }, [compact]);
 
     useEffect(() => {
         if (!menuOpen) {
@@ -78,6 +116,11 @@ export default function AppLayout({ children }) {
         function onKeyDown(event) {
             if (event.key === 'Escape') {
                 setMenuOpen(false);
+                profileButtonRef.current?.focus();
+            }
+
+            if (event.key === 'Tab') {
+                setMenuOpen(false);
             }
         }
 
@@ -90,7 +133,19 @@ export default function AppLayout({ children }) {
         };
     }, [menuOpen]);
 
+    useEffect(() => {
+        if (menuOpen && focusMenu.current) {
+            focusMenu.current = false;
+            menuItems.current[0]?.focus();
+        }
+    }, [menuOpen]);
+
     function onToggleSidebar() {
+        if (compact) {
+            setOverlayOpen((open) => !open);
+            return;
+        }
+
         const next = !collapsed;
         setCollapsed(next);
         storeCollapsed(next);
@@ -105,11 +160,83 @@ export default function AppLayout({ children }) {
         router.post('/logout');
     }
 
+    function openMenuFromKeyboard() {
+        focusMenu.current = true;
+        setMenuOpen(true);
+    }
+
+    function onProfileKeyDown(event) {
+        if (event.key !== 'ArrowDown' && event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (!menuOpen) {
+            openMenuFromKeyboard();
+            return;
+        }
+
+        menuItems.current[0]?.focus();
+    }
+
+    function onMenuKeyDown(event) {
+        const items = menuItems.current.filter(Boolean);
+        const index = items.indexOf(document.activeElement);
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            items[Math.min(items.length - 1, index + 1)]?.focus();
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            items[Math.max(0, index - 1)]?.focus();
+        } else if (event.key === 'Home') {
+            event.preventDefault();
+            items[0]?.focus();
+        } else if (event.key === 'End') {
+            event.preventDefault();
+            items[items.length - 1]?.focus();
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            setMenuOpen(false);
+            profileButtonRef.current?.focus();
+        } else if (event.key === 'Tab') {
+            setMenuOpen(false);
+        }
+    }
+
+    function onSkip(event) {
+        event.preventDefault();
+        document.getElementById('conteudo')?.focus();
+    }
+
+    const shellClass = [
+        'app-shell',
+        iconOnly ? 'app-shell--collapsed' : '',
+        overlayOpen ? 'app-shell--overlay' : '',
+        phone ? 'app-shell--phone' : '',
+    ].filter(Boolean).join(' ');
+    const toggleLabel = overlayOpen
+        ? 'Fechar menu'
+        : (iconOnly ? 'Expandir menu' : 'Recolher menu');
+
     return (
-        <div className={collapsed ? 'app-shell app-shell--collapsed' : 'app-shell'}>
+        <div className={shellClass}>
+            <a className="skip-link" href="#conteudo" onClick={onSkip}>
+                Pular para o conteúdo
+            </a>
             <CursorGlow />
-            <aside className="app-sidebar">
-                <Link href="/" className="brand" title="Fintrack">
+            {overlayOpen ? (
+                <button
+                    type="button"
+                    className="sidebar-backdrop"
+                    aria-label="Fechar menu"
+                    tabIndex={-1}
+                    onClick={() => setOverlayOpen(false)}
+                />
+            ) : null}
+            <aside className="app-sidebar" ref={sidebarRef}>
+                <Link href="/" className="brand" title={iconOnly ? 'Fintrack' : undefined} onClick={() => setOverlayOpen(false)}>
                     <Logo />
                     <span className="sidebar-label">Fintrack</span>
                 </Link>
@@ -126,7 +253,8 @@ export default function AppLayout({ children }) {
                                 href={item.href}
                                 className={active ? 'nav-link nav-link--active' : 'nav-link'}
                                 aria-current={active ? 'page' : undefined}
-                                title={collapsed ? item.label : undefined}
+                                title={iconOnly ? item.label : undefined}
+                                onClick={() => setOverlayOpen(false)}
                             >
                                 <Icon aria-hidden="true" strokeWidth={1.75} />
                                 <span className="sidebar-label">{item.label}</span>
@@ -137,19 +265,29 @@ export default function AppLayout({ children }) {
                 <button
                     type="button"
                     className="sidebar-toggle"
-                    aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-                    title={collapsed ? 'Expandir menu' : undefined}
+                    aria-label={toggleLabel}
+                    title={iconOnly ? toggleLabel : undefined}
+                    aria-expanded={compact ? overlayOpen : undefined}
                     onClick={onToggleSidebar}
                 >
-                    {collapsed
+                    {iconOnly
                         ? <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} />
                         : <PanelLeftClose aria-hidden="true" strokeWidth={1.75} />}
-                    <span className="sidebar-label">Recolher</span>
+                    <span className="sidebar-label">{overlayOpen ? 'Fechar' : 'Recolher'}</span>
                 </button>
             </aside>
-            <main className="app-main">
+            <main className="app-main" id="conteudo" tabIndex={-1}>
                 <div className="app-content">
                     <div className="app-top">
+                        <button
+                            type="button"
+                            className="icon-button app-menu"
+                            aria-label="Menu"
+                            aria-expanded={overlayOpen}
+                            onClick={() => setOverlayOpen((open) => !open)}
+                        >
+                            <Menu aria-hidden="true" strokeWidth={1.75} />
+                        </button>
                         <button
                             type="button"
                             className="icon-button"
@@ -163,23 +301,51 @@ export default function AppLayout({ children }) {
                         {user ? (
                             <div className="profile" ref={profileRef}>
                                 <button
+                                    ref={profileButtonRef}
                                     type="button"
                                     className="profile__button"
                                     aria-label="Abrir perfil"
+                                    aria-haspopup="menu"
                                     aria-expanded={menuOpen}
+                                    aria-controls="profile-menu"
                                     onClick={() => setMenuOpen((open) => !open)}
+                                    onKeyDown={onProfileKeyDown}
                                 >
                                     <span className="profile__initials">{initials(user.name)}</span>
                                 </button>
                                 {menuOpen ? (
-                                    <div className="profile__menu">
-                                        <p className="profile__name">{user.name}</p>
-                                        <Link href="/profile" className="profile__link" onClick={() => setMenuOpen(false)}>
-                                            Meu perfil
-                                        </Link>
-                                        <button type="button" className="profile__logout" onClick={onLogout}>
-                                            Sair
-                                        </button>
+                                    <div className="profile__menu" id="profile-menu">
+                                        <p className="profile__name" id="profile-menu-name">{user.name}</p>
+                                        <div
+                                            role="menu"
+                                            aria-labelledby="profile-menu-name"
+                                            onKeyDown={onMenuKeyDown}
+                                        >
+                                            <Link
+                                                href="/profile"
+                                                className="profile__link"
+                                                role="menuitem"
+                                                tabIndex={-1}
+                                                ref={(element) => {
+                                                    menuItems.current[0] = element;
+                                                }}
+                                                onClick={() => setMenuOpen(false)}
+                                            >
+                                                Meu perfil
+                                            </Link>
+                                            <button
+                                                type="button"
+                                                className="profile__logout"
+                                                role="menuitem"
+                                                tabIndex={-1}
+                                                ref={(element) => {
+                                                    menuItems.current[1] = element;
+                                                }}
+                                                onClick={onLogout}
+                                            >
+                                                Sair
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : null}
                             </div>

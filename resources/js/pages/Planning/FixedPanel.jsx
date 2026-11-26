@@ -158,20 +158,20 @@ export default function FixedPanel({ page, editor, setEditor }) {
             ) : null}
             <div className="plan-stats">
                 <Card className="plan-stat">
-                    <p className="plan-kicker">Total mensal comprometido</p>
+                    <h2 className="plan-kicker">Total mensal comprometido</h2>
                     <p className="plan-stat__value">{plain(indicators.committed)}</p>
                 </Card>
                 <Card className="plan-stat">
-                    <p className="plan-kicker">Fixos</p>
+                    <h2 className="plan-kicker">Fixos</h2>
                     <p className="plan-stat__value">{indicators.fixed_count}</p>
                     <p className="plan-note">{plain(indicators.fixed_amount)}</p>
                 </Card>
                 <Card className="plan-stat">
-                    <p className="plan-kicker">Parcelados ativos</p>
+                    <h2 className="plan-kicker">Parcelados ativos</h2>
                     <p className="plan-stat__value">{indicators.active_installments}</p>
                 </Card>
                 <Card className="plan-stat">
-                    <p className="plan-kicker">Parcelas pagas/totais</p>
+                    <h2 className="plan-kicker">Parcelas pagas/totais</h2>
                     <p className="plan-stat__value">
                         {indicators.installments_total === 0
                             ? '—'
@@ -179,11 +179,11 @@ export default function FixedPanel({ page, editor, setEditor }) {
                     </p>
                 </Card>
                 <Card className="plan-stat">
-                    <p className="plan-kicker">Já quitado no mês</p>
+                    <h2 className="plan-kicker">Já quitado no mês</h2>
                     <p className="plan-stat__value">{plain(indicators.settled)}</p>
                 </Card>
                 <Card className="plan-stat">
-                    <p className="plan-kicker">% do orçamento comprometido</p>
+                    <h2 className="plan-kicker">% do orçamento comprometido</h2>
                     <p className="plan-stat__value">
                         {indicators.committed_percent == null ? '—' : `${indicators.committed_percent}%`}
                     </p>

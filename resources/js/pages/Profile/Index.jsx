@@ -5,6 +5,7 @@ import Button from '../../components/Button/Button';
 import Card from '../../components/Card/Card';
 import FormField from '../../components/FormField/FormField';
 import TextInput from '../../components/TextInput/TextInput';
+import PageHeader from '../../components/PageHeader/PageHeader';
 import AppLayout from '../../layouts/AppLayout/AppLayout';
 import { useFieldSetter } from '../../lib/fields';
 import { setTheme, useTheme } from '../../lib/theme';
@@ -108,6 +109,7 @@ export default function Index({ member_since: memberSince = '' }) {
         <>
             <Head title="Meu perfil" />
             <div className="page profile-page">
+                <PageHeader title="Meu perfil" />
                 <Card>
                     <div className="profile-identity">
                         <span className="profile-identity__avatar" aria-hidden="true">{initials(user.name)}</span>

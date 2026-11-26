@@ -113,7 +113,7 @@ export default function MonthField({ label, value, onChange, error, hint, min, m
     const restoreFocus = useRef(true);
     const [text, setText] = useState(value ?? '');
     const [open, setOpen] = useState(false);
-    const [dropUp, setDropUp] = useState(false);
+    const [place, setPlace] = useState(null);
     const [year, setYear] = useState(() => parseMonth(value)?.year ?? todayYear);
     const parsed = parseMonth(text);
     const labelText = parsed ? `${MONTH_HEADINGS[parsed.month - 1]} ${parsed.year}` : '';
@@ -132,15 +132,39 @@ export default function MonthField({ label, value, onChange, error, hint, min, m
     }, [value]);
 
     useLayoutEffect(() => {
-        if (!open || !rootRef.current) {
-            return;
+        if (!open || !rootRef.current || !popoverRef.current) {
+            return undefined;
         }
 
-        const rect = rootRef.current.getBoundingClientRect();
-        const height = popoverRef.current?.offsetHeight ?? 280;
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
-        setDropUp(spaceBelow < height + 12 && spaceAbove > spaceBelow);
+        function measure() {
+            const rect = rootRef.current.getBoundingClientRect();
+            const pop = popoverRef.current;
+
+            if (!pop) {
+                return;
+            }
+
+            const margin = 8;
+            const width = Math.min(pop.offsetWidth || 280, window.innerWidth - margin * 2);
+            const height = pop.offsetHeight || 280;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            const openUp = spaceBelow < height + 12 && spaceAbove > spaceBelow;
+            let top = openUp ? rect.top - height - 6 : rect.bottom + 6;
+            let left = rect.left;
+            left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+            top = Math.max(margin, Math.min(top, window.innerHeight - height - margin));
+            setPlace({ top, left, width });
+        }
+
+        measure();
+        window.addEventListener('resize', measure);
+        window.addEventListener('scroll', measure, true);
+
+        return () => {
+            window.removeEventListener('resize', measure);
+            window.removeEventListener('scroll', measure, true);
+        };
     }, [open, year, popoverRef]);
 
     useEffect(() => {
@@ -264,7 +288,10 @@ export default function MonthField({ label, value, onChange, error, hint, min, m
                 </div>
                 {open ? (
                     <div
-                        className={dropUp ? 'month-picker month-picker--up' : 'month-picker month-picker--down'}
+                        className="month-picker"
+                        style={place
+                            ? { top: place.top, left: place.left, width: place.width }
+                            : { top: -9999, left: 0 }}
                         role="dialog"
                         aria-label={`Escolher ${label}`}
                         ref={popoverRef}

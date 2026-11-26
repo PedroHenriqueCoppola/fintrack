@@ -89,7 +89,7 @@ export default function Show({
 
     return (
         <>
-            <Head title="Metas" />
+            <Head title={goal.name} />
             <div className="page goals-page goals-show">
                 <p className="goals-back">
                     <Link href={listHref}>Voltar para metas</Link>
@@ -189,7 +189,7 @@ export default function Show({
                     {movements.length === 0 ? (
                         <p className="goals-note">Nenhuma movimentação neste período.</p>
                     ) : (
-                        <div className="goal-movements">
+                        <div className="goal-movements" tabIndex={0} role="region" aria-label="Últimas movimentações">
                             {movements.map((movement) => (
                                 <div key={movement.id} className="goal-movement">
                                     <span className="goal-movement__date">{formatDate(movement.date)}</span>

@@ -27,8 +27,8 @@
 }
 
 .select__button:disabled {
+    color: var(--color-text-muted);
     cursor: default;
-    opacity: 0.5;
 }
 
 .form-field--error .select__button,

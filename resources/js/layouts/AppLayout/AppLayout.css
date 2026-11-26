@@ -111,7 +111,7 @@
     width: 100%;
     max-width: var(--container-max);
     margin-inline: auto;
-    padding: 2rem 3.6rem 4.8rem;
+    padding: 2rem 3.2rem 4.8rem;
 }
 
 .app-top {
@@ -243,4 +243,101 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+.skip-link {
+    position: absolute;
+    top: 1.6rem;
+    left: 1.6rem;
+    z-index: 60;
+    padding: 0.8rem 1.2rem;
+    border-radius: var(--radius-md);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-decoration: none;
+    transform: translateY(-12rem);
+}
+
+.skip-link:focus {
+    transform: none;
+}
+
+.app-main:focus {
+    outline: none;
+}
+
+.app-main:focus-visible {
+    outline: 2px solid var(--color-primary-soft);
+    outline-offset: -2px;
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    padding: 0;
+    border: 0;
+    background: var(--color-overlay);
+    cursor: pointer;
+}
+
+.app-menu {
+    display: none;
+}
+
+.profile__menu [role='menu'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+@media (max-width: 1279px) {
+    .app-content {
+        padding-inline: 2.4rem;
+    }
+}
+
+@media (max-width: 1099px) {
+    .app-content {
+        padding-inline: 1.6rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+    .app-shell--overlay .app-sidebar {
+        position: fixed;
+        z-index: 45;
+        top: 1.4rem;
+        left: 1.4rem;
+        width: var(--sidebar-width);
+        height: calc(100vh - 2.8rem);
+        margin: 0;
+    }
+
+    .app-shell--overlay .app-main {
+        margin-left: calc(var(--sidebar-width-collapsed) + 1.4rem);
+    }
+}
+
+@media (max-width: 767px) {
+    .app-sidebar {
+        display: none;
+    }
+
+    .app-menu {
+        display: inline-flex;
+    }
+
+    .app-shell--overlay .app-sidebar {
+        position: fixed;
+        z-index: 45;
+        top: 1.4rem;
+        left: 1.4rem;
+        display: flex;
+        width: min(var(--sidebar-width), calc(100vw - 2.8rem));
+        height: calc(100vh - 2.8rem);
+        margin: 0;
+    }
 }

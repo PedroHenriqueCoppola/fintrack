@@ -299,7 +299,7 @@ export default function PlanMonth({ month, plan, navigation }) {
                             ) : null}
                         </div>
                     </div>
-                    <div className="plan-table-wrap">
+                    <div className="plan-table-wrap" tabIndex={0} role="region" aria-label="Categorias de gasto">
                         <table className="plan-table">
                             <thead>
                                 <tr>
@@ -370,7 +370,8 @@ export default function PlanMonth({ month, plan, navigation }) {
                     </div>
                     {plan.reserves.length > 0 ? (
                         <>
-                            <p className="plan-section">Reservas (quanto vou guardar no mês)</p>
+                            <h2 className="plan-section">Reservas (quanto vou guardar no mês)</h2>
+                            <div className="plan-table-wrap" tabIndex={0} role="region" aria-label="Reservas">
                             <table className="plan-table">
                                 <tbody>
                                     {plan.reserves.map((row) => {
@@ -409,15 +410,16 @@ export default function PlanMonth({ month, plan, navigation }) {
                                     })}
                                 </tbody>
                             </table>
+                            </div>
                         </>
                     ) : null}
                 </Card>
                 <Card title="Visão final" className="card--highlight plan-vision">
-                    <p className="plan-kicker">Renda esperada</p>
+                    <h3 className="plan-kicker">Renda esperada</h3>
                     <p className="plan-figure"><MoneyText value={summary.expected_income} /></p>
-                    <p className="plan-kicker">Total planejado</p>
+                    <h3 className="plan-kicker">Total planejado</h3>
                     <p className="plan-figure"><MoneyText value={summary.total_planned} /></p>
-                    <p className="plan-kicker">Sobra a alocar</p>
+                    <h3 className="plan-kicker">Sobra a alocar</h3>
                     <p className="plan-allocate">
                         <MoneyText
                             value={summary.to_allocate}

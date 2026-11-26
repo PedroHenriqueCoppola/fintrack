@@ -24,6 +24,18 @@ use App\Http\Middleware\SyncCurrentPendings;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+if (app()->isLocal()) {
+    Route::get('/_errors/{status}', function (string $status) {
+        $code = (int) $status;
+        abort_unless(in_array($code, [403, 404, 419, 500, 503], true), 404);
+
+        return Inertia::render('Error/Index', [
+            'code' => $code,
+            'authenticated' => auth()->check(),
+        ])->toResponse(request())->setStatusCode($code);
+    })->where('status', '403|404|419|500|503');
+}
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [SessionController::class, 'create'])->name('login');
     Route::post('/login', [SessionController::class, 'store']);
@@ -113,5 +125,7 @@ Route::middleware(['auth', 'inertia.encrypt', SyncCurrentPendings::class])->grou
     Route::delete('/manage/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy')->whereNumber('paymentMethod');
     Route::put('/manage/tags/{tag}', [TagController::class, 'update'])->name('tags.update')->whereNumber('tag');
     Route::delete('/manage/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy')->whereNumber('tag');
-    Route::get('/styleguide', fn () => Inertia::render('Styleguide/Index'))->name('styleguide');
+    if (app()->isLocal()) {
+        Route::get('/styleguide', fn () => Inertia::render('Styleguide/Index'))->name('styleguide');
+    }
 });

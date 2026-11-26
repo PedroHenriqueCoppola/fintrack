@@ -384,3 +384,10 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Pequenos ajustes:** Pendente → Paga no modal segue a regra de data do "marcar como paga" quando a data não foi mexida; selo "Ref." atualiza na hora no modal; a renda do Planejamento só salva quando o valor muda; tom da variação de Despesas invertido no Resumo dos relatórios (subir é ruim); relatório de Faturas lê só as compras perto do período; a conta "guardar menos resgatar" passa a existir num lugar só.
 - **Correção do 11a:** a pontuação aceita passa a incluir também : ; ! ? " @ $ * (dados antigos voltam a salvar), e os campos de Observação aceitam quebra de linha; trocar a senha encerra as outras sessões; símbolo "Caixinhas" na sidebar, no login, no favicon e no PDF; painel "Mais filtros" numa linha só; página Meu perfil redesenhada (identidade, dados, segurança e aparência).
 - **Fora (decisão do autor):** restaurar transação gerada excluída, pular faturas vazias, enxugar o Planejamento e mudar o Planejamento para data em vez de competência.
+
+### Módulo 11b (visual e acabamento)
+
+- **Páginas de erro** 404, 403, 419, 500 e 503 com o fantasminha, sem sidebar, com botão para o Dashboard (ou login).
+- **Responsividade de 1920 a 768 px** (computador e tablet); no tablet a sidebar fica só com ícones e abre por cima do conteúdo. Celular: só "abre e funciona", com menu no topo.
+- **Título da aba** em todas as páginas no formato "Página · Fintrack" (Dashboard deixa de usar a saudação como título; o detalhe da meta usa o nome da meta).
+- **Acessibilidade:** menu do avatar por teclado, abas de verdade (ou botões simples) nas Faturas, hierarquia de títulos, link "Pular para o conteúdo", contraste conferido nos dois temas, calendário sem engolir cliques fora dele.

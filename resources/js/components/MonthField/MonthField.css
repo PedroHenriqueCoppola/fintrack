@@ -70,7 +70,7 @@
 }
 
 .month-field__row > button:not(.month-field__value):disabled {
-    opacity: 0.4;
+    color: var(--color-text-subtle);
     cursor: not-allowed;
 }
 
@@ -81,10 +81,9 @@
 }
 
 .month-picker {
-    position: absolute;
-    z-index: 30;
-    left: 0;
-    width: min(28rem, 100%);
+    position: fixed;
+    z-index: 120;
+    width: min(28rem, calc(100vw - 1.6rem));
     padding: 1.4rem 1.6rem 1.6rem;
     border: 1px solid var(--color-modal-border);
     border-radius: 2rem;
@@ -94,14 +93,6 @@
 
 .month-picker:focus {
     outline: none;
-}
-
-.month-picker--down {
-    top: calc(100% + 0.6rem);
-}
-
-.month-picker--up {
-    bottom: calc(100% + 0.6rem);
 }
 
 .month-picker__nav {
@@ -195,7 +186,6 @@
 
 .month-picker__month:disabled {
     color: var(--color-text-subtle);
-    opacity: 0.4;
     cursor: not-allowed;
 }
 

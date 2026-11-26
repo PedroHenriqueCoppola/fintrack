@@ -319,7 +319,7 @@ export default function ClosingModal({ month, maxMonth, onClose }) {
 
                         return (
                             <div key={kind}>
-                                <p className="closing-group__title">{kind === 'investment' ? 'Investimentos' : 'Contas'}</p>
+                                <h3 className="closing-group__title">{kind === 'investment' ? 'Investimentos' : 'Contas'}</h3>
                                 {rows.map(({ item, index }) => (
                                     <div className="closing-bank" key={item.bank_id}>
                                         <span

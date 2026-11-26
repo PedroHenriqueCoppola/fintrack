@@ -209,7 +209,7 @@ export default function Index({
                     <>
                         <div className="net-worth-grid">
                             <Card className="card--highlight net-worth-span-4 net-worth-indicator">
-                                <p className="net-worth-label">Patrimônio atual</p>
+                                <h2 className="net-worth-label">Patrimônio atual</h2>
                                 <p className="net-worth-value">{formatPlainMoney(indicators.total)}</p>
                                 {indicators.accounts_total != null ? (
                                     <p className="net-worth-split">
@@ -231,11 +231,11 @@ export default function Index({
                                 </p>
                             </Card>
                             <Card className="net-worth-span-4 net-worth-indicator">
-                                <p className="net-worth-label">Último fechamento</p>
+                                <h2 className="net-worth-label">Último fechamento</h2>
                                 <p className="net-worth-value net-worth-value--md">{indicators.last_label}</p>
                             </Card>
                             <Card className="net-worth-span-4 net-worth-indicator">
-                                <p className="net-worth-label">Registros</p>
+                                <h2 className="net-worth-label">Registros</h2>
                                 <p className="net-worth-value net-worth-value--md">{indicators.records_label}</p>
                             </Card>
                             <Card className="net-worth-span-12" title="Evolução do patrimônio">
@@ -250,7 +250,7 @@ export default function Index({
                                     <div className="net-worth-banks">
                                         {(byBank.groups ?? [{ title: null, total: null, banks: byBank.banks }]).map((group) => (
                                             <div key={group.title ?? 'banks'}>
-                                                {group.title ? <p className="net-worth-group__title">{group.title}</p> : null}
+                                                {group.title ? <h3 className="net-worth-group__title">{group.title}</h3> : null}
                                                 {group.banks.map((bank) => (
                                                     <div className="net-worth-bank" key={bank.id}>
                                                         <span

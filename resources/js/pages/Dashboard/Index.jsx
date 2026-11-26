@@ -118,7 +118,7 @@ function Variation({ variation, comparison }) {
 function Indicator({ label, amount, plain = false, variation, comparison, support = null, legend = null }) {
     return (
         <>
-            <p className="dashboard-label">{label}</p>
+            <h2 className="dashboard-label">{label}</h2>
             <p className={plain ? 'dashboard-figure dashboard-figure--plain' : 'dashboard-figure'}>
                 {plain ? formatNeutralMoney(amount) : <Money value={amount} />}
             </p>
@@ -202,7 +202,7 @@ export default function Index({
 
     return (
         <>
-            <Head title={title} />
+            <Head title="Dashboard" />
             <div className="page dashboard">
                 <PageHeader
                     title={title}
@@ -537,7 +537,7 @@ export default function Index({
                             <div className="dashboard-goals">
                                 {goals.items.map((goal) => (
                                     <Link key={goal.id} href={goal.href} className="dashboard-goal">
-                                        <span className="dashboard-goal__name">{goal.name}</span>
+                                        <h3 className="dashboard-goal__name">{goal.name}</h3>
                                         <span className="dashboard-goal__meta">
                                             {`${formatPlainMoney(goal.progress)} de ${formatPlainMoney(goal.target_amount)}`}
                                         </span>

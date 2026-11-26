@@ -34,10 +34,9 @@
 }
 
 .date-picker__popover {
-    position: absolute;
-    z-index: 30;
-    right: 0;
-    width: 36rem;
+    position: fixed;
+    z-index: 120;
+    width: min(36rem, calc(100vw - 1.6rem));
     padding: 1.4rem 1.6rem 1.6rem;
     border: 1px solid var(--color-modal-border);
     border-radius: 2rem;
@@ -47,14 +46,6 @@
 
 .date-picker__popover:focus {
     outline: none;
-}
-
-.date-picker__popover--down {
-    top: calc(100% + 0.6rem);
-}
-
-.date-picker__popover--up {
-    bottom: calc(100% + 0.6rem);
 }
 
 .calendar-nav {
@@ -141,6 +132,5 @@
 
 .calendar__day:disabled {
     color: var(--color-text-subtle);
-    opacity: 0.35;
     cursor: default;
 }

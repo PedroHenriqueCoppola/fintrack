@@ -61,7 +61,7 @@
 
 .manage-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(27rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(27rem, 100%), 1fr));
     gap: 1.4rem;
     align-items: start;
 }
@@ -401,7 +401,7 @@
     font-weight: 500;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 699px) {
     .manage-form__row {
         grid-template-columns: 1fr;
     }

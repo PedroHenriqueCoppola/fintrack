@@ -193,17 +193,17 @@ export default function Index({
                     </Card>
                 ) : (
                     <>
-                        <div className="invoice-pills" role="tablist" aria-label="Cartões">
+                        <div className="invoice-pills" role="group" aria-label="Cartões">
                             {cards.map((card) => {
                                 const selected = card.id === selectedId;
 
                                 return (
-                                    <Link
+                                    <button
                                         key={card.id}
-                                        href={`/invoices?card=${card.id}`}
+                                        type="button"
                                         className={selected ? 'invoice-pill invoice-pill--on' : 'invoice-pill'}
-                                        role="tab"
-                                        aria-selected={selected}
+                                        aria-pressed={selected}
+                                        onClick={() => router.get('/invoices', { card: card.id })}
                                     >
                                         <span
                                             className="invoice-pill__dot"
@@ -216,7 +216,7 @@ export default function Index({
                                                 <span className="invoice-pill__bank">{card.bank_name}</span>
                                             ) : null}
                                         </span>
-                                    </Link>
+                                    </button>
                                 );
                             })}
                         </div>
@@ -240,7 +240,7 @@ export default function Index({
                                     </div>
                                     <p className="invoice-cycle">{invoice.cycle_label}</p>
                                     {hasLines ? (
-                                        <div className="invoice-table-wrap">
+                                        <div className="invoice-table-wrap" tabIndex={0} role="region" aria-label="Lançamentos da fatura">
                                             <table className="invoice-table">
                                                 <thead>
                                                     <tr>
@@ -268,7 +268,7 @@ export default function Index({
                                 </Card>
                                 <div className="invoice-side">
                                     <Card className="card--highlight">
-                                        <p className="invoice-total__label">Lançado até agora</p>
+                                        <h2 className="invoice-total__label">Lançado até agora</h2>
                                         <p className="invoice-total__value">{formatPlainMoney(invoice.posted)}</p>
                                         <p className="invoice-total__label">Previsto</p>
                                         <p className="invoice-total__amount invoice-total__amount--muted">{formatPlainMoney(invoice.forecast)}</p>

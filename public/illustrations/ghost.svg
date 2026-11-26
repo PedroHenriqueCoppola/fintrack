@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" role="img" aria-label="Fantasminha">
+  <defs>
+    <linearGradient id="gh-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e9defd"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="205" rx="46" ry="8" fill="#7c4fd6" opacity="0.22"/>
+  <path d="M40 98 C40 56 66 28 100 28 C134 28 160 56 160 98 L160 168
+           C160 176 152 180 146 174 L136 164 L124 178 C120 183 114 183 110 178 L100 166 L90 178
+           C86 183 80 183 76 178 L64 164 L54 174 C48 180 40 176 40 168 Z"
+        fill="url(#gh-body)" stroke="#b89bf3" stroke-width="3" stroke-linejoin="round"/>
+  <ellipse cx="80" cy="94" rx="9" ry="12" fill="#2b1d4f"/>
+  <ellipse cx="120" cy="94" rx="9" ry="12" fill="#2b1d4f"/>
+  <circle cx="83" cy="89" r="3.2" fill="#ffffff"/>
+  <circle cx="123" cy="89" r="3.2" fill="#ffffff"/>
+  <ellipse cx="66" cy="114" rx="8" ry="5" fill="#f2a7c6" opacity="0.7"/>
+  <ellipse cx="134" cy="114" rx="8" ry="5" fill="#f2a7c6" opacity="0.7"/>
+  <path d="M92 116 Q100 124 108 116" fill="none" stroke="#2b1d4f" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M40 118 C28 116 22 124 24 132 C26 138 34 138 40 132" fill="url(#gh-body)" stroke="#b89bf3" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M160 112 C174 104 182 110 180 118 C178 125 170 126 160 124" fill="url(#gh-body)" stroke="#b89bf3" stroke-width="3" stroke-linejoin="round"/>
+  <g transform="translate(160 56) rotate(14)">
+    <rect x="-17" y="-11" width="34" height="22" rx="4" fill="#7c4fd6"/>
+    <rect x="-17" y="-5" width="34" height="5" fill="#5a2fb0"/>
+    <rect x="-12" y="4" width="10" height="3" rx="1.5" fill="#d9c8fb"/>
+  </g>
+</svg>

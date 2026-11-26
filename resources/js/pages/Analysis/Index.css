@@ -479,13 +479,13 @@
 .popover--calendar {
     top: calc(100% + 0.8rem);
     left: 0;
-    width: 36rem;
+    width: min(36rem, 100%);
 }
 
 .popover--filters {
     top: calc(100% + 0.8rem);
     right: 0;
-    width: 38rem;
+    width: min(38rem, 100%);
 }
 
 .popover__title-row {
@@ -553,5 +553,39 @@
 }
 
 .modal--filter {
-    width: min(52rem, 100%);
+    width: min(52rem, 92vw);
+}
+
+@media (max-width: 1279px) {
+    .summary {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1099px) {
+    .period-bar {
+        align-items: flex-start;
+    }
+
+    .period-bar > .period-seg {
+        flex: 1 1 100%;
+        flex-wrap: nowrap;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .period-bar > .period-seg button {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 699px) {
+    .popover__dates {
+        grid-template-columns: 1fr;
+    }
 }

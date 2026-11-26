@@ -247,6 +247,25 @@ Linha principal em `--color-primary-soft`, 2.4px, pontas arredondadas, ponto fin
 - **Aparência** (card): segmento "Escuro | Claro" ligado ao mesmo controle de tema do topo.
 - Cada card com título (1.6rem/600) e uma linha de descrição em texto secundário. Sucesso em aviso discreto no próprio card (não um banner no topo).
 
+### Páginas de erro (módulo 11b)
+
+- Página própria, sem sidebar (serve também para quem não está logado): símbolo + "Fintrack" no topo à esquerda, conteúdo centralizado na tela.
+- Atrás do fantasma, o código do erro em números enormes (~16rem, 800, `--color-accent`, bem apagado); na frente, o **fantasminha** (`public/illustrations/ghost.svg`, ~18rem de altura) flutuando devagar (sobe e desce 8px em 3s, `ease-in-out`, infinito; parado com `prefers-reduced-motion`).
+- Abaixo: título (2.8rem/700), uma frase leve em texto secundário (máx. ~44rem) e os botões: primário ("Voltar ao Dashboard", ou "Ir para o login" sem sessão) e secundário ("Voltar", que volta uma página; em 419, "Recarregar").
+- Textos: **404** "Página não encontrada" / "O fantasminha procurou em todo canto e não achou essa página."; **403** "Acesso negado" / "Esta página não está liberada para a sua conta."; **419** "Sessão expirada" / "A página ficou parada por muito tempo. Recarregue e tente de novo."; **500** "Algo deu errado" / "Um fantasminha bagunçou algo por aqui. Tente de novo em instantes."; **503** "Em manutenção" / "Estamos arrumando a casa. Volte daqui a pouco.".
+- Título da aba: "{título} · Fintrack". Dois temas.
+
+### Responsividade: computador e tablet (módulo 11b)
+
+- Faixas: **largo** (≥ 1280px), **médio** (1100 a 1279px), **tablet** (768 a 1099px). Abaixo de 768px, "abre e funciona" (sem layout próprio, mas sem quebrar).
+- **Sidebar:** largo e médio seguem a escolha da pessoa (aberta ou recolhida). No tablet, fica **recolhida só com ícones** (com `title`/tooltip do nome); o botão de expandir abre a sidebar **por cima do conteúdo** (sobreposição com fundo escurecido, fecha com Esc, clique fora ou ao navegar), sem empurrar a página e sem mudar a preferência salva. Abaixo de 768px, a sidebar some e aparece um botão de menu (`Menu`) no topo que abre a mesma sobreposição.
+- **Margens da página:** 3.2rem no largo, 2.4rem no médio, 1.6rem no tablet.
+- **Barra de período:** no tablet, o segmento de atalhos rola na horizontal dentro da própria caixa (sem quebrar em duas linhas), e a caixa de datas e os botões descem para a linha de baixo, alinhados à esquerda.
+- **Grades de cards:** 4 colunas viram 2 no médio/tablet; 3 viram 2 no tablet; gráficos sempre em largura cheia no tablet.
+- **Tabelas e listas largas:** rolagem horizontal dentro do card (região com `tabIndex={0}`, `role="region"`, `aria-label`), nunca rolagem da página inteira.
+- **Modais:** largura máxima 92vw, altura máxima 90vh com rolagem interna; campos lado a lado viram uma coluna abaixo de 700px. Popovers (calendário, seleção, tags, mês) sempre dentro da tela.
+- Nenhuma rolagem horizontal da página em 768px.
+
 ## 7. Movimento
 
 - Transição padrão: `var(--transition)` (0.25s, `cubic-bezier(0.4, 0, 0.2, 1)`) em cor, borda, fundo e `transform`.
