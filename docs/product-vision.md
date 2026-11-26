@@ -391,3 +391,9 @@ Todos os pontos da revisão foram respondidos pelo autor; não há pendências a
 - **Responsividade de 1920 a 768 px** (computador e tablet); no tablet a sidebar fica só com ícones e abre por cima do conteúdo. Celular: só "abre e funciona", com menu no topo.
 - **Título da aba** em todas as páginas no formato "Página · Fintrack" (Dashboard deixa de usar a saudação como título; o detalhe da meta usa o nome da meta).
 - **Acessibilidade:** menu do avatar por teclado, abas de verdade (ou botões simples) nas Faturas, hierarquia de títulos, link "Pular para o conteúdo", contraste conferido nos dois temas, calendário sem engolir cliques fora dele.
+
+### Módulo 11c (demonstração e portfólio)
+
+- **Usuário demo por comando** (`php artisan fintrack:demo`): recria do zero uma conta de demonstração com 12 meses de dados realistas e sempre iguais (semente fixa), relativos à data de hoje, sem tocar em nenhum outro usuário. Não roda em produção sem `--force`.
+- **Prints automáticos** (`npm run screenshots`): um script entra na conta demo e fotografa as telas principais nos dois temas para `docs/screenshots/`.
+- **README de portfólio em inglês** (`README.md`), com versão em português (`README.pt-BR.md`), prints, stack, como rodar, regras de negócio em destaque e uma seção sobre como o projeto foi feito com agentes de IA (dono do produto, orquestração e revisão, implementação pelo agente no editor, um módulo por vez).

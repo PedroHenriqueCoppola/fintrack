@@ -1,134 +1,167 @@
+[Português](README.pt-BR.md)
+
+<img src="public/brand/fintrack-mark.svg" alt="Fintrack mark: a purple rounded square with a white card and three rising bars" width="64" height="64">
+
 # Fintrack
 
-Sistema web de finanças pessoais: transações, orçamento do mês por categoria, planejamento, metas, patrimônio e relatórios. As regras de negócio estão em `docs/product-vision.md`.
+A personal finance web app for daily use: transactions, credit card invoices, monthly planning, goals, net worth and reports.
 
-## Funcionalidades
+<img src="docs/screenshots/dark/01-dashboard.png" alt="Dark dashboard for the current month: period balance, income, expenses, amount set aside, category usage against the plan, and the open invoice of each card" width="1440">
 
-O visual novo segue o design system: superfícies em camadas, cards com sombra suave e a fonte Plus Jakarta Sans. Não há header. A sidebar flutuante traz o símbolo Caixinhas e o nome Fintrack, os oito links (Dashboard, Análise, Faturas, Planejamento, Metas, Patrimônio, Relatórios e Gerenciar) e o botão Recolher. No topo da área de conteúdo ficam o botão de tema e o ícone de perfil. O tema escuro é o padrão. O botão de tema alterna para o tema claro e guarda a escolha neste navegador.
+## Features
 
-Nesta etapa dá para entrar, criar conta, cadastrar em Gerenciar, lançar transações, planejar o mês, acompanhar a fatura de cada cartão, fechar o patrimônio do mês, acompanhar metas (inclusive recomeçar depois de uma concluída), ver o resumo no Dashboard e baixar relatórios. A aba do navegador usa o nome da página seguido de Fintrack; no Dashboard o texto da aba é Dashboard, e no detalhe da meta é o nome da meta. No tablet a sidebar fica só com ícones e abre por cima do conteúdo; abaixo de 768 px ela some e o botão Menu, no topo, abre a mesma sobreposição. Páginas inexistentes, sem permissão, com a sessão expirada, com falha do servidor ou em manutenção mostram uma tela própria com o fantasminha, sem a sidebar. O botão principal dessa tela recarrega a página: o Dashboard, se houver sessão, ou o login, se não houver. Uma meta pode ser excluída sem mexer nas transações. Um banco, categoria, cartão ou forma de pagamento só pode ser excluído quando ninguém o usa; com uso, a saída é arquivar. Uma transação pode levar até 10 tags, criadas no próprio lançamento. Em Gerenciar dá para renomear ou excluir a tag; excluir tira a tag das transações. O avatar do topo mostra as iniciais do nome e abre Meu perfil, onde dá para trocar nome, e-mail, senha e o tema. Trocar a senha encerra as outras sessões. O mesmo símbolo aparece no login, no favicon e no PDF dos relatórios. O botão Nova transação, no Dashboard e na Análise, abre o modal. Reserva pode guardar ou resgatar; o resgate não pode deixar o saldo da categoria negativo. A Análise lista os lançamentos, com filtros na URL, filtros salvos e o resumo do período. Faturas mostra o ciclo do cartão, o que já foi lançado e o que ainda está previsto. Patrimônio guarda o saldo de cada banco no fechamento do mês. Metas acompanha o saldo da categoria de Reserva, o prazo e o que foi guardado no período. O Dashboard junta o saldo do período, o uso do planejado, a fatura aberta, os gráficos, as últimas transações e até quatro metas ativas. Relatórios gera na hora quatro modelos prontos ou um relatório montado na página, com prévia, PDF e Excel. Nada fica salvo. As páginas internas exigem uma conta. Ainda não há usuário de demonstração.
+**Dashboard.** The period at a glance: money in, money out, what is left, and how much of that balance was set aside. The month shows spending against the plan, the open invoice of each card, and the latest transactions.
 
-## Como subir
+**Analysis.** Transactions grouped by day, with the totals for the period. Filters for text, category, bank, payment method, tags and amount stay in the address, and a filter can be saved and opened again later.
 
-Na pasta do projeto:
+**Invoices.** Each card has its own closing day. Posted purchases and forecast ones sit on the invoice named after the month it closes. A closed invoice can be marked paid; that mark does not create a new expense.
+
+**Planning.** Set the income you expect and an amount for each category. The month shows what was spent, what is already committed, and what is left to assign. Fixed bills and installments generate their own pending rows.
+
+**Goals and reserves.** A goal follows one reserve category. Saving and withdrawing move that balance, and a withdrawal cannot take it below zero. A finished goal stays finished, and a later goal on the same category starts from its own date.
+
+**Net worth.** Once a month, record the balance of each account and each investment. The total and the change since the previous closing are calculated when the page opens.
+
+**Reports.** Choose a ready-made report or build one on the page, read the preview, then download the same numbers as PDF or Excel. The file is not stored.
+
+**Manage.** Categories, banks, cards, payment methods and tags live on one page. An item that is already in use is archived instead of deleted.
+
+## Screenshots
+
+<table>
+<tr>
+<td width="50%"><strong>Dark</strong></td>
+<td width="50%"><strong>Light</strong></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/dark/01-dashboard.png" alt="Dark dashboard with the period balance, planned usage and open card invoices" width="640"></td>
+<td><img src="docs/screenshots/light/01-dashboard.png" alt="Light dashboard with the same period balance, planned usage and open card invoices" width="640"></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/dark/02-analysis.png" alt="Dark analysis list for the current month, with saved filters and transactions grouped by day" width="640"></td>
+<td><img src="docs/screenshots/light/02-analysis.png" alt="Light analysis list for the current month, with saved filters and transactions grouped by day" width="640"></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/dark/03-invoices.png" alt="Dark invoice of Itaú Click, with posted and forecast purchases and paid invoices below" width="640"></td>
+<td><img src="docs/screenshots/light/03-invoices.png" alt="Light invoice of Itaú Click, with posted and forecast purchases and paid invoices below" width="640"></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/dark/04-planning.png" alt="Dark monthly plan with expected income, category amounts and nothing left to assign" width="640"></td>
+<td><img src="docs/screenshots/light/04-planning.png" alt="Light monthly plan with expected income, category amounts and nothing left to assign" width="640"></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/dark/06-goals.png" alt="Dark goals page with two active goals, one completed goal and the reserve chart" width="640"></td>
+<td><img src="docs/screenshots/light/06-goals.png" alt="Light goals page with two active goals, one completed goal and the reserve chart" width="640"></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/dark/08-net-worth.png" alt="Dark net worth page at 42,000, with the yearly chart and the latest closing by account" width="640"></td>
+<td><img src="docs/screenshots/light/08-net-worth.png" alt="Light net worth page at 42,000, with the yearly chart and the latest closing by account" width="640"></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/dark/09-reports.png" alt="Dark yearly spending-by-category report with PDF and Excel download buttons" width="640"></td>
+<td><img src="docs/screenshots/light/09-reports.png" alt="Light yearly spending-by-category report with PDF and Excel download buttons" width="640"></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/dark/11-new-transaction.png" alt="Dark new-transaction dialog filled in as a paid grocery expense and not yet saved" width="640"></td>
+<td><img src="docs/screenshots/light/11-new-transaction.png" alt="Light new-transaction dialog filled in as a paid grocery expense and not yet saved" width="640"></td>
+</tr>
+<tr>
+<td colspan="2"><img src="docs/screenshots/dark/14-dashboard-tablet.png" alt="Dark dashboard at tablet width, with the sidebar collapsed to icons" width="640"><br>Tablet, dark theme, 1024 × 768.</td>
+</tr>
+</table>
+
+## Tech stack
+
+Versions below are the ones installed in this repository.
+
+| Piece | Version | Source |
+| --- | --- | --- |
+| PHP | 8.5.12 | `docker/php/Dockerfile` |
+| Laravel | 13.42.0 | `composer.lock` (`laravel/framework`) |
+| Inertia (Laravel) | 3.7.0 | `composer.lock` (`inertiajs/inertia-laravel`) |
+| Inertia (React) | 3.11.0 | `package-lock.json` |
+| React | 19.3.1 | `package-lock.json` |
+| Vite | 8.3.8 | `package-lock.json` |
+| PostgreSQL | 18.6 | `docker-compose.yml` (`postgres:18.6-bookworm`) |
+| Node | 26.13.1 | `docker-compose.yml` (`node:26.13.1-bookworm`) |
+| Recharts | 3.11.0 | `package-lock.json` |
+| Dompdf | 3.1.2 (wrapper), 3.1.6 (library) | `composer.lock` (`barryvdh/laravel-dompdf`, `dompdf/dompdf`) |
+| OpenSpout | 5.15.3 | `composer.lock` |
+| Playwright | 1.65.1 | `package-lock.json` |
+| Composer | 2.11.2 | `docker/php/Dockerfile` |
+| pgAdmin | 9.19.0 | `docker-compose.yml` |
+
+The interface is Inertia with React (JSX, no TypeScript) and plain CSS. Icons are Lucide (`lucide-react` 0.554.0). The typeface is Plus Jakarta Sans.
+
+## Getting started
+
+Docker Desktop on Windows, with the project on the WSL filesystem. There is no need for PHP, Composer, Node or PostgreSQL on the host: every command goes through Docker Compose.
 
 ```bash
 docker compose up -d
 ```
 
-Na primeira vez o PHP instala as dependências, gera a chave da aplicação e roda as migrações. O Vite instala os pacotes do front. Isso pode levar alguns minutos. Acompanhe com:
+The first boot installs PHP dependencies, generates the application key and runs the migrations. The Vite container installs the front-end packages. That can take a few minutes:
 
 ```bash
 docker compose logs -f app vite
 ```
 
-O app fica pronto quando o log do `app` mostrar o servidor em `0.0.0.0:8000` e o `vite` mostrar o endereço local.
+The app is ready when `app` is listening on `0.0.0.0:8000` and Vite prints its local address.
 
-## Endereços
-
-| Serviço | Endereço |
+| Service | Address |
 | --- | --- |
-| Aplicação | http://localhost:8000 |
-| Vite (assets do desenvolvimento) | http://localhost:5173 |
+| Application | http://localhost:8000 |
+| Vite (development assets) | http://localhost:5173 |
 | pgAdmin | http://localhost:5050 |
 
-Abra a aplicação em http://localhost:8000. Sem uma conta, a tela de entrada abre em http://localhost:8000/login. O Vite só entrega os arquivos do front; a navegação fica na porta 8000.
+Open http://localhost:8000. Without an account, the login screen is at http://localhost:8000/login. Vite only serves the front-end files; navigation stays on port 8000.
 
-pgAdmin, ambiente local:
+pgAdmin, local only:
 
-- E-mail: `admin@example.com`
-- Senha: `fintrack`
+- Email: `admin@example.com`
+- Password: `fintrack`
 
-O servidor **Fintrack** já aparece na lista. Na primeira conexão o pgAdmin pede a senha do banco: `fintrack` (usuário `fintrack`, banco `fintrack`).
+The **Fintrack** server is already in the list. The first connection asks for the database password: `fintrack` (user `fintrack`, database `fintrack`). These passwords are for development only.
 
-Essas senhas são só de desenvolvimento.
+### Demo account
 
-## Primeiro usuário
-
-Não há usuário pronto. Crie o primeiro pela tela de cadastro:
-
-1. Abra http://localhost:8000/register.
-2. Preencha nome, e-mail e senha (mínimo de 8 caracteres) e confirme a senha.
-3. Ao enviar, a conta é criada, já com as categorias e as formas de pagamento iniciais, e você entra no Dashboard.
-
-Para entrar de novo, use http://localhost:8000/login. A mesma tela troca entre **Entrar** e **Criar conta**. A caixa **Manter conectado por 30 dias** mantém a sessão. O ícone de perfil, no topo da área de conteúdo, abre um menu com o nome e a opção **Sair**, que encerra a sessão.
-
-## Gerenciar
-
-A página http://localhost:8000/manage reúne os cadastros: categorias, bancos, cartões e formas de pagamento. O botão de criar fica ao lado do título e muda conforme a aba. Criar e editar acontecem em um modal. A busca por nome ignora acentos. Arquivar tira o item da lista ativa; nada é apagado. O botão **Mostrar arquivados** revela os itens arquivados, com a ação **Desarquivar**. As categorias ficam em dois grupos: **Despesas** e **Reservas e receitas**. Um banco que ainda tem cartão ativo não arquiva: a tela pede para arquivar o cartão antes.
-
-Cada conta nova recebe categorias e formas de pagamento iniciais:
-
-- Gasto: Mercado, Moradia, Transporte, Saúde, Lazer, Outros
-- Reserva: Reserva de emergência, Investimentos
-- Receita: Salário, Outras receitas
-- Formas de pagamento: Pix, Débito, Crédito (só Crédito exige cartão) e Transferência. Contas já criadas não recebem Transferência sozinhas: o cadastro fica em Gerenciar.
-
-O escopo `BelongsToUser` filtra toda consulta pelo usuário logado e preenche `user_id` ao criar. Numa requisição web sem usuário autenticado, a consulta não devolve registros. No tinker, nos comandos do Artisan e nos jobs não há usuário autenticado: o escopo não filtra e não gera erro. Por isso o comando abaixo precisa indicar a conta.
-
-Para aplicar os padrões a um usuário que já existia:
+This recreates only the demo account. Other users are left as they are. In production the command refuses to run unless `--force` is passed.
 
 ```bash
-docker compose exec app php artisan tinker --execute='app(App\Services\DefaultDataService::class)->createFor(App\Models\User::query()->where("email", "seu@email")->firstOrFail());'
+docker compose exec app php artisan fintrack:demo
 ```
 
-Troque `seu@email` pelo e-mail da conta. Rodar de novo não duplica. Para todas as contas de uma vez:
+- Email: `demo@fintrack.app`
+- Password: `fintrack-demo`
+- Name: Ana Demo
+
+The data is a little more than a year, dated from today in `America/Sao_Paulo`. Two runs on the same day build the same account.
+
+A new account can also be created at http://localhost:8000/register. It starts with the default categories and payment methods.
+
+### Screenshots
+
+The script signs in through the login screen. `APP_URL` defaults to `http://localhost:8000`.
+
+On the host, when that address is the app:
 
 ```bash
-docker compose exec app php artisan tinker --execute='App\Models\User::query()->each(function ($user) { app(App\Services\DefaultDataService::class)->createFor($user); echo $user->email, PHP_EOL; });'
+npx playwright install chromium
+npm run screenshots
 ```
 
-## Transações e Análise
+In this repository Node lives in the Vite container. Chromium also needs its system libraries once per container:
 
-O modal registra despesa, receita ou reserva, paga ou pendente, com valor, data, descrição, categoria, banco e forma de pagamento. Reserva só aceita categoria de natureza Reserva, não aceita cartão de crédito e continua pedindo banco e forma de pagamento (Transferência, Pix e as demais que não exigem cartão). A transação Paga não pode ter data depois de hoje. A Pendente pode, até 5 anos à frente, também no lançamento manual. A data de competência pode. Se a forma exige cartão, o cartão é obrigatório e o banco fica travado no banco do cartão. Na Reserva esse campo não aparece. Data de competência e observação ficam em Mais opções. Duplicar abre uma cópia com a data de hoje e o status Paga. Excluir uma transação ou um filtro salvo pede confirmação num modal do sistema e, no caso da transação, apaga a linha.
+```bash
+docker compose exec vite npx playwright install chromium
+docker compose exec -u root vite npx playwright install-deps chromium
+docker compose exec vite npm run screenshots
+```
 
-Na lista, um lançamento gerado por gasto fixo ou parcela aparece com a marca Fixo ou Parcela n/total. Uma pendente pode ter data futura. Ao marcá-la como paga, a data futura vira hoje; a data passada também vira hoje quando não há cartão, e permanece quando há cartão, porque ela decide a fatura. Se a data mudou e a competência estava vazia, ela guarda o dia original. Quando o mês da competência é outro, a linha mostra o selo "Ref. dez/2026". Excluir uma transação gerada, paga ou pendente, impede o sistema de recriá-la naquele mês; o aviso dessa exclusão fica em negrito.
+Pictures are written to `docs/screenshots/dark` and `docs/screenshots/light`. If the demo account does not exist, the script stops with `Rode php artisan fintrack:demo antes`.
 
-A página http://localhost:8000/analysis agrupa por dia no período escolhido (mês atual é o padrão; o intervalo é o do calendário, no fuso de São Paulo). O último filtro fica na sessão do login e volta ao abrir a página sem parâmetros. **Limpar filtros** esquece esse filtro e volta ao mês atual. O resumo — quantidade, receitas (tipo Receita pagas), despesas (tipo Despesa pagas), reservado (tipo Reserva pagas), saldo e média por despesa — é calculado no servidor sobre o filtro inteiro. O saldo é receitas menos despesas; o reservado não desconta. O filtro de tipo inclui Reserva. Uma linha de Reserva mostra o valor sem sinal e sem cor, com o chip Reserva ao lado da categoria. Transação pendente entra na quantidade e fica de fora do dinheiro. A lista carrega de 50 em 50. Os filtros ficam na URL, então o endereço pode ser aberto em outra aba. Dá para salvar até 20 filtros por conta e apagar cada um. Aplicar um filtro salvo substitui o filtro guardado na sessão. A busca ignora maiúsculas e acentos. Se o período for um único mês futuro, com fixos ou parcelas previstos e o planejamento ainda não confirmado, a lista avisa quantos lançamentos estão previstos e leva ao Planejamento.
-
-Tag ainda não existe.
-
-## Planejamento
-
-A página http://localhost:8000/planning trabalha com um mês por vez (passado, atual ou futuro). O mês escolhido fica na sessão enquanto o login durar; sem mês guardado, abre o mês atual no fuso de São Paulo. Sair da conta esquece esse mês. A aba **Planejar o mês** mostra a renda esperada, o valor de cada categoria de despesa, o gasto pago do mês, o comprometido (fixos, parcelas e pendentes de despesa lançados à mão) e o que resta. Reserva mostra o valor do mês e o texto Guardado, com a soma das reservas pagas da categoria no mês, sem barra. A sobra a alocar é a renda menos a soma dos valores; pode ficar negativa. Mês sem plano salvo abre zerado. O botão de copiar só aparece quando existe um plano anterior e diz de qual mês. Confirmar e voltar para rascunho valem só para mês futuro; o mês atual gera os pendentes sozinho. Voltar para rascunho não apaga o que já foi gerado.
-
-A aba **Fixos e parcelados** cadastra o gasto que se repete e o parcelado, e lista o que está ativo no mês escolhido. O mês de início e o de fim são escolhidos pelo nome ("Novembro 2026"), sem digitar. Um fixo fora do mês mostra "Começa em novembro de 2026" ou "Terminou em outubro de 2026". Se o Pendente daquele mês foi pago num mês anterior, a linha mostra "Pago antecipado em dd/mm". Se foi pago num mês posterior, mostra "Pago em dd/mm". O valor entra em "Já quitado no mês" do mês de referência. O que começa depois ou já terminou fica no grupo **Fora deste mês**. O valor de cada parcela é calculado no servidor: o total dividido pelo número de parcelas, arredondado para baixo, e o resto fica na última. Um fixo ou parcela que passa da porcentagem configurada (30% no início) recebe a marca **Alto impacto**.
-
-O mês atual recebe as pendentes dos fixos e das parcelas sozinho: ao criar, editar ou arquivar o cadastro, e também na primeira visita autenticada daquele mês. Meses futuros só geram quando o planejamento daquele mês é confirmado. Meses passados não ganham pendente por essa geração. Ela não grava o plano do mês. Uma transação gerada que o usuário excluiu, paga ou pendente, não volta. Se a geração automática falhar, a página abre e a próxima tentativa espera 5 minutos.
-
-## Faturas
-
-A página http://localhost:8000/invoices lista os cartões ativos. A fatura leva o nome do mês em que fecha, e o seletor mostra esse mês por extenso ("Novembro 2026"). A compra feita no dia do fechamento entra na fatura seguinte. **Lançado** são as despesas pagas do ciclo; **Previsto**, as pendentes, inclusive a pendente manual com data futura. Quando a competência cai em outro mês, a linha mostra o selo "Ref. dez/2026". O total estimado é a soma dos dois, calculada no servidor. Dá para ver as faturas anteriores e, depois do fechamento, marcar a fatura como paga (e desmarcar). A marca só guarda a data: não cria despesa e não muda as transações. No modal de transação, com cartão e data escolhidos, uma dica diz em qual fatura a compra entra.
-
-## Patrimônio
-
-A página http://localhost:8000/net-worth mostra o que está guardado em cada banco. O botão **Registrar fechamento** abre o modal no mês mais recente que ainda não foi fechado, até o mês atual. Se não houver buraco, abre o mês atual para edição. O campo de mês mostra o nome por extenso e só vai de janeiro de 2000 até o mês atual. O modal diz se ele está sem fechamento ou já fechado. Um fechamento antigo se edita clicando na linha dele. O total e a variação são calculados no servidor. A variação compara com o fechamento anterior, mesmo que um mês tenha sido pulado. O filtro de período (padrão: ano) muda o gráfico e a lista; o patrimônio atual e o bloco por banco continuam sendo os do último fechamento. Excluir um fechamento tira só aquele registro.
-
-## Dashboard
-
-A página http://localhost:8000/ reúne o resumo do período. O filtro é o mesmo da Análise (mês atual é o padrão) e fica só no endereço, sem gravar na sessão. O destaque é o saldo do período: receitas pagas menos despesas pagas. Quando o reservado do período é positivo, o card avisa quanto desse saldo foi guardado. Reservado é o que foi guardado menos o que foi resgatado nas transações pagas do tipo Reserva, e não entra no saldo; pode aparecer negativo. A rosca e as barras continuam só com despesas. Cada indicador compara com o período anterior do mesmo tamanho; em "Todo o período" não há comparação. O uso do planejado mostra o mês em que o período termina, sem passar do mês atual. A fatura aberta de cada cartão ativo não depende do período. Os gráficos de barras e de rosca, as últimas transações, o patrimônio e o bloco de metas também vêm calculados no servidor. O bloco mostra até quatro metas ativas, com link para o detalhe.
-
-## Relatórios
-
-A página http://localhost:8000/reports monta o relatório na hora. Nada é gravado: não há lista de relatórios gerados nem modelo salvo. O filtro de período é o mesmo do Dashboard (mês atual é o padrão) e fica só no endereço.
-
-**Modelos prontos:** Gastos por categoria (despesas pagas), Resumo do período (quatro caixas no topo e, quando há período anterior, a comparação embaixo; em "Todo o período" ficam só as caixas), Extrato de transações (pagas, da mais recente à mais antiga, com as caixas Totais das linhas listadas) e Saldo mês a mês (todos os meses do intervalo, no máximo os últimos 60).
-
-**Montar o meu:** um conjunto por vez — Transações (os filtros da Análise e agrupamento por dia, semana, mês, categoria ou banco), Faturas (fechamento dentro do período), Patrimônio ou Metas. Nas transações do construtor, as somas e a quantidade seguem a situação escolhida (Paga, Pendente ou Todas). Os modelos prontos continuam só com pagas. A prévia mostra as primeiras 50 linhas e avisa "Mostrando 50 de N". PDF até 2.000 linhas e Excel até 20.000; acima disso o download é recusado. O servidor formata o texto uma vez; a prévia e o PDF usam esse texto, e o Excel grava o valor cru. O período no documento traz as datas exatas. Sem filtro, nenhuma etiqueta aparece.
-
-O PDF usa a biblioteca `barryvdh/laravel-dompdf` 3.1.2 (Dompdf 3.1.6), tema claro, fonte DejaVu Sans. O Excel usa `openspout/openspout` 5.15.3, com números e datas de verdade. Os dois são compatíveis com PHP 8.5 e Laravel 13. O arquivo não fica em disco.
-
-## Metas
-
-A página http://localhost:8000/goals lista as metas. O filtro de período é o mesmo do Dashboard e fica só no endereço. O segmento é Todas, Ativas, Concluídas e Arquivadas (o padrão continua Ativas). Cada meta usa uma categoria de Reserva. A primeira meta da categoria acompanha todo o saldo pago (guardar menos resgatar). Uma meta criada depois começa do zero e conta só o que for guardado a partir do dia da criação. Meta concluída não impede a próxima: ao criar outra, a concluída fica congelada no valor de hoje, continua em Concluídas e deixa de mudar. Meta em andamento continua impedindo. Arquivar é ação do usuário e congela o valor se ele ainda mudava; o dinheiro continua no total e no gráfico geral. Meta concluída congelada só edita nome e observação. Meta arquivada não se edita e só volta se for a mais recente da categoria e não houver outra em curso. A barra fica verde quando a meta foi atingida. O gráfico geral mostra o saldo das categorias que têm meta, no período inteiro, até 60 meses. O detalhe mostra a evolução da própria meta, o valor mensal sugerido e as últimas movimentações. Não há exclusão.
-
-## Proteção do login
-
-- 5 falhas seguidas do mesmo e-mail e do mesmo IP bloqueiam o login por 5 minutos, contados a partir da 5ª falha. Durante o bloqueio, nem a senha correta entra.
-- 20 falhas do mesmo IP em 15 minutos bloqueiam o login por mais 15 minutos, mesmo que o e-mail mude a cada tentativa.
-- O cadastro aceita no máximo 10 tentativas por hora por IP.
-
-## Comandos úteis
+### Useful commands
 
 ```bash
 docker compose logs -f
@@ -140,28 +173,62 @@ docker compose exec app php artisan migrate
 docker compose exec app bash
 ```
 
-`docker compose down` para os containers e **mantém** o volume do banco. Não use `down -v` se quiser conservar os dados.
+`docker compose down` stops the containers and keeps the database volume. Do not use `down -v` if you want to keep the data.
 
-## Quando mudar dependências
-
-Pacote novo ou atualizado no `composer.json` (PHP):
+After a change in `composer.json`:
 
 ```bash
 docker compose exec app composer install
 ```
 
-Pacote novo ou atualizado no `package.json` (JavaScript):
+After a change in `package.json`:
 
 ```bash
 docker compose exec vite npm install
 ```
 
-## Backup manual do banco
-
-A porta do PostgreSQL não fica exposta. O backup sai de dentro do container:
+The database port is not published. A manual backup is taken from inside the container:
 
 ```bash
 docker compose exec -T db pg_dump -U fintrack -d fintrack > backup-fintrack.sql
 ```
 
-O arquivo `backup-fintrack.sql` é criado na pasta atual.
+## Business rules worth knowing
+
+Money is `DECIMAL(15, 2)` and arithmetic uses bcmath. Derived numbers are not stored: invoice totals, reserve balances, goal progress and net-worth totals are calculated from the rows that were actually saved.
+
+An invoice follows the card's closing day. A purchase on the closing day belongs to the next invoice. Posted means a paid expense in that cycle. Forecast means a pending one.
+
+Fixed bills and installments generate pending transactions. The current month is generated by the system. A future month is generated when that month's plan is confirmed.
+
+Reserve is a third transaction type, with deposit and withdrawal. The balance of a reserve category is never allowed to go negative.
+
+A goal belongs to one reserve category. The first goal counts the whole history. A later goal starts from its own date, and finishing one goal freezes it so the next one can begin.
+
+Net worth is a monthly closing: one balance per account and per investment. Reports show a preview, a PDF and an Excel file from the same structure, and none of the three is saved.
+
+## Architecture
+
+Controllers stay thin. Form Requests validate input, Services apply the rules, and Resources shape what each Inertia page receives. There is no separate JSON API. A global scope ties every user-owned query to the signed-in user and sets `user_id` on create. In the console, where nobody is signed in, that scope does not filter.
+
+More detail: [architecture](docs/architecture.md), [routes](docs/route-map.md), [product rules](docs/product-vision.md) and the [design system](docs/design-system.md).
+
+## How it was built with AI agents
+
+The author owned the product: the decisions, the manual test scripts, and the merge of each module. Claude orchestrated: the decision questions, the specification of each module as a prompt, a code review of each commit, and the test scripts. The Cursor agent wrote the implementation.
+
+Each module followed the same cycle: decision questions, then a prompt with the specification and the updated docs, then the implementation with a mandatory self-review, a code review, correction rounds, manual tests, and the merge.
+
+The files that guided the agents are `docs/product-vision.md`, `docs/design-system.md` and `.cursor/rules/`.
+
+`git rev-list --count HEAD` reports 59 commits. `git log --grep='Merge pull request' --oneline` lists 12 merged pull requests. Those pull requests brought in the twelve branches from `feat/module-02-auth` through `feat/module-11b-polish`, all contained in `main`.
+
+The written spec kept the modules consistent. Invoice cycles and goal restarts needed more correction rounds than the simpler screens.
+
+## Limitations and next steps
+
+There is no automated test suite. Testing was done with manual scripts. There is no dedicated phone layout. There is no automatic backup. Investment accounts are balances recorded at each closing, with no yield.
+
+## License
+
+All rights reserved.
