@@ -242,6 +242,11 @@ Antes de apontar um endereço público para o app:
 
 Não há suíte de testes automatizados. Os testes foram roteiros manuais. Não há um layout de celular dedicado. Não há backup automático. As contas de investimento são saldos registrados em cada fechamento, sem rentabilidade. Não há recuperação de senha por e-mail.
 
+
+## 🔗 Links
+
+[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pedro-henrique-coppola-071baa225/) [![instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/pedrocoppola_/)
+
 ## Licença
 
 Todos os direitos reservados.
