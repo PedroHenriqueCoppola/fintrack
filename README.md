@@ -242,6 +242,11 @@ Before pointing a public address at the app:
 
 There is no automated test suite. Testing was done with manual scripts. There is no dedicated phone layout. There is no automatic backup. Investment accounts are balances recorded at each closing, with no yield. There is no password reset by email.
 
+
+## 🔗 Links
+
+[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pedro-henrique-coppola-071baa225/) [![instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/pedrocoppola_/)
+
 ## License
 
 All rights reserved.
